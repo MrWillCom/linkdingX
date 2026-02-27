@@ -41,16 +41,6 @@ This is a **browser extension** built with [WXT](https://wxt.dev/) (Web Extensio
 | `pnpm compile`       | Run TypeScript type check            |
 | `pnpm format`        | Format code with Prettier            |
 
-### Testing Commands (Vitest)
-
-> NOTE: Testing is not yet set up in this project. See [Testing Setup](#testing-setup) below.
-
-```bash
-pnpm test          # Run all tests
-pnpm test:watch   # Run tests in watch mode
-pnpm test run <file>  # Run a single test file
-```
-
 ---
 
 ## Code Style Guidelines

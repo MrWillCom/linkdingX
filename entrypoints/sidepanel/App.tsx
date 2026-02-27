@@ -1,15 +1,19 @@
-import { useState } from 'react'
-import './App.css'
-import { Button } from '@heroui/react'
+import { useSetup } from '@/hooks/useSetup'
+import Setup from '@/components/Setup'
+import BookmarksList from '@/components/BookmarksList'
 
 function App() {
-  const [count, setCount] = useState(0)
+  const { isSetupComplete, isLoading } = useSetup()
 
-  return (
-    <Button onClick={() => setCount(count => count + 1)}>
-      count is {count}
-    </Button>
-  )
+  if (isLoading) {
+    return null
+  }
+
+  if (!isSetupComplete) {
+    return <Setup />
+  }
+
+  return <BookmarksList />
 }
 
 export default App
