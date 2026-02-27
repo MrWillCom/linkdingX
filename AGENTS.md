@@ -2,6 +2,7 @@
 
 > **IMPORTANT: Before any action, ALWAYS read the relevant documentation first!**
 >
+> - **Use Context7** to look up WXT and HeroUI documentation
 > - WXT Docs: https://wxt.dev/
 > - HeroUI Docs: https://v3.heroui.com/
 > - Read the TOC and relevant guides thoroughly before coding!
@@ -105,7 +106,6 @@ import { useState, useEffect } from 'react'
 
 // External libraries (named imports preferred)
 import { Button, Input } from '@heroui/react'
-import useSWR from 'swr'
 
 // WXT APIs - use #imports for explicit imports
 import { storage } from 'wxt/storage'
@@ -272,8 +272,8 @@ HeroUI forms support:
 import { Form, TextField, Input, Label, FieldError, Button } from '@heroui/react'
 
 <Form>
-  <TextField nameRequired>
-    ="email" is<Label>Email</Label>
+  <TextField name="email" isRequired>
+    <Label>Email</Label>
     <Input />
     <FieldError />
   </TextField>
@@ -382,7 +382,6 @@ Follow the rules in `.agents/skills/vercel-react-best-practices/AGENTS.md`:
 - Derive state during render when possible (avoid redundant state)
 - Use `useCallback` / `useMemo` only when necessary
 - Prefer functional setState updates: `setCount(c => c + 1)`
-- Use SWR for data fetching (automatic deduplication)
 - Lazy initialize expensive state: `useState(() => expensiveFn())`
 
 ```typescript
@@ -391,9 +390,6 @@ setCount(c => c + 1)
 
 // Good: lazy initialization
 const [data] = useState(() => expensiveCalculation())
-
-// Good: SWR for data fetching
-const { data, error } = useSWR('/api/user', fetcher)
 ```
 
 ### Error Handling
@@ -435,7 +431,6 @@ Key dependencies used in this project:
 - **WXT v0.20.18** - Web Extension Toolkit
 - **Tailwind CSS v4** - Styling
 - **HeroUI v3.0.0-beta.7** - Component library
-- **SWR** - Data fetching
 - **TypeScript** - Type safety
 - **Prettier** - Code formatting
 
@@ -443,11 +438,24 @@ Key dependencies used in this project:
 
 ## Additional Guidelines
 
+- **Use Context7** to look up documentation when implementing features
 - Run `pnpm compile` before committing to catch type errors
 - Run `pnpm format` before committing to ensure consistent formatting
 - Test in both Chrome and Firefox during development
 - Follow the Vercel React best practices for optimal performance
 - **ALWAYS read the relevant documentation before implementing features!**
+
+### Context7 Usage
+
+When working on this project, use Context7 to look up:
+
+- **WXT**: Framework APIs, entry points, storage, manifest config
+- **HeroUI**: Component props, form patterns, accessibility
+
+```bash
+# Example: Look up HeroUI Button component
+# Use context7_resolve_library_id then context7_query_docs
+```
 
 ### Communication Guidelines
 
