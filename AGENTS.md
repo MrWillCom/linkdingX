@@ -281,6 +281,35 @@ import { Form, TextField, Input, Label, FieldError, Button } from '@heroui/react
 </Form>
 ```
 
+### Tabs Component (React)
+
+> READ: https://v3.heroui.com/docs/react/components/tabs
+
+```typescript
+import { Tabs } from '@heroui/react'
+
+// Controlled state
+<Tabs selectedKey={value} onSelectionChange={setValue}>
+  <Tabs.List>
+    <Tabs.Tab id="tab1">
+      Tab 1
+      <Tabs.Indicator />
+    </Tabs.Tab>
+    <Tabs.Tab id="tab2">
+      Tab 2
+      <Tabs.Indicator />
+    </Tabs.Tab>
+  </Tabs.List>
+</Tabs>
+```
+
+**Key Points**:
+
+- Use `id` prop on `<Tabs.Tab>` (NOT `key`) for tab identification
+- Use `selectedKey` and `onSelectionChange` for controlled state
+- Always include `<Tabs.Indicator />` inside each `<Tabs.Tab>` (required for indicator animation)
+- Props differ between React version (`id`, `selectedKey`) and Native version (`value`, `onValueChange`)
+
 ### Styling
 
 - Use `className` for custom Tailwind classes
@@ -445,6 +474,8 @@ Key dependencies used in this project:
 - Test in both Chrome and Firefox during development
 - Follow the Vercel React best practices for optimal performance
 - **ALWAYS read the relevant documentation before implementing features!**
+- **Verify external API capabilities** before assuming features exist - don't guess or assume API parameters without checking
+- **Look up component documentation first** - Don't guess the API props, always check Context7 for correct usage
 
 ### Context7 Usage
 
