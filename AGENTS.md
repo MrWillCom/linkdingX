@@ -494,3 +494,40 @@ When working on this project, use Context7 to look up:
 - **Use the question tool** when uncertain about implementation choices (e.g., UI patterns, data handling, architecture decisions)
 - Don't assume user preferences - ask instead when there are multiple reasonable approaches
 - This ensures we build exactly what you want rather than making incorrect assumptions
+
+---
+
+## Lessons Learned
+
+### Tailwind `group` Modifier Mistakes
+
+**Mistake**: Adding `group` to the wrong element.
+
+When implementing hover effects where a child element changes on parent hover:
+
+1. **Wrong**: Add `group` to the outer container (e.g., entire list item row)
+   - This causes all children to react when hovering anywhere on the row
+
+2. **Correct**: Add `group` only to the interactive element (e.g., button)
+   - Use `group-hover`/`group-active` on child elements to respond to parent button hover only
+
+### Button + Inner Indicator Pattern
+
+For a clickable indicator with larger click area but smaller visual:
+
+```tsx
+// Button: larger padding for clickable area
+// Inner div: smaller size for visual dot
+<button className="group p-2 rounded-full hover:bg-default-200 transition-colors">
+  <div className="w-2.5 h-2.5 rounded-full bg-blue-500 group-hover:bg-blue-600" />
+</button>
+```
+
+**Key points**:
+
+- Use `group` on the button element only
+- Inner elements use `group-hover`/`group-active` to respond to button hover (not row hover)
+- Button: `p-2` for larger clickable area
+- Inner div: smaller `w-2.5 h-2.5` for visual dot
+- Use conditional Tailwind classes (not inline styles) so hover states work for both states
+- Example: `bookmark.unread ? 'bg-blue-500 group-hover:bg-blue-600' : 'bg-gray-300 group-hover:bg-gray-400'`

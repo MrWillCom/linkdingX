@@ -20,5 +20,29 @@ export default defineBackground(() => {
         })
       return true
     }
+    if (message.type === 'api-patch') {
+      const { url, data: patchData, options } = message
+      const fetchOptions: RequestInit = {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+          ...options?.headers,
+        },
+        body: JSON.stringify(patchData),
+      }
+      fetch(url, fetchOptions)
+        .then(response => {
+          return response.json().then(data => ({
+            ok: response.ok,
+            status: response.status,
+            data,
+          }))
+        })
+        .then(sendResponse)
+        .catch(error => {
+          sendResponse({ ok: false, error: error.message })
+        })
+      return true
+    }
   })
 })
