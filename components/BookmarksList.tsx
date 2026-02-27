@@ -1,6 +1,6 @@
-import { useCallback, useEffect, useRef } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import useSWRInfinite from 'swr/infinite'
-import { Card, Link, Chip, Spinner } from '@heroui/react'
+import { Card, Link, Chip, Spinner, Tabs } from '@heroui/react'
 
 interface Bookmark {
   id: number
@@ -64,7 +64,11 @@ async function fetcher(key: string): Promise<BookmarksResponse> {
 
 const PAGE_SIZE = 15
 
+type UnreadFilter = 'all' | 'unread' | 'read'
+
 export default function BookmarksList() {
+  const [unreadFilter, setUnreadFilter] = useState<UnreadFilter>('all')
+
   const getKey = useCallback(
     (pageIndex: number, previousPageData: BookmarksResponse | null) => {
       if (previousPageData && !previousPageData.next) return null
@@ -105,6 +109,12 @@ export default function BookmarksList() {
 
   const bookmarks = data ? data.flatMap(page => page.results) : []
 
+  const filteredBookmarks = bookmarks.filter(bookmark => {
+    if (unreadFilter === 'unread') return bookmark.unread
+    if (unreadFilter === 'read') return !bookmark.unread
+    return true
+  })
+
   if (error) {
     return (
       <div className="p-4 flex flex-col items-center gap-4">
@@ -130,9 +140,59 @@ export default function BookmarksList() {
     )
   }
 
+  if (filteredBookmarks.length === 0) {
+    return (
+      <div className="p-4 space-y-4">
+        <div className="sticky top-4 z-10 pb-2">
+          <Tabs
+            selectedKey={unreadFilter}
+            onSelectionChange={key => setUnreadFilter(key as UnreadFilter)}
+          >
+            <Tabs.List>
+              <Tabs.Tab id="all">
+                All
+                <Tabs.Indicator />
+              </Tabs.Tab>
+              <Tabs.Tab id="unread">
+                Unread
+                <Tabs.Indicator />
+              </Tabs.Tab>
+              <Tabs.Tab id="read">
+                Read
+                <Tabs.Indicator />
+              </Tabs.Tab>
+            </Tabs.List>
+          </Tabs>
+        </div>
+        <p>No {unreadFilter} bookmarks.</p>
+      </div>
+    )
+  }
+
   return (
     <div className="p-4 space-y-4">
-      {bookmarks.map(bookmark => (
+      <div className="sticky top-4 z-10 pb-2">
+        <Tabs
+          selectedKey={unreadFilter}
+          onSelectionChange={key => setUnreadFilter(key as UnreadFilter)}
+        >
+          <Tabs.List>
+            <Tabs.Tab id="all">
+              All
+              <Tabs.Indicator />
+            </Tabs.Tab>
+            <Tabs.Tab id="unread">
+              Unread
+              <Tabs.Indicator />
+            </Tabs.Tab>
+            <Tabs.Tab id="read">
+              Read
+              <Tabs.Indicator />
+            </Tabs.Tab>
+          </Tabs.List>
+        </Tabs>
+      </div>
+      {filteredBookmarks.map(bookmark => (
         <Card key={bookmark.id} className="p-4">
           <div className="flex flex-col gap-2">
             <Link href={bookmark.url} target="_blank" className="font-semibold">
