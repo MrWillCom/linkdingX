@@ -62,7 +62,7 @@ async function fetcher(key: string): Promise<BookmarksResponse> {
   return response.data as BookmarksResponse
 }
 
-const PAGE_SIZE = 100
+const PAGE_SIZE = 15
 
 export default function BookmarksList() {
   const getKey = useCallback(
