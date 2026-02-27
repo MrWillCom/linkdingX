@@ -1,5 +1,6 @@
-import { useState, useEffect } from 'react'
-import { Card, Link, Chip, Spinner, Button } from '@heroui/react'
+import { useCallback, useEffect, useRef } from 'react'
+import useSWRInfinite from 'swr/infinite'
+import { Card, Link, Chip, Spinner } from '@heroui/react'
 
 interface Bookmark {
   id: number
@@ -33,15 +34,15 @@ const apiTokenStorage = storage.defineItem<string>('local:apiToken', {
   fallback: '',
 })
 
-async function fetchBookmarks(): Promise<Bookmark[]> {
+async function fetcher(key: string): Promise<BookmarksResponse> {
   const server = await serverStorage.getValue()
   const apiToken = await apiTokenStorage.getValue()
 
   if (!server || !apiToken) {
-    return []
+    throw new Error('Setup not complete')
   }
 
-  const url = `${server}/api/bookmarks/`
+  const fullUrl = `${server}${key}`
   const options: RequestInit = {
     headers: {
       Authorization: `Token ${apiToken}`,
@@ -50,7 +51,7 @@ async function fetchBookmarks(): Promise<Bookmark[]> {
 
   const response = await browser.runtime.sendMessage({
     type: 'api-request',
-    url,
+    url: fullUrl,
     options,
   })
 
@@ -58,25 +59,60 @@ async function fetchBookmarks(): Promise<Bookmark[]> {
     throw new Error(response.data?.detail || 'Failed to fetch bookmarks')
   }
 
-  return response.data.results as Bookmark[]
+  return response.data as BookmarksResponse
 }
 
+const PAGE_SIZE = 100
+
 export default function BookmarksList() {
-  const [bookmarks, setBookmarks] = useState<Bookmark[]>([])
-  const [isLoading, setIsLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
+  const getKey = useCallback(
+    (pageIndex: number, previousPageData: BookmarksResponse | null) => {
+      if (previousPageData && !previousPageData.next) return null
+      const offset = pageIndex * PAGE_SIZE
+      return `/api/bookmarks/?limit=${PAGE_SIZE}&offset=${offset}`
+    },
+    [],
+  )
+
+  const { data, error, size, setSize, isLoading, isValidating, mutate } =
+    useSWRInfinite<BookmarksResponse>(getKey, fetcher, {
+      revalidateFirstPage: false,
+    })
+
+  const loadMoreRef = useRef<HTMLDivElement>(null)
+  const isLoadingMore =
+    isLoading || (size > 0 && data && typeof data[size - 1] === 'undefined')
 
   useEffect(() => {
-    fetchBookmarks()
-      .then(data => {
-        setBookmarks(data)
-        setIsLoading(false)
-      })
-      .catch(err => {
-        setError(err.message)
-        setIsLoading(false)
-      })
-  }, [])
+    const observer = new IntersectionObserver(
+      entries => {
+        if (entries[0].isIntersecting && !isLoadingMore && !isValidating) {
+          const hasMore = !data || data[data.length - 1]?.next !== null
+          if (hasMore) {
+            setSize(size + 1)
+          }
+        }
+      },
+      { threshold: 0.1 },
+    )
+
+    if (loadMoreRef.current) {
+      observer.observe(loadMoreRef.current)
+    }
+
+    return () => observer.disconnect()
+  }, [isLoadingMore, isValidating, data, setSize, size])
+
+  const bookmarks = data ? data.flatMap(page => page.results) : []
+
+  if (error) {
+    return (
+      <div className="p-4 flex flex-col items-center gap-4">
+        <p className="text-danger">Error: {error.message}</p>
+        <Spinner onClick={() => mutate()} className="cursor-pointer" />
+      </div>
+    )
+  }
 
   if (isLoading) {
     return (
@@ -84,10 +120,6 @@ export default function BookmarksList() {
         <Spinner />
       </div>
     )
-  }
-
-  if (error) {
-    return <div className="p-4 text-danger">Error: {error}</div>
   }
 
   if (bookmarks.length === 0) {
@@ -126,6 +158,12 @@ export default function BookmarksList() {
           </div>
         </Card>
       ))}
+      <div ref={loadMoreRef} className="py-4 flex justify-center">
+        {isLoadingMore && <Spinner />}
+        {!isLoadingMore && data && !data[data.length - 1]?.next && (
+          <p className="text-default-400 text-sm">No more bookmarks</p>
+        )}
+      </div>
     </div>
   )
 }

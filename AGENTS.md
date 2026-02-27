@@ -448,3 +448,9 @@ Key dependencies used in this project:
 - Test in both Chrome and Firefox during development
 - Follow the Vercel React best practices for optimal performance
 - **ALWAYS read the relevant documentation before implementing features!**
+
+### Communication Guidelines
+
+- **Use the question tool** when uncertain about implementation choices (e.g., UI patterns, data handling, architecture decisions)
+- Don't assume user preferences - ask instead when there are multiple reasonable approaches
+- This ensures we build exactly what you want rather than making incorrect assumptions
