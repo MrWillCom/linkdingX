@@ -438,6 +438,7 @@ Key dependencies used in this project:
 
 ## Additional Guidelines
 
+- **Use Skills to Solve Problems**: When encountering issues or needing to investigate problems, use the available skills (e.g., `web-design-guidelines` for UI/UX review, `vercel-react-best-practices` for React performance issues)
 - **Use Context7** to look up documentation when implementing features
 - Run `pnpm compile` before committing to catch type errors
 - Run `pnpm format` before committing to ensure consistent formatting
