@@ -1,16 +1,30 @@
 # AGENTS.md - Development Guidelines for linkdingX
 
+> **IMPORTANT: Before any action, ALWAYS read the relevant documentation first!**
+>
+> - WXT Docs: https://wxt.dev/
+> - HeroUI Docs: https://v3.heroui.com/
+> - Read the TOC and relevant guides thoroughly before coding!
+
+---
+
 ## Project Overview
 
 This is a **browser extension** built with [WXT](https://wxt.dev/) (Web Extension Toolkit), React, TypeScript, and Tailwind CSS v4. It uses pnpm as the package manager.
 
-The project structure:
+### Project Structure
 
-- `entrypoints/` - Extension entry points (background, content scripts, sidepanel)
-- `components/` - Reusable React components
-- `utils/` - Utility functions
-- `assets/` - Static assets (CSS, images)
-- `public/` - Public assets (icons)
+```
+📂 {rootDir}/
+   📁 entrypoints/       # Extension entry points (background, content scripts, sidepanel)
+   📁 components/        # Auto-imported React components
+   📁 utils/             # Auto-imported utility functions
+   📁 hooks/             # Auto-imported React hooks
+   📁 assets/            # CSS, images (processed by WXT)
+   📁 public/           # Static assets (icons, copied as-is)
+   📄 wxt.config.ts     # WXT configuration
+   📄 package.json
+```
 
 ---
 
@@ -26,6 +40,16 @@ The project structure:
 | `pnpm zip:firefox`   | Create distribution zip (Firefox)    |
 | `pnpm compile`       | Run TypeScript type check            |
 | `pnpm format`        | Format code with Prettier            |
+
+### Testing Commands (Vitest)
+
+> NOTE: Testing is not yet set up in this project. See [Testing Setup](#testing-setup) below.
+
+```bash
+pnpm test          # Run all tests
+pnpm test:watch   # Run tests in watch mode
+pnpm test run <file>  # Run a single test file
+```
 
 ---
 
@@ -83,6 +107,8 @@ interface User {
 
 ### Imports
 
+**Order**: React imports → External libraries → Internal modules → Types → Styles
+
 ```typescript
 // React imports
 import { useState, useEffect } from 'react'
@@ -91,16 +117,274 @@ import { useState, useEffect } from 'react'
 import { Button, Input } from '@heroui/react'
 import useSWR from 'swr'
 
-// Internal imports (use path aliases if available)
+// WXT APIs - use #imports for explicit imports
+import { storage } from 'wxt/storage'
+import { defineContentScript, defineBackground } from '#imports'
+
+// Internal imports (use path aliases)
 import { formatDate } from '@/utils/date'
 import type { User } from '@/types'
 ```
 
-- Avoid barrel file imports (e.g., `from '@/components'`) when possible
-- Group imports: external → internal → types → styles
-- Use absolute imports with `@/` prefix for internal modules
+**Key Points**:
 
-### React Best Practices
+- Avoid barrel file imports (e.g., `from '@/components'`) when possible
+- Use `#imports` for WXT utilities explicitly
+- Use absolute imports with `@/` prefix for internal modules
+- Run `wxt prepare` to generate auto-import type definitions
+
+---
+
+## WXT Framework Specifics
+
+> READ: https://wxt.dev/guide/essentials/entrypoints
+
+### Entrypoint Types
+
+| Entrypoint     | Filename Pattern               | Output                        |
+| -------------- | ------------------------------ | ----------------------------- |
+| Background     | `entrypoints/background.[jt]s` | `/background.js`              |
+| Content Script | `entrypoints/content.[jt]sx?`  | `/content-scripts/content.js` |
+| Popup          | `entrypoints/popup.html`       | `/popup.html`                 |
+| Options        | `entrypoints/options.html`     | `/options.html`               |
+| Side Panel     | `entrypoints/sidepanel.html`   | `/sidepanel.html`             |
+
+### Defining Entrypoints
+
+```typescript
+// Background service worker
+import { defineBackground } from '#imports'
+
+export default defineBackground({
+  main() {
+    browser.runtime.onInstalled.addListener(() => {
+      console.log('Extension installed')
+    })
+  },
+})
+```
+
+```typescript
+// Content script
+import { defineContentScript } from '#imports'
+
+export default defineContentScript({
+  matches: ['*://*/*'],
+  main(ctx) {
+    console.log('Content script running')
+  },
+})
+```
+
+### Manifest Configuration
+
+WXT auto-generates `manifest.json`. Configure via:
+
+1. Global options in `wxt.config.ts`
+2. Entrypoint-specific options in the entrypoint file
+3. Hooks for modification
+
+```typescript
+// wxt.config.ts
+export default defineConfig({
+  manifest: {
+    name: '__MSG_extName__',
+    description: '__MSG_extDescription__',
+    default_locale: 'en',
+    permissions: ['storage', 'tabs'],
+    host_permissions: ['https://*/*'],
+  },
+})
+```
+
+### Storage
+
+> READ: https://wxt.dev/guide/essentials/storage
+
+Use WXT's built-in storage API:
+
+```typescript
+import { storage } from 'wxt/storage'
+
+// Define a typed storage item
+const accountStorage = storage.defineItem<Account>('local:account')
+
+// Use it
+const account = await accountStorage.getValue()
+await accountStorage.setValue(newAccount)
+await accountStorage.deleteValue()
+```
+
+### Auto-imports
+
+> READ: https://wxt.dev/guide/essentials/config/auto-imports
+
+WXT auto-imports from:
+
+- `components/*`
+- `composables/*`
+- `hooks/*`
+- `utils/*`
+- All WXT APIs
+
+To see all auto-imports, run `wxt prepare` and check `.wxt/types/imports-module.d.ts`.
+
+---
+
+## HeroUI Component Library
+
+> READ: https://v3.heroui.com/docs/react/getting-started
+> READ: https://v3.heroui.com/docs/react/components
+
+### Key Differences from Other UI Libraries
+
+- **Props use `is` prefix**: `isDisabled`, `isLoading`, `isOpen` (NOT `disabled`, `loading`, `open`)
+- **Events use `on` prefix with specific names**: `onPress`, `onValueChange`, `onSelectionChange`
+- **Built on React Aria**: Accessible by default, follows WAI-ARIA guidelines
+
+### Import
+
+```typescript
+import { Button, Input, Form, Card } from '@heroui/react'
+```
+
+### Button
+
+```typescript
+import { Button } from '@heroui/react'
+
+// Variants: primary, secondary, tertiary, outline, ghost, danger
+// Sizes: sm, md, lg
+
+<Button
+  variant="primary"
+  size="md"
+  isDisabled={false}
+  isLoading={false}
+  onPress={() => console.log('pressed')}
+>
+  Click me
+</Button>
+```
+
+### Form Components
+
+> READ: https://v3.heroui.com/docs/guide/forms
+
+HeroUI forms support:
+
+- Built-in validation with `isRequired`, `minLength`, `pattern`
+- Labels via `<Label>` component
+- Error messages via `<FieldError>`
+- Integration with React Hook Form
+
+```typescript
+import { Form, TextField, Input, Label, FieldError, Button } from '@heroui/react'
+
+<Form>
+  <TextField nameRequired>
+    ="email" is<Label>Email</Label>
+    <Input />
+    <FieldError />
+  </TextField>
+  <Button type="submit">Submit</Button>
+</Form>
+```
+
+### Styling
+
+- Use `className` for custom Tailwind classes
+- Components are built on Tailwind CSS v4
+- Use semantic class names when combining with Tailwind
+
+```tsx
+<div className="flex items-center justify-between p-4 bg-white rounded-lg shadow">
+```
+
+---
+
+## Tailwind CSS v4
+
+> This project uses Tailwind v4 with `@tailwindcss/vite` plugin
+
+**No `tailwind.config.js` file** - Tailwind v4 uses CSS-based configuration:
+
+```css
+/* assets/tailwind.css */
+@import 'tailwindcss';
+
+@theme {
+  --color-primary: #0072f5;
+  --color-secondary: #7828c8;
+}
+```
+
+---
+
+## Testing Setup (Reference)
+
+> READ: https://wxt.dev/guide/essentials/unit-testing
+
+To add testing to this project:
+
+1. Install Vitest:
+
+```bash
+pnpm add -D vitest @wxt-dev/module-react
+```
+
+2. Create `vitest.config.ts`:
+
+```typescript
+import { defineConfig } from 'vitest/config'
+import { WxtVitest } from 'wxt/testing/vitest-plugin'
+
+export default defineConfig({
+  plugins: [WxtVitest()],
+})
+```
+
+3. Add test script to `package.json`:
+
+```json
+{
+  "scripts": {
+    "test": "vitest",
+    "test:run": "vitest run"
+  }
+}
+```
+
+4. Write tests:
+
+```typescript
+import { describe, it, expect } from 'vitest'
+import { fakeBrowser } from 'wxt/testing/fake-browser'
+
+const accountStorage = storage.defineItem<Account>('local:account')
+
+describe('accountStorage', () => {
+  beforeEach(() => {
+    fakeBrowser.reset()
+  })
+
+  it('should store and retrieve account', async () => {
+    const account = { name: 'Test' }
+    await accountStorage.setValue(account)
+    expect(await accountStorage.getValue()).toEqual(account)
+  })
+})
+```
+
+**Key Points**:
+
+- `WxtVitest()` polyfills the `browser` API with in-memory implementation
+- Use `wxt/testing/fake-browser` for storage mocking
+- Mock WXT APIs using their real import paths (check `.wxt/types/imports-module.d.ts`)
+
+---
+
+## React Best Practices
 
 Follow the rules in `.agents/skills/vercel-react-best-practices/AGENTS.md`:
 
@@ -151,112 +435,19 @@ async function saveBookmark(url: string) {
 }
 ```
 
-### CSS / Tailwind
-
-- Use Tailwind CSS v4 utility classes
-- Avoid custom CSS when Tailwind can handle it
-- Use semantic class names when combining with Tailwind
-
-```tsx
-// Good: Tailwind utilities
-<div className="flex items-center justify-between p-4 bg-white rounded-lg shadow">
-
-// Good: semantic class + Tailwind
-<div className="card">
-  <div className="card-title">Title</div>
-</div>
-```
-
-### WXT / Extension Specifics
-
-- Entry points go in `entrypoints/` directory
-- Use `defineContentScript()` for content scripts
-- Use `defineBackground()` for service workers
-- Manifest is auto-generated by WXT
-
-```typescript
-// Content script
-import { defineContentScript } from 'wxt'
-
-export default defineContentScript({
-  matches: ['*://*/*'],
-  main() {
-    console.log('Content script running')
-  },
-})
-
-// Background service worker
-import { defineBackground } from 'wxt'
-
-export default defineBackground({
-  main() {
-    browser.runtime.onInstalled.addListener(() => {
-      console.log('Extension installed')
-    })
-  },
-})
-```
-
 ---
 
-## React Component Patterns
+## Dependencies
 
-### Component File Structure
+Key dependencies used in this project:
 
-```tsx
-// components/UserAvatar.tsx
-import { memo } from 'react'
-
-interface UserAvatarProps {
-  src?: string
-  name: string
-  size?: 'sm' | 'md' | 'lg'
-}
-
-function UserAvatar({ src, name, size = 'md' }: UserAvatarProps) {
-  const sizeClasses = {
-    sm: 'w-8 h-8',
-    md: 'w-12 h-12',
-    lg: 'w-16 h-16',
-  }
-
-  return (
-    <img src={src} alt={name} className={`${sizeClasses[size]} rounded-full`} />
-  )
-}
-
-export default memo(UserAvatar)
-```
-
-### Custom Hooks
-
-```typescript
-// utils/useLocalStorage.ts
-import { useState, useEffect } from 'react'
-
-function useLocalStorage<T>(key: string, initialValue: T) {
-  const [storedValue, setStoredValue] = useState<T>(() => {
-    try {
-      const item = window.localStorage.getItem(key)
-      return item ? JSON.parse(item) : initialValue
-    } catch {
-      return initialValue
-    }
-  })
-
-  useEffect(() => {
-    try {
-      window.localStorage.setItem(key, JSON.stringify(storedValue))
-    } catch {
-      // Handle private browsing or quota exceeded
-    }
-  }, [key, storedValue])
-
-  return [storedValue, setStoredValue] as const
-}
-
-export default useLocalStorage
-```
+- **React 19** - UI framework
+- **WXT v0.20.18** - Web Extension Toolkit
+- **Tailwind CSS v4** - Styling
+- **HeroUI v3.0.0-beta.7** - Component library
+- **SWR** - Data fetching
+- **TypeScript** - Type safety
+- **Prettier** - Code formatting
 
 ---
 
@@ -266,17 +457,4 @@ export default useLocalStorage
 - Run `pnpm format` before committing to ensure consistent formatting
 - Test in both Chrome and Firefox during development
 - Follow the Vercel React best practices for optimal performance
-
----
-
-## Dependencies
-
-Key dependencies used in this project:
-
-- **React 19** - UI framework
-- **WXT** - Web Extension Toolkit
-- **Tailwind CSS v4** - Styling
-- **HeroUI** - Component library
-- **SWR** - Data fetching
-- **TypeScript** - Type safety
-- **Prettier** - Code formatting
+- **ALWAYS read the relevant documentation before implementing features!**
