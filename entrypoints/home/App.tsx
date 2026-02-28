@@ -13,7 +13,7 @@ function App() {
     return <Setup />
   }
 
-  return <BookmarksList variant="default" />
+  return <BookmarksList variant="expanded" />
 }
 
 export default App

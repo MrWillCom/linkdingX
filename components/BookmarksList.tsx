@@ -2,6 +2,7 @@ import { formatDistanceToNow } from 'date-fns'
 import { useCallback, useEffect, useRef, useState } from 'react'
 import useSWRInfinite from 'swr/infinite'
 import { Button, Link, Chip, Spinner, Tabs } from '@heroui/react'
+import { ExternalLink } from 'lucide-react'
 
 interface Bookmark {
   id: number
@@ -100,8 +101,15 @@ async function toggleUnread(
 const PAGE_SIZE = 15
 
 type UnreadFilter = 'all' | 'unread' | 'read'
+type BookmarksListVariant = 'default' | 'expanded'
 
-export default function BookmarksList() {
+interface BookmarksListProps {
+  variant?: BookmarksListVariant
+}
+
+export default function BookmarksList({
+  variant = 'default',
+}: BookmarksListProps) {
   const [unreadFilter, setUnreadFilter] = useState<UnreadFilter>('all')
   const [bookmarks, setBookmarks] = useState<Bookmark[]>([])
 
@@ -194,34 +202,52 @@ export default function BookmarksList() {
   }
 
   return (
-    <div className="p-0">
-      <div className="sticky top-0 left-0 right-0 z-10 px-2 py-2 bg-background">
-        <Tabs
-          selectedKey={unreadFilter}
-          onSelectionChange={key => setUnreadFilter(key as UnreadFilter)}
-        >
-          <Tabs.List>
-            <Tabs.Tab id="all">
-              All
-              <Tabs.Indicator />
-            </Tabs.Tab>
-            <Tabs.Tab id="unread">
-              Unread
-              <Tabs.Indicator />
-            </Tabs.Tab>
-            <Tabs.Tab id="read">
-              Read
-              <Tabs.Indicator />
-            </Tabs.Tab>
-          </Tabs.List>
-        </Tabs>
+    <div className={`p-0 ${variant === 'expanded' ? 'max-w-3xl mx-auto' : ''}`}>
+      <div className="sticky top-0 left-0 right-0 z-10 px-2 py-2">
+        <div className="flex items-center justify-between">
+          <Tabs
+            selectedKey={unreadFilter}
+            onSelectionChange={key => setUnreadFilter(key as UnreadFilter)}
+          >
+            <Tabs.List>
+              <Tabs.Tab id="all">
+                All
+                <Tabs.Indicator />
+              </Tabs.Tab>
+              <Tabs.Tab id="unread">
+                Unread
+                <Tabs.Indicator />
+              </Tabs.Tab>
+              <Tabs.Tab id="read">
+                Read
+                <Tabs.Indicator />
+              </Tabs.Tab>
+            </Tabs.List>
+          </Tabs>
+          {variant === 'default' && (
+            <Button
+              variant="tertiary"
+              size="sm"
+              isIconOnly
+              aria-label="Open in new tab"
+              onPress={async () => {
+                const url = browser.runtime.getURL(
+                  '/home.html' as '/sidepanel.html',
+                )
+                await browser.tabs.create({ url })
+              }}
+            >
+              <ExternalLink className="w-4 h-4" />
+            </Button>
+          )}
+        </div>
       </div>
       {filteredBookmarks.length > 0 ? (
         <>
           {filteredBookmarks.map(bookmark => (
             <div
               key={bookmark.id}
-             className={`flex items-start gap-1 py-2 px-2 hover:bg-default-100 transition-colors border-b border-default-200 last:border-b-0 ${unreadFilter === 'all' && !bookmark.unread ? 'opacity-50' : ''}`}
+              className={`flex items-start gap-1 py-2 px-2 hover:bg-default-100 transition-colors border-b border-default-200 last:border-b-0 ${unreadFilter === 'all' && !bookmark.unread ? 'opacity-50' : ''}`}
             >
               <button
                 onClick={() =>
