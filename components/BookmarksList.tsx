@@ -181,7 +181,9 @@ export default function BookmarksList({
     return (
       <div className="p-4 flex flex-col items-center gap-4">
         <p className="text-danger">Error: {error.message}</p>
-        <Spinner onClick={() => mutate()} className="cursor-pointer" />
+        <Button variant="secondary" size="sm" onPress={() => mutate()}>
+          Retry
+        </Button>
       </div>
     )
   }
@@ -255,7 +257,7 @@ export default function BookmarksList({
                 onClick={() =>
                   toggleUnread(bookmark.id, !bookmark.unread, setBookmarks)
                 }
-                className="group flex-shrink-0 focus:outline-none cursor-pointer p-2 -mt-0.5 -ml-1.5 -mr-0.5 rounded-full hover:bg-default-200 active:bg-default-300 transition-colors"
+                className="group flex-shrink-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary cursor-pointer p-2 -mt-0.5 -ml-1.5 -mr-0.5 rounded-full hover:bg-default-200 active:bg-default-300 transition-colors"
                 aria-label={bookmark.unread ? 'Mark as read' : 'Mark as unread'}
               >
                 <div

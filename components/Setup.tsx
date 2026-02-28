@@ -88,7 +88,10 @@ export default function Setup() {
             }}
           >
             <Label>Server</Label>
-            <Input placeholder="https://linkding.example.com" />
+            <Input
+              placeholder="https://linkding.example.com"
+              autoComplete="url"
+            />
             <FieldError />
           </TextField>
           <TextField
@@ -102,7 +105,7 @@ export default function Setup() {
             }}
           >
             <Label>API Token</Label>
-            <Input placeholder="xxxxxxxx..." type="password" />
+            <Input placeholder="xxxxxxxx…" type="password" autoComplete="off" />
             <FieldError />
           </TextField>
         </FieldGroup>

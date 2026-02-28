@@ -91,7 +91,12 @@ export default function Settings() {
 
   return (
     <Modal isOpen={isOpen} onOpenChange={handleOpenChange}>
-      <Button isIconOnly variant="tertiary" onPress={() => setIsOpen(true)}>
+      <Button
+        isIconOnly
+        variant="tertiary"
+        onPress={() => setIsOpen(true)}
+        aria-label="Open settings"
+      >
         <SettingsIcon size={18} />
       </Button>
       <Modal.Backdrop>
@@ -122,6 +127,7 @@ export default function Settings() {
                       value={server}
                       onChange={e => setServer(e.target.value)}
                       placeholder="https://linkding.example.com"
+                      autoComplete="url"
                     />
                   </TextField>
                   <TextField
@@ -133,7 +139,8 @@ export default function Settings() {
                     <Input
                       value={apiToken}
                       onChange={e => setApiToken(e.target.value)}
-                      placeholder="xxxxxxxx..."
+                      placeholder="xxxxxxxx…"
+                      autoComplete="off"
                     />
                   </TextField>
                   {error && <FieldError>{error}</FieldError>}
