@@ -193,38 +193,9 @@ export default function BookmarksList() {
     )
   }
 
-  if (filteredBookmarks.length === 0) {
-    return (
-      <div className="p-0">
-        <div className="sticky top-0 z-10 pb-2 px-4 pt-2 bg-background/80 backdrop-blur-sm">
-          <Tabs
-            selectedKey={unreadFilter}
-            onSelectionChange={key => setUnreadFilter(key as UnreadFilter)}
-          >
-            <Tabs.List>
-              <Tabs.Tab id="all">
-                All
-                <Tabs.Indicator />
-              </Tabs.Tab>
-              <Tabs.Tab id="unread">
-                Unread
-                <Tabs.Indicator />
-              </Tabs.Tab>
-              <Tabs.Tab id="read">
-                Read
-                <Tabs.Indicator />
-              </Tabs.Tab>
-            </Tabs.List>
-          </Tabs>
-        </div>
-        <p>No {unreadFilter} bookmarks.</p>
-      </div>
-    )
-  }
-
   return (
     <div className="p-0">
-      <div className="sticky top-0 left-0 right-0 z-10 pb-2 px-4 pt-2 bg-background">
+      <div className="sticky top-0 left-0 right-0 z-10 px-2 py-2 bg-background">
         <Tabs
           selectedKey={unreadFilter}
           onSelectionChange={key => setUnreadFilter(key as UnreadFilter)}
@@ -245,74 +216,84 @@ export default function BookmarksList() {
           </Tabs.List>
         </Tabs>
       </div>
-      {filteredBookmarks.map(bookmark => (
-        <div
-          key={bookmark.id}
-          className={`flex items-start gap-1 py-2 px-2 hover:bg-default-100 transition-colors border-b border-default-200 last:border-b-0 ${unreadFilter === 'all' && !bookmark.unread ? 'opacity-50' : ''}`}
-        >
-          <button
-            onClick={() =>
-              toggleUnread(bookmark.id, !bookmark.unread, setBookmarks)
-            }
-            className="group flex-shrink-0 focus:outline-none cursor-pointer p-2 -mt-0.5 -ml-1.5 -mr-0.5 rounded-full hover:bg-default-200 active:bg-default-300 transition-colors"
-            aria-label={bookmark.unread ? 'Mark as read' : 'Mark as unread'}
-          >
+      {filteredBookmarks.length > 0 ? (
+        <>
+          {filteredBookmarks.map(bookmark => (
             <div
-              className={`w-2.5 h-2.5 rounded-full transition-colors ${
-                bookmark.unread
-                  ? 'bg-blue-500 group-hover:bg-blue-600 group-active:bg-blue-700'
-                  : 'bg-gray-300 group-hover:bg-gray-400 group-active:bg-gray-500'
-              }`}
-            />
-          </button>
-          <div className="flex-1 min-w-0">
-            <Link
-              href={bookmark.url}
-              target="_blank"
-              className="text-sm font-medium text-foreground hover:text-primary transition-colors"
+              key={bookmark.id}
+              className="flex items-start gap-1 py-2 px-2 hover:bg-default-100 transition-colors border-b border-default-200 last:border-b-0"
             >
-              {bookmark.title || bookmark.url}
-            </Link>
-            {bookmark.description && (
-              <p className="text-xs text-muted mt-0.5 line-clamp-2">
-                {bookmark.description}
-              </p>
-            )}
-            <div className="flex flex-col gap-1.5 mt-1.5">
-              {bookmark.tag_names.length > 0 && (
-                <div className="flex flex-wrap gap-1.5">
-                  {bookmark.tag_names.map(tag => (
-                    <Chip
-                      key={tag}
-                      size="sm"
-                      variant="soft"
-                      className="text-2xs"
-                    >
-                      {tag}
-                    </Chip>
-                  ))}
+              <button
+                onClick={() =>
+                  toggleUnread(bookmark.id, !bookmark.unread, setBookmarks)
+                }
+                className="group flex-shrink-0 focus:outline-none cursor-pointer p-2 -mt-0.5 -ml-1.5 -mr-0.5 rounded-full hover:bg-default-200 active:bg-default-300 transition-colors"
+                aria-label={bookmark.unread ? 'Mark as read' : 'Mark as unread'}
+              >
+                <div
+                  className={`w-2.5 h-2.5 rounded-full transition-colors ${
+                    bookmark.unread
+                      ? 'bg-blue-500 group-hover:bg-blue-600 group-active:bg-blue-700'
+                      : 'bg-gray-300 group-hover:bg-gray-400 group-active:bg-gray-500'
+                  }`}
+                />
+              </button>
+              <div className="flex-1 min-w-0">
+                <Link
+                  href={bookmark.url}
+                  target="_blank"
+                  className="text-sm font-medium text-foreground hover:text-primary transition-colors"
+                >
+                  {bookmark.title || bookmark.url}
+                </Link>
+                {bookmark.description && (
+                  <p className="text-xs text-muted mt-0.5 line-clamp-2">
+                    {bookmark.description}
+                  </p>
+                )}
+                <div className="flex flex-col gap-1.5 mt-1.5">
+                  {bookmark.tag_names.length > 0 && (
+                    <div className="flex flex-wrap gap-1.5">
+                      {bookmark.tag_names.map(tag => (
+                        <Chip
+                          key={tag}
+                          size="sm"
+                          variant="soft"
+                          className="text-2xs"
+                        >
+                          {tag}
+                        </Chip>
+                      ))}
+                    </div>
+                  )}
+                  <span className="text-2xs text-muted">
+                    {formatDistanceToNow(new Date(bookmark.date_added), {
+                      addSuffix: true,
+                    })}
+                  </span>
                 </div>
-              )}
-              <span className="text-2xs text-muted">
-                {formatDistanceToNow(new Date(bookmark.date_added), {
-                  addSuffix: true,
-                })}
-              </span>
+              </div>
             </div>
+          ))}
+          <div ref={loadMoreRef} className="py-4 flex justify-center">
+            {isLoadingMore && <Spinner />}
+            {!isLoadingMore && hasMore && !hasTriggeredLoadRef.current && (
+              <Button
+                size="sm"
+                variant="ghost"
+                onPress={() => setSize(size + 1)}
+              >
+                Load more
+              </Button>
+            )}
+            {!isLoadingMore && !hasMore && (
+              <p className="text-muted text-sm">No more bookmarks</p>
+            )}
           </div>
-        </div>
-      ))}
-      <div ref={loadMoreRef} className="py-4 flex justify-center">
-        {isLoadingMore && <Spinner />}
-        {!isLoadingMore && hasMore && !hasTriggeredLoadRef.current && (
-          <Button size="sm" variant="ghost" onPress={() => setSize(size + 1)}>
-            Load more
-          </Button>
-        )}
-        {!isLoadingMore && !hasMore && (
-          <p className="text-muted text-sm">No more bookmarks</p>
-        )}
-      </div>
+        </>
+      ) : (
+        <p>No {unreadFilter} bookmarks.</p>
+      )}
     </div>
   )
 }
