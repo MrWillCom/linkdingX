@@ -13,8 +13,8 @@ interface Bookmark {
   description: string
   notes: string
   web_archive_snapshot_url: string
-  favicon_url: string
-  preview_image_url: string
+  favicon_url: string | null
+  preview_image_url: string | null
   is_archived: boolean
   unread: boolean
   shared: boolean
@@ -194,6 +194,66 @@ type BookmarksListVariant = 'default' | 'expanded'
 
 interface BookmarksListProps {
   variant?: BookmarksListVariant
+}
+
+function hasMediaUrl(value: string | null | undefined): value is string {
+  return typeof value === 'string' && value.trim().length > 0
+}
+
+interface BookmarkFaviconProps {
+  url: string | null | undefined
+  className?: string
+}
+
+function BookmarkFavicon({ url, className = '' }: BookmarkFaviconProps) {
+  const [isHidden, setIsHidden] = useState(!hasMediaUrl(url))
+
+  useEffect(() => {
+    setIsHidden(!hasMediaUrl(url))
+  }, [url])
+
+  if (isHidden || !hasMediaUrl(url)) {
+    return null
+  }
+
+  return (
+    <img
+      src={url}
+      alt=""
+      aria-hidden="true"
+      loading="lazy"
+      className={`h-4 w-4 rounded-sm border border-default-200 object-cover flex-shrink-0 ${className}`}
+      onError={() => setIsHidden(true)}
+    />
+  )
+}
+
+interface BookmarkPreviewProps {
+  url: string | null | undefined
+  alt: string
+  className?: string
+}
+
+function BookmarkPreview({ url, alt, className = '' }: BookmarkPreviewProps) {
+  const [isHidden, setIsHidden] = useState(!hasMediaUrl(url))
+
+  useEffect(() => {
+    setIsHidden(!hasMediaUrl(url))
+  }, [url])
+
+  if (isHidden || !hasMediaUrl(url)) {
+    return null
+  }
+
+  return (
+    <img
+      src={url}
+      alt={alt}
+      loading="lazy"
+      className={`rounded-md border border-default-200 object-cover ${className}`}
+      onError={() => setIsHidden(true)}
+    />
+  )
 }
 
 export default function BookmarksList({
@@ -470,32 +530,51 @@ export default function BookmarksList({
                   </div>
                 </div>
                 <Card.Title className="text-sm line-clamp-1">
-                  {displayedCurrentTabBookmark.title ||
-                    displayedCurrentTabBookmark.url}
+                  <span className="flex min-w-0 items-center gap-1.5">
+                    <BookmarkFavicon
+                      url={displayedCurrentTabBookmark.favicon_url}
+                    />
+                    <span className="line-clamp-1">
+                      {displayedCurrentTabBookmark.title ||
+                        displayedCurrentTabBookmark.url}
+                    </span>
+                  </span>
                 </Card.Title>
               </Card.Header>
               <Card.Content className="pt-0">
-                <Link
-                  href={displayedCurrentTabBookmark.url}
-                  target="_blank"
-                  className="text-2xs text-muted hover:text-primary transition-colors line-clamp-1"
-                >
-                  {displayedCurrentTabBookmark.url}
-                </Link>
-                {displayedCurrentTabBookmark.tag_names.length > 0 && (
-                  <div className="flex flex-wrap gap-1.5 mt-1.5">
-                    {displayedCurrentTabBookmark.tag_names.map(tag => (
-                      <Chip
-                        key={tag}
-                        size="sm"
-                        variant="soft"
-                        className="text-2xs"
-                      >
-                        {tag}
-                      </Chip>
-                    ))}
+                <div className="flex items-start gap-2">
+                  <div className="min-w-0 flex-1">
+                    <Link
+                      href={displayedCurrentTabBookmark.url}
+                      target="_blank"
+                      className="text-2xs text-muted hover:text-primary transition-colors line-clamp-1"
+                    >
+                      {displayedCurrentTabBookmark.url}
+                    </Link>
+                    {displayedCurrentTabBookmark.tag_names.length > 0 && (
+                      <div className="flex flex-wrap gap-1.5 mt-1.5">
+                        {displayedCurrentTabBookmark.tag_names.map(tag => (
+                          <Chip
+                            key={tag}
+                            size="sm"
+                            variant="soft"
+                            className="text-2xs"
+                          >
+                            {tag}
+                          </Chip>
+                        ))}
+                      </div>
+                    )}
                   </div>
-                )}
+                  <BookmarkPreview
+                    url={displayedCurrentTabBookmark.preview_image_url}
+                    alt={
+                      displayedCurrentTabBookmark.title ||
+                      displayedCurrentTabBookmark.url
+                    }
+                    className="h-14 w-20 flex-shrink-0"
+                  />
+                </div>
               </Card.Content>
               <Card.Footer className="pt-2 flex items-center justify-between">
                 <span className="text-2xs text-muted">
@@ -563,9 +642,12 @@ export default function BookmarksList({
                 <Link
                   href={bookmark.url}
                   target="_blank"
-                  className="text-sm font-medium text-foreground hover:text-primary transition-colors"
+                  className="flex min-w-0 items-center gap-1.5 text-sm font-medium text-foreground hover:text-primary transition-colors"
                 >
-                  {bookmark.title || bookmark.url}
+                  <BookmarkFavicon url={bookmark.favicon_url} />
+                  <span className="line-clamp-1">
+                    {bookmark.title || bookmark.url}
+                  </span>
                 </Link>
                 {bookmark.description && (
                   <p className="text-xs text-muted mt-0.5 line-clamp-2">
@@ -594,6 +676,11 @@ export default function BookmarksList({
                   </span>
                 </div>
               </div>
+              <BookmarkPreview
+                url={bookmark.preview_image_url}
+                alt={bookmark.title || bookmark.url}
+                className="h-12 w-16 flex-shrink-0 mt-0.5"
+              />
             </div>
           ))}
           <div ref={loadMoreRef} className="py-4 flex justify-center">
