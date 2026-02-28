@@ -3,6 +3,7 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import useSWRInfinite from 'swr/infinite'
 import { Button, Link, Chip, Spinner, Tabs } from '@heroui/react'
 import { ExternalLink } from 'lucide-react'
+import Settings from './Settings'
 
 interface Bookmark {
   id: number
@@ -240,6 +241,7 @@ export default function BookmarksList({
               <ExternalLink className="w-4 h-4" />
             </Button>
           )}
+          {variant === 'expanded' && <Settings />}
         </div>
       </div>
       {filteredBookmarks.length > 0 ? (

@@ -616,7 +616,110 @@ For a clickable indicator with larger click area but smaller visual:
 <div className="mt-1.5 tags" />
 ```
 
-### IntersectionObserver in Chrome Side Panels
+### Always Use Question Tool for Clarifications
+
+**Rule**: When the user asks something that requires choices, confirmations, or decisions about implementation, you MUST use the question tool to ask the user directly.
+
+**Examples of when to use question tool**:
+
+- Choosing between multiple approaches
+- Confirming details before implementation
+- Any decision that affects the implementation
+- UI placement decisions
+
+**What NOT to do**:
+
+- Don't proceed without confirmation
+- Don't make assumptions about user preferences
+- Don't ask follow-up questions inline in your response
+
+**Example of CORRECT behavior**:
+
+```
+User: "Make the button blue or red?"
+Assistant: [uses question tool to ask]
+```
+
+**Example of INCORRECT behavior**:
+
+```
+User: "Make the button blue or red?"
+Assistant: "I'll make it blue"  ← WRONG! Must ask first
+```
+
+---
+
+### Always Check Documentation Before Implementing
+
+**Rule**: ALWAYS look up documentation (Context7, official docs, web search) BEFORE writing any code for:
+
+- UI components (HeroUI, Tailwind, etc.)
+- Framework APIs (WXT, React, etc.)
+- Library usage patterns
+
+**Why**:
+
+- You guessed the HeroUI Modal API wrong
+- The component API is different from what you assumed
+- This wastes time and creates bugs
+
+**What NOT to do**:
+
+- Don't assume you know how a component works
+- Don't guess the API based on experience with similar libraries
+- Don't write code first, then check docs when it fails
+
+**Example of INCORRECT behavior**:
+
+```
+User: "Add a modal with Setup component"
+Assistant: [writes Modal code without checking docs]
+→ Modal doesn't work because wrong API usage
+```
+
+**Example of CORRECT behavior**:
+
+```
+User: "Add a modal with Setup component"
+Assistant: [first checks HeroUI Modal docs on Context7]
+→ Understands correct API (Modal.Trigger as child, etc.)
+→ Then writes working code
+```
+
+---
+
+### Always Check Documentation Line by Line
+
+**Rule**: When copying from official documentation examples, you MUST check EVERY line one by one. Do NOT skip any parts.
+
+**Why**:
+
+- Skipped lines (like `<Modal.Icon>`, `<Surface>`, `className="p-6"`) caused bugs
+- User had to point out each missing piece individually
+- This wastes both user and assistant time
+
+**What to do**:
+
+- Compare your implementation against the official example line by line
+- Check for: props, children, classNames, components like `<Surface>`, `<Modal.Icon>`, etc.
+- If in doubt, ask the user to confirm
+
+**Example of INCORRECT behavior**:
+
+```
+User: "Follow the official Modal example"
+Assistant: [copies most of the code but skips <Modal.Icon> and className="p-6"]
+→ User gets frustrated having to point out each missing piece
+```
+
+**Example of CORRECT behavior**:
+
+```
+User: "Follow the official Modal example"
+Assistant: [reads the example line by line, identifies all required parts]
+→ Implements complete code matching the example exactly
+→ Asks if user wants any modifications
+```
 
 **Issue**: The IntersectionObserver API may not fire properly in Chrome's side panel until the user interacts with it (e.g., clicks somewhere). This affects infinite scroll functionality.
 
