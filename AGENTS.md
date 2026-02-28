@@ -559,3 +559,59 @@ For a clickable indicator with larger click area but smaller visual:
 - Inner div: smaller `w-2.5 h-2.5` for visual dot
 - Use conditional Tailwind classes (not inline styles) so hover states work for both states
 - Example: `bookmark.unread ? 'bg-blue-500 group-hover:bg-blue-600' : 'bg-gray-300 group-hover:bg-gray-400'`
+
+### HeroUI v3 Semantic Colors
+
+- **Wrong**: `text-default-400`, `text-default-300` (these don't exist in HeroUI v3)
+- **Correct**: Use semantic colors like `text-muted`
+- HeroUI v3 uses semantic color names (`--muted`, `--foreground`, `--background`) rather than numbered default colors
+
+### pnpm Dependency Behavior
+
+- Adding a new dependency can accidentally remove indirect dependencies
+- Always verify `package.json` after installing new packages
+- Example: Installing `date-fns` removed `swr` (an indirect dependency), requiring manual re-addition
+
+### Tailwind v4 Custom Utilities
+
+- Use `@utility` directive (not just `@theme`) to create custom utilities
+- Example: Creating `text-2xs` (10px) and `text-3xs` (8px) for smaller text
+
+```css
+@utility text-2xs {
+  font-size: 0.625rem;
+  line-height: 0.875rem;
+}
+
+@utility text-3xs {
+  font-size: 0.5rem;
+  line-height: 0.75rem;
+}
+```
+
+- Tailwind's smallest built-in font size is `text-xs` (12px/0.75rem)
+
+### Flexbox Gap Semantics
+
+- `gap` in `flex-col` container = vertical spacing between items
+- `gap` in `flex-wrap` container = horizontal spacing between chips
+- Use `mt` (margin-top) for spacing between different sections (e.g., description → tags)
+
+```tsx
+// Vertical layout: gap controls vertical spacing
+<div className="flex flex-col gap-1.5">
+  <div>Title</div>
+  <div>Description</div>
+  <div>Tags</div>
+</div>
+
+// Horizontal/wrap layout: gap controls horizontal spacing
+<div className="flex flex-wrap gap-1.5">
+  <Chip>Tag 1</Chip>
+  <Chip>Tag 2</Chip>
+</div>
+
+// Between different sections: use mt
+<p className="description" />
+<div className="mt-1.5 tags" />
+```
