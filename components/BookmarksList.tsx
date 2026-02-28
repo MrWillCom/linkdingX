@@ -224,7 +224,7 @@ export default function BookmarksList() {
 
   return (
     <div className="p-0">
-      <div className="sticky top-0 z-10 pb-2 px-4 pt-2 bg-background/80 backdrop-blur-sm">
+      <div className="sticky top-0 left-0 right-0 z-10 pb-2 px-4 pt-2 bg-background">
         <Tabs
           selectedKey={unreadFilter}
           onSelectionChange={key => setUnreadFilter(key as UnreadFilter)}
@@ -248,13 +248,13 @@ export default function BookmarksList() {
       {filteredBookmarks.map(bookmark => (
         <div
           key={bookmark.id}
-          className="flex items-start gap-3 py-2 px-3 hover:bg-default-100 transition-colors border-b border-default-200 last:border-b-0"
+          className="flex items-start gap-1 py-2 px-2 hover:bg-default-100 transition-colors border-b border-default-200 last:border-b-0"
         >
           <button
             onClick={() =>
               toggleUnread(bookmark.id, !bookmark.unread, setBookmarks)
             }
-            className="group mt-0.5 flex-shrink-0 focus:outline-none cursor-pointer p-2 -ml-1.5 rounded-full hover:bg-default-200 active:bg-default-300 transition-colors"
+            className="group flex-shrink-0 focus:outline-none cursor-pointer p-2 -mt-0.5 -ml-1.5 -mr-0.5 rounded-full hover:bg-default-200 active:bg-default-300 transition-colors"
             aria-label={bookmark.unread ? 'Mark as read' : 'Mark as unread'}
           >
             <div
