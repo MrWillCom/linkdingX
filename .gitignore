@@ -25,5 +25,6 @@ web-ext.config.ts
 *.sln
 *.sw?
 
-# Agent skills
+# Agents
 /.agents/skills
+/.codex
