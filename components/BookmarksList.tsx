@@ -187,8 +187,8 @@ export default function BookmarksList() {
 
   if (bookmarks.length === 0 && !isLoading) {
     return (
-      <div className="p-4">
-        <p>No bookmarks yet.</p>
+      <div className="flex justify-center py-8">
+        <p className="text-muted text-sm">No bookmarks yet.</p>
       </div>
     )
   }
@@ -292,7 +292,9 @@ export default function BookmarksList() {
           </div>
         </>
       ) : (
-        <p>No {unreadFilter} bookmarks.</p>
+        <div className="flex justify-center py-8">
+          <p className="text-muted text-sm">No {unreadFilter} bookmarks.</p>
+        </div>
       )}
     </div>
   )
