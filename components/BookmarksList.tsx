@@ -1,7 +1,7 @@
 import { formatDistanceToNow } from 'date-fns'
 import { useCallback, useEffect, useRef, useState } from 'react'
 import useSWRInfinite from 'swr/infinite'
-import { Link, Chip, Spinner, Tabs } from '@heroui/react'
+import { Button, Link, Chip, Spinner, Tabs } from '@heroui/react'
 
 interface Bookmark {
   id: number
@@ -129,6 +129,7 @@ export default function BookmarksList() {
   }, [mutate])
 
   const loadMoreRef = useRef<HTMLDivElement>(null)
+  const hasTriggeredLoadRef = useRef(false)
   const isLoadingMore =
     isLoading || (size > 0 && data && typeof data[size - 1] === 'undefined')
 
@@ -138,6 +139,7 @@ export default function BookmarksList() {
         if (entries[0].isIntersecting && !isLoadingMore && !isValidating) {
           const hasMore = !data || data[data.length - 1]?.next !== null
           if (hasMore) {
+            hasTriggeredLoadRef.current = true
             setSize(size + 1)
           }
         }
@@ -151,6 +153,8 @@ export default function BookmarksList() {
 
     return () => observer.disconnect()
   }, [isLoadingMore, isValidating, data, setSize, size])
+
+  const hasMore = !data || data[data.length - 1]?.next !== null
 
   useEffect(() => {
     if (data) {
@@ -300,8 +304,13 @@ export default function BookmarksList() {
       ))}
       <div ref={loadMoreRef} className="py-4 flex justify-center">
         {isLoadingMore && <Spinner />}
-        {!isLoadingMore && data && !data[data.length - 1]?.next && (
-          <p className="text-default-400 text-sm">No more bookmarks</p>
+        {!isLoadingMore && hasMore && !hasTriggeredLoadRef.current && (
+          <Button size="sm" variant="ghost" onPress={() => setSize(size + 1)}>
+            Load more
+          </Button>
+        )}
+        {!isLoadingMore && !hasMore && (
+          <p className="text-muted text-sm">No more bookmarks</p>
         )}
       </div>
     </div>
