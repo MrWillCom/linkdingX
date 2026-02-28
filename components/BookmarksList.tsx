@@ -1,3 +1,4 @@
+import { formatDistanceToNow } from 'date-fns'
 import { useCallback, useEffect, useRef, useState } from 'react'
 import useSWRInfinite from 'swr/infinite'
 import { Link, Chip, Spinner, Tabs } from '@heroui/react'
@@ -260,27 +261,29 @@ export default function BookmarksList() {
               {bookmark.title || bookmark.url}
             </Link>
             {bookmark.description && (
-              <p className="text-xs text-default-400 mt-0.5 line-clamp-1">
+              <p className="text-xs text-muted mt-0.5 line-clamp-2">
                 {bookmark.description}
               </p>
             )}
-            <div className="flex items-center gap-2 mt-1">
+            <div className="flex flex-col gap-1.5 mt-1.5">
               {bookmark.tag_names.length > 0 && (
-                <div className="flex flex-wrap gap-1">
+                <div className="flex flex-wrap gap-1.5">
                   {bookmark.tag_names.map(tag => (
                     <Chip
                       key={tag}
                       size="sm"
                       variant="soft"
-                      className="text-xs"
+                      className="text-2xs"
                     >
                       {tag}
                     </Chip>
                   ))}
                 </div>
               )}
-              <span className="text-xs text-default-300">
-                {new Date(bookmark.date_added).toLocaleDateString()}
+              <span className="text-2xs text-muted">
+                {formatDistanceToNow(new Date(bookmark.date_added), {
+                  addSuffix: true,
+                })}
               </span>
             </div>
           </div>

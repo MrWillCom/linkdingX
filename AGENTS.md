@@ -7,6 +7,34 @@
 > - HeroUI Docs: https://v3.heroui.com/
 > - Read the TOC and relevant guides thoroughly before coding!
 
+> **⚠️ CRITICAL: Always Use Question Tool for Clarifications**
+>
+> When the user asks something that requires:
+>
+> - Choosing between multiple approaches
+> - Confirming details before implementation
+> - Any decision that affects the implementation
+>
+> You MUST use the `question` tool to ask the user directly. Do NOT:
+>
+> - Proceed without confirmation
+> - Make assumptions about user preferences
+> - Ask follow-up questions inline in your response
+>
+> Example of CORRECT behavior:
+>
+> ```
+> User: "Make the button blue or red?"
+> Assistant: [uses question tool to ask]
+> ```
+>
+> Example of INCORRECT behavior:
+>
+> ```
+> User: "Make the button blue or red?"
+> Assistant: "I'll make it blue"  ← WRONG! Must ask first
+> ```
+
 ---
 
 ## Project Overview
