@@ -221,7 +221,7 @@ export default function BookmarksList() {
           {filteredBookmarks.map(bookmark => (
             <div
               key={bookmark.id}
-              className="flex items-start gap-1 py-2 px-2 hover:bg-default-100 transition-colors border-b border-default-200 last:border-b-0"
+             className={`flex items-start gap-1 py-2 px-2 hover:bg-default-100 transition-colors border-b border-default-200 last:border-b-0 ${unreadFilter === 'all' && !bookmark.unread ? 'opacity-50' : ''}`}
             >
               <button
                 onClick={() =>
