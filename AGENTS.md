@@ -615,3 +615,42 @@ For a clickable indicator with larger click area but smaller visual:
 <p className="description" />
 <div className="mt-1.5 tags" />
 ```
+
+### IntersectionObserver in Chrome Side Panels
+
+**Issue**: The IntersectionObserver API may not fire properly in Chrome's side panel until the user interacts with it (e.g., clicks somewhere). This affects infinite scroll functionality.
+
+**Symptoms**:
+
+- Scroll-to-load-more doesn't work when the side panel first opens
+- Works after clicking anywhere in the side panel
+
+**Solutions that didn't work**:
+
+1. Adding `rootMargin` to IntersectionObserver options
+2. Calling `document.body.focus()` on mount
+
+**Working solution**: Add a fallback "Load More" button that:
+
+- Shows by default when there's more data to load
+- Hides when the IntersectionObserver successfully triggers a load (using a ref to track this)
+- Allows users to manually load more if infinite scroll fails
+
+```tsx
+const hasTriggeredLoadRef = useRef(false)
+
+// In IntersectionObserver callback:
+if (hasMore) {
+  hasTriggeredLoadRef.current = true
+  setSize(size + 1)
+}
+
+// In render:
+{
+  !isLoadingMore && hasMore && !hasTriggeredLoadRef.current && (
+    <Button size="sm" variant="ghost" onPress={() => setSize(size + 1)}>
+      Load more
+    </Button>
+  )
+}
+```
