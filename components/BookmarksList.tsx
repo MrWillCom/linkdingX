@@ -202,6 +202,8 @@ export default function BookmarksList({
   const [unreadFilter, setUnreadFilter] = useState<UnreadFilter>('all')
   const [bookmarks, setBookmarks] = useState<Bookmark[]>([])
   const [currentTabUrl, setCurrentTabUrl] = useState<string | null>(null)
+  const [displayedCurrentTabBookmark, setDisplayedCurrentTabBookmark] =
+    useState<Bookmark | null>(null)
 
   const getKey = useCallback(
     (pageIndex: number, previousPageData: BookmarksResponse | null) => {
@@ -348,6 +350,19 @@ export default function BookmarksList({
     }
   }, [bookmarks, currentTabBookmarkData, mutateCurrentTabBookmark])
 
+  useEffect(() => {
+    if (currentTabBookmarkData) {
+      setDisplayedCurrentTabBookmark(currentTabBookmarkData)
+      return
+    }
+
+    const timeoutId = window.setTimeout(() => {
+      setDisplayedCurrentTabBookmark(null)
+    }, 220)
+
+    return () => window.clearTimeout(timeoutId)
+  }, [currentTabBookmarkData])
+
   const filteredBookmarks = bookmarks.filter(bookmark => {
     if (unreadFilter === 'unread') return bookmark.unread
     if (unreadFilter === 'read') return !bookmark.unread
@@ -422,77 +437,100 @@ export default function BookmarksList({
           )}
           {variant === 'expanded' && <Settings />}
         </div>
-        {currentTabBookmarkData && (
-          <Card
-            variant="secondary"
-            className={`mt-2 border border-default-200 shadow-sm ${
-              unreadFilter === 'all' && !currentTabBookmarkData.unread
-                ? 'opacity-75'
-                : ''
-            }`}
-          >
-            <Card.Header className="pb-1">
-              <Card.Description className="text-2xs uppercase tracking-wide">
-                Current page in Linkding
-              </Card.Description>
-              <Card.Title className="text-sm line-clamp-1">
-                {currentTabBookmarkData.title || currentTabBookmarkData.url}
-              </Card.Title>
-            </Card.Header>
-            <Card.Content className="pt-0">
-              <Link
-                href={currentTabBookmarkData.url}
-                target="_blank"
-                className="text-2xs text-muted hover:text-primary transition-colors line-clamp-1"
-              >
-                {currentTabBookmarkData.url}
-              </Link>
-              {currentTabBookmarkData.tag_names.length > 0 && (
-                <div className="flex flex-wrap gap-1.5 mt-1.5">
-                  {currentTabBookmarkData.tag_names.map(tag => (
-                    <Chip
-                      key={tag}
-                      size="sm"
-                      variant="soft"
-                      className="text-2xs"
-                    >
-                      {tag}
-                    </Chip>
-                  ))}
+        <div
+          className={`overflow-hidden transition-all duration-200 ease-out ${
+            currentTabBookmarkData
+              ? 'mt-2 max-h-96 opacity-100 translate-y-0'
+              : 'mt-0 max-h-0 opacity-0 -translate-y-1 pointer-events-none'
+          }`}
+        >
+          {displayedCurrentTabBookmark && (
+            <Card
+              variant={
+                displayedCurrentTabBookmark.unread ? 'tertiary' : 'secondary'
+              }
+              className="border border-default-200 shadow-sm"
+            >
+              <Card.Header className="pb-1">
+                <div className="flex items-center justify-between gap-2">
+                  <Card.Description className="text-2xs uppercase tracking-wide">
+                    Current page in Linkding
+                  </Card.Description>
+                  <div className="inline-flex items-center gap-1.5">
+                    <span
+                      className={`inline-block h-2 w-2 rounded-full ${
+                        displayedCurrentTabBookmark.unread
+                          ? 'bg-blue-500'
+                          : 'bg-gray-400'
+                      }`}
+                    />
+                    <span className="text-3xs text-muted uppercase tracking-wide">
+                      {displayedCurrentTabBookmark.unread ? 'Unread' : 'Read'}
+                    </span>
+                  </div>
                 </div>
-              )}
-            </Card.Content>
-            <Card.Footer className="pt-2 flex items-center justify-between">
-              <span className="text-2xs text-muted">
-                {formatDistanceToNow(
-                  new Date(currentTabBookmarkData.date_added),
-                  {
-                    addSuffix: true,
-                  },
+                <Card.Title className="text-sm line-clamp-1">
+                  {displayedCurrentTabBookmark.title ||
+                    displayedCurrentTabBookmark.url}
+                </Card.Title>
+              </Card.Header>
+              <Card.Content className="pt-0">
+                <Link
+                  href={displayedCurrentTabBookmark.url}
+                  target="_blank"
+                  className="text-2xs text-muted hover:text-primary transition-colors line-clamp-1"
+                >
+                  {displayedCurrentTabBookmark.url}
+                </Link>
+                {displayedCurrentTabBookmark.tag_names.length > 0 && (
+                  <div className="flex flex-wrap gap-1.5 mt-1.5">
+                    {displayedCurrentTabBookmark.tag_names.map(tag => (
+                      <Chip
+                        key={tag}
+                        size="sm"
+                        variant="soft"
+                        className="text-2xs"
+                      >
+                        {tag}
+                      </Chip>
+                    ))}
+                  </div>
                 )}
-              </span>
-              <Button
-                size="sm"
-                variant="ghost"
-                isDisabled={
-                  isCurrentTabBookmarkLoading || isCurrentTabBookmarkValidating
-                }
-                onPress={() =>
-                  toggleUnread(
-                    currentTabBookmarkData.id,
-                    !currentTabBookmarkData.unread,
-                    setBookmarks,
-                    mutateCurrentTabBookmark,
-                  )
-                }
-              >
-                {currentTabBookmarkData.unread
-                  ? 'Mark as read'
-                  : 'Mark as unread'}
-              </Button>
-            </Card.Footer>
-          </Card>
-        )}
+              </Card.Content>
+              <Card.Footer className="pt-2 flex items-center justify-between">
+                <span className="text-2xs text-muted">
+                  {formatDistanceToNow(
+                    new Date(displayedCurrentTabBookmark.date_added),
+                    {
+                      addSuffix: true,
+                    },
+                  )}
+                </span>
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  isDisabled={
+                    !currentTabBookmarkData ||
+                    isCurrentTabBookmarkLoading ||
+                    isCurrentTabBookmarkValidating
+                  }
+                  onPress={() =>
+                    toggleUnread(
+                      displayedCurrentTabBookmark.id,
+                      !displayedCurrentTabBookmark.unread,
+                      setBookmarks,
+                      mutateCurrentTabBookmark,
+                    )
+                  }
+                >
+                  {displayedCurrentTabBookmark.unread
+                    ? 'Mark as read'
+                    : 'Mark as unread'}
+                </Button>
+              </Card.Footer>
+            </Card>
+          )}
+        </div>
       </div>
       {filteredBookmarks.length > 0 ? (
         <>
