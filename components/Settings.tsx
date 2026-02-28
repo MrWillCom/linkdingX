@@ -1,23 +1,25 @@
 'use client'
 
-import { Button, Input, Label, Modal, Surface, TextField } from '@heroui/react'
+import {
+  Button,
+  FieldError,
+  Input,
+  Label,
+  Modal,
+  Surface,
+  TextField,
+} from '@heroui/react'
 import { useState, useEffect } from 'react'
-import { storage } from '#imports'
 import { Settings as SettingsIcon } from 'lucide-react'
-
-const serverStorage = storage.defineItem<string>('local:server', {
-  fallback: '',
-})
-
-const apiTokenStorage = storage.defineItem<string>('local:apiToken', {
-  fallback: '',
-})
+import { useSetup } from '@/hooks/useSetup'
 
 export default function Settings() {
   const [isOpen, setIsOpen] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
   const [server, setServer] = useState('')
   const [apiToken, setApiToken] = useState('')
+  const [error, setError] = useState('')
+  const { serverStorage, apiTokenStorage } = useSetup()
 
   useEffect(() => {
     async function loadValues() {
@@ -28,21 +30,31 @@ export default function Settings() {
       setServer(serverValue)
       setApiToken(apiTokenValue)
     }
-    loadValues()
-  }, [])
+    if (isOpen) {
+      loadValues()
+    }
+  }, [isOpen, serverStorage, apiTokenStorage])
 
   const onSave = async () => {
-    if (!server || !apiToken) return
+    setError('')
+
+    const trimmedServer = server.trim()
+    const trimmedApiToken = apiToken.trim()
+
+    if (!trimmedServer || !trimmedApiToken) {
+      setError('Both server and API token are required')
+      return
+    }
 
     setIsLoading(true)
     try {
       const response = await browser.runtime.sendMessage({
         type: 'api-request',
-        url: `${server}/api/user/profile/`,
+        url: `${trimmedServer}/api/user/profile/`,
         options: {
           method: 'GET',
           headers: {
-            Authorization: `Token ${apiToken}`,
+            Authorization: `Token ${trimmedApiToken}`,
           },
         },
       })
@@ -51,29 +63,41 @@ export default function Settings() {
         throw new Error('Invalid server URL or API token')
       }
 
-      await serverStorage.setValue(server)
-      await apiTokenStorage.setValue(apiToken)
+      await serverStorage.setValue(trimmedServer)
+      await apiTokenStorage.setValue(trimmedApiToken)
+      setIsOpen(false)
     } catch (err) {
-      console.error('Settings error:', err)
+      setError(
+        err instanceof Error ? err.message : 'Failed to validate credentials',
+      )
     } finally {
       setIsLoading(false)
     }
   }
 
+  const handleOpenChange = (open: boolean) => {
+    if (isLoading) return
+    if (!open) {
+      setError('')
+    }
+    setIsOpen(open)
+  }
+
+  const handleCancel = () => {
+    if (isLoading) return
+    setError('')
+    setIsOpen(false)
+  }
+
   return (
-    <Modal isOpen={isOpen} onOpenChange={setIsOpen}>
-      <Button
-        isIconOnly
-        size="sm"
-        variant="ghost"
-        onPress={() => setIsOpen(true)}
-      >
+    <Modal isOpen={isOpen} onOpenChange={handleOpenChange}>
+      <Button isIconOnly variant="tertiary" onPress={() => setIsOpen(true)}>
         <SettingsIcon size={18} />
       </Button>
       <Modal.Backdrop>
         <Modal.Container placement="auto">
           <Modal.Dialog className="sm:max-w-md">
-            <Modal.CloseTrigger />
+            <Modal.CloseTrigger isDisabled={isLoading} />
             <Modal.Header>
               <Modal.Icon className="bg-accent-soft text-accent-soft-foreground">
                 <SettingsIcon className="size-5" />
@@ -85,8 +109,14 @@ export default function Settings() {
             </Modal.Header>
             <Modal.Body className="p-6">
               <Surface variant="default">
-                <form className="flex flex-col gap-4">
-                  <TextField name="server" type="text">
+                <form
+                  className="flex flex-col gap-4"
+                  onSubmit={e => {
+                    e.preventDefault()
+                    onSave()
+                  }}
+                >
+                  <TextField name="server" type="text" isInvalid={!!error}>
                     <Label>Server</Label>
                     <Input
                       value={server}
@@ -94,7 +124,11 @@ export default function Settings() {
                       placeholder="https://linkding.example.com"
                     />
                   </TextField>
-                  <TextField name="apiToken" type="password">
+                  <TextField
+                    name="apiToken"
+                    type="password"
+                    isInvalid={!!error}
+                  >
                     <Label>API Token</Label>
                     <Input
                       value={apiToken}
@@ -102,14 +136,19 @@ export default function Settings() {
                       placeholder="xxxxxxxx..."
                     />
                   </TextField>
+                  {error && <FieldError>{error}</FieldError>}
                 </form>
               </Surface>
             </Modal.Body>
             <Modal.Footer>
-              <Button slot="close" variant="secondary">
+              <Button
+                isDisabled={isLoading}
+                variant="secondary"
+                onPress={handleCancel}
+              >
                 Cancel
               </Button>
-              <Button isPending={isLoading} onPress={onSave} slot="close">
+              <Button isPending={isLoading} onPress={onSave}>
                 Save
               </Button>
             </Modal.Footer>

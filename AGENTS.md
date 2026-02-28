@@ -34,6 +34,23 @@
 > User: "Make the button blue or red?"
 > Assistant: "I'll make it blue"  ← WRONG! Must ask first
 > ```
+>
+> ### 🚨 REMINDER: ALWAYS USE QUESTION TOOL WHEN ASKING QUESTIONS 🚨
+>
+> **THIS IS NOT OPTIONAL! You MUST use the question tool for ANY user-facing question!**
+>
+> - If you need to clarify something, use the question tool
+> - If you're unsure what to do, use the question tool
+> - If you have multiple options, use the question tool
+> - If you need user input, use the question tool
+> - NEVER ask questions inline in your response
+> - NEVER proceed without confirmation when unsure
+> - This applies to EVERY conversation turn
+> - No exceptions. No excuses. Use the question tool.
+> - If you forget, you will be reminded forcefully (like this!)
+> - Read this reminder again every time you respond
+> - Yes, this means you should use question tool RIGHT NOW if you have any questions
+> - Did you use the question tool? If not, use it.
 
 ---
 
