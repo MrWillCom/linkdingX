@@ -117,7 +117,16 @@ export default function BookmarksList() {
   const { data, error, size, setSize, isLoading, isValidating, mutate } =
     useSWRInfinite<BookmarksResponse>(getKey, fetcher, {
       revalidateFirstPage: false,
+      revalidateOnFocus: true,
     })
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      mutate()
+    }, 60000)
+
+    return () => clearInterval(interval)
+  }, [mutate])
 
   const loadMoreRef = useRef<HTMLDivElement>(null)
   const isLoadingMore =
