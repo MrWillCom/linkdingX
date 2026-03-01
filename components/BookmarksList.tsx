@@ -605,7 +605,9 @@ export default function BookmarksList({
                   </span>
                   <Button
                     size="sm"
-                    variant="ghost"
+                    variant={
+                      displayedCurrentTabBookmark.unread ? 'primary' : 'ghost'
+                    }
                     isDisabled={
                       !currentTabBookmarkData ||
                       isCurrentTabBookmarkLoading ||
