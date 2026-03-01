@@ -6,7 +6,6 @@ import {
   Form,
   Input,
   Label,
-  Surface,
   TextField,
 } from '@heroui/react'
 import { useEffect, useReducer } from 'react'
@@ -132,56 +131,54 @@ export default function SettingsForm({
 
   return (
     <div className="flex flex-col gap-6">
-      <Surface variant="default">
-        <Form
-          className="flex flex-col gap-4"
-          onSubmit={e => {
-            e.preventDefault()
-            onSave()
-          }}
+      <Form
+        className="flex flex-col gap-4"
+        onSubmit={e => {
+          e.preventDefault()
+          onSave()
+        }}
+      >
+        <TextField
+          name="server"
+          type="text"
+          isInvalid={!!state.error}
+          isRequired
         >
-          <TextField
-            name="server"
-            type="text"
-            isInvalid={!!state.error}
-            isRequired
-          >
-            <Label>Server</Label>
-            <Input
-              value={state.server}
-              onChange={e =>
-                dispatch({
-                  type: 'SET_SERVER',
-                  payload: e.target.value,
-                })
-              }
-              placeholder="https://linkding.example.com"
-              autoComplete="url"
-            />
-          </TextField>
-          <TextField
-            name="apiToken"
-            type="password"
-            isInvalid={!!state.error}
-            isRequired
-          >
-            <Label>API Token</Label>
-            <Input
-              value={state.apiToken}
-              onChange={e =>
-                dispatch({
-                  type: 'SET_API_TOKEN',
-                  payload: e.target.value,
-                })
-              }
-              placeholder="xxxxxxxx…"
-              autoComplete="off"
-            />
-          </TextField>
-          {state.error && <FieldError>{state.error}</FieldError>}
-          <button type="submit" className="hidden" aria-hidden="true" />
-        </Form>
-      </Surface>
+          <Label>Server</Label>
+          <Input
+            value={state.server}
+            onChange={e =>
+              dispatch({
+                type: 'SET_SERVER',
+                payload: e.target.value,
+              })
+            }
+            placeholder="https://linkding.example.com"
+            autoComplete="url"
+          />
+        </TextField>
+        <TextField
+          name="apiToken"
+          type="password"
+          isInvalid={!!state.error}
+          isRequired
+        >
+          <Label>API Token</Label>
+          <Input
+            value={state.apiToken}
+            onChange={e =>
+              dispatch({
+                type: 'SET_API_TOKEN',
+                payload: e.target.value,
+              })
+            }
+            placeholder="xxxxxxxx…"
+            autoComplete="off"
+          />
+        </TextField>
+        {state.error && <FieldError>{state.error}</FieldError>}
+        <button type="submit" className="hidden" aria-hidden="true" />
+      </Form>
       <div className="flex justify-end gap-3">
         {showCancel && (
           <Button
