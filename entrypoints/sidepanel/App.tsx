@@ -1,5 +1,5 @@
 import { useSetup } from '@/hooks/useSetup'
-import Setup from '@/components/Setup'
+import SetupGuide from '@/components/SetupGuide'
 import BookmarksList from '@/components/BookmarksList'
 
 function App() {
@@ -10,7 +10,7 @@ function App() {
   }
 
   if (!isSetupComplete) {
-    return <Setup />
+    return <SetupGuide />
   }
 
   return <BookmarksList variant="default" />
