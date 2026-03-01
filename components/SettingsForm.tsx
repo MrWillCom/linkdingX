@@ -3,6 +3,7 @@
 import {
   Button,
   FieldError,
+  Form,
   Input,
   Label,
   Surface,
@@ -132,14 +133,19 @@ export default function SettingsForm({
   return (
     <div className="flex flex-col gap-6">
       <Surface variant="default">
-        <form
+        <Form
           className="flex flex-col gap-4"
           onSubmit={e => {
             e.preventDefault()
             onSave()
           }}
         >
-          <TextField name="server" type="text" isInvalid={!!state.error}>
+          <TextField
+            name="server"
+            type="text"
+            isInvalid={!!state.error}
+            isRequired
+          >
             <Label>Server</Label>
             <Input
               value={state.server}
@@ -153,7 +159,12 @@ export default function SettingsForm({
               autoComplete="url"
             />
           </TextField>
-          <TextField name="apiToken" type="password" isInvalid={!!state.error}>
+          <TextField
+            name="apiToken"
+            type="password"
+            isInvalid={!!state.error}
+            isRequired
+          >
             <Label>API Token</Label>
             <Input
               value={state.apiToken}
@@ -169,7 +180,7 @@ export default function SettingsForm({
           </TextField>
           {state.error && <FieldError>{state.error}</FieldError>}
           <button type="submit" className="hidden" aria-hidden="true" />
-        </form>
+        </Form>
       </Surface>
       <div className="flex justify-end gap-3">
         {showCancel && (
