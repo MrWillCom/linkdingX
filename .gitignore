@@ -28,3 +28,6 @@ web-ext.config.ts
 # Agents
 /.agents/skills
 /.codex
+
+# Worktrees
+/.worktrees/
