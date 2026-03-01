@@ -2,8 +2,7 @@ import { useCallback, useEffect, useRef, useState, useMemo } from 'react'
 import useSWR from 'swr'
 import useSWRInfinite from 'swr/infinite'
 import { Button, Spinner } from '@heroui/react'
-import { ExternalLink } from 'lucide-react'
-import Settings from './Settings'
+import { ExternalLink, Settings as SettingsIcon } from 'lucide-react'
 import { FilterTabs, type UnreadFilter } from './FilterTabs'
 import { CurrentTabCard } from './CurrentTabCard'
 import { BookmarkItem } from './BookmarkItem'
@@ -429,7 +428,17 @@ export default function BookmarksList({
               <ExternalLink className="w-4 h-4" />
             </Button>
           )}
-          {variant === 'expanded' && <Settings />}
+          {variant === 'expanded' && (
+            <Button
+              variant="tertiary"
+              size="sm"
+              isIconOnly
+              aria-label="Open settings"
+              onPress={() => browser.runtime.openOptionsPage()}
+            >
+              <SettingsIcon size={18} />
+            </Button>
+          )}
         </div>
         <div
           className={`grid transition-[grid-template-rows,margin-top,opacity] duration-300 ease-in-out ${
