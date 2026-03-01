@@ -2,7 +2,15 @@ import { formatDistanceToNow } from 'date-fns'
 import { useCallback, useEffect, useRef, useState } from 'react'
 import useSWR, { type KeyedMutator } from 'swr'
 import useSWRInfinite from 'swr/infinite'
-import { Button, Card, Chip, Link, Spinner, Tabs } from '@heroui/react'
+import {
+  Button,
+  Card,
+  Chip,
+  Link,
+  ScrollShadow,
+  Spinner,
+  Tabs,
+} from '@heroui/react'
 import { ExternalLink } from 'lucide-react'
 import Settings from './Settings'
 
@@ -312,7 +320,13 @@ export default function BookmarksList({
   }, [mutate])
 
   const loadMoreRef = useRef<HTMLDivElement>(null)
+  const [isScrolled, setIsScrolled] = useState(false)
   const hasTriggeredLoadRef = useRef(false)
+
+  const handleScroll = (e: React.UIEvent<HTMLDivElement>) => {
+    setIsScrolled(e.currentTarget.scrollTop > 0)
+  }
+
   const isLoadingMore =
     isLoading || (size > 0 && data && typeof data[size - 1] === 'undefined')
 
@@ -457,9 +471,12 @@ export default function BookmarksList({
   }
 
   return (
-    <div className={`p-0 ${variant === 'expanded' ? 'max-w-3xl mx-auto' : ''}`}>
-      <div className="sticky top-0 left-0 right-0 z-10 px-2 py-2">
-        <div className="flex items-center justify-between">
+    <div
+      onScroll={handleScroll}
+      className={`h-screen overflow-y-auto relative ${variant === 'expanded' ? 'max-w-3xl mx-auto' : ''}`}
+    >
+      <div className="sticky top-0 z-30 bg-background px-2 py-2">
+        <div className="flex items-center justify-between h-9">
           <Tabs
             selectedKey={unreadFilter}
             onSelectionChange={key => setUnreadFilter(key as UnreadFilter)}
@@ -498,62 +515,176 @@ export default function BookmarksList({
           {variant === 'expanded' && <Settings />}
         </div>
         <div
-          className={`overflow-hidden transition-all duration-200 ease-out ${
+          className={`grid transition-[grid-template-rows,margin-top,opacity] duration-300 ease-in-out ${
             currentTabBookmarkData
-              ? 'mt-2 max-h-96 opacity-100 translate-y-0'
-              : 'mt-0 max-h-0 opacity-0 -translate-y-1 pointer-events-none'
+              ? 'grid-rows-[1fr] mt-2 opacity-100'
+              : 'grid-rows-[0fr] mt-0 opacity-0 pointer-events-none'
           }`}
         >
-          {displayedCurrentTabBookmark && (
-            <Card
-              variant={
-                displayedCurrentTabBookmark.unread ? 'tertiary' : 'secondary'
-              }
-              className="border border-default-200 shadow-sm"
-            >
-              <Card.Header className="pb-1">
-                <div className="flex items-center justify-between gap-2">
-                  <Card.Description className="text-2xs uppercase tracking-wide">
-                    Current page in Linkding
-                  </Card.Description>
-                  <div className="inline-flex items-center gap-1.5">
-                    <span
-                      className={`inline-block h-2 w-2 rounded-full ${
-                        displayedCurrentTabBookmark.unread
-                          ? 'bg-blue-500'
-                          : 'bg-gray-400'
-                      }`}
-                    />
-                    <span className="text-3xs text-muted uppercase tracking-wide">
-                      {displayedCurrentTabBookmark.unread ? 'Unread' : 'Read'}
-                    </span>
+          <div className="overflow-hidden">
+            {displayedCurrentTabBookmark && (
+              <Card
+                variant={
+                  displayedCurrentTabBookmark.unread ? 'tertiary' : 'secondary'
+                }
+                className="border border-default-200 shadow-sm"
+              >
+                <Card.Header className="pb-1">
+                  <div className="flex items-center justify-between gap-2">
+                    <Card.Description className="text-2xs uppercase tracking-wide">
+                      Current page in Linkding
+                    </Card.Description>
+                    <div className="inline-flex items-center gap-1.5">
+                      <span
+                        className={`inline-block h-2 w-2 rounded-full ${
+                          displayedCurrentTabBookmark.unread
+                            ? 'bg-blue-500'
+                            : 'bg-gray-400'
+                        }`}
+                      />
+                      <span className="text-3xs text-muted uppercase tracking-wide">
+                        {displayedCurrentTabBookmark.unread ? 'Unread' : 'Read'}
+                      </span>
+                    </div>
                   </div>
-                </div>
-                <Card.Title className="text-sm line-clamp-1">
-                  <span className="flex min-w-0 items-center gap-1.5">
-                    <BookmarkFavicon
-                      url={displayedCurrentTabBookmark.favicon_url}
-                    />
-                    <span className="line-clamp-1">
-                      {displayedCurrentTabBookmark.title ||
-                        displayedCurrentTabBookmark.url}
+                  <Card.Title className="text-sm line-clamp-1">
+                    <span className="flex min-w-0 items-center gap-1.5">
+                      <BookmarkFavicon
+                        url={displayedCurrentTabBookmark.favicon_url}
+                      />
+                      <span className="line-clamp-1">
+                        {displayedCurrentTabBookmark.title ||
+                          displayedCurrentTabBookmark.url}
+                      </span>
                     </span>
+                  </Card.Title>
+                </Card.Header>
+                <Card.Content className="pt-0">
+                  <div className="flex items-start gap-2">
+                    <div className="min-w-0 flex-1">
+                      <Link
+                        href={displayedCurrentTabBookmark.url}
+                        target="_blank"
+                        className="text-2xs text-muted hover:text-primary transition-colors line-clamp-1"
+                      >
+                        {displayedCurrentTabBookmark.url}
+                      </Link>
+                      {displayedCurrentTabBookmark.tag_names.length > 0 && (
+                        <div className="flex flex-wrap gap-1.5 mt-1.5">
+                          {displayedCurrentTabBookmark.tag_names.map(tag => (
+                            <Chip
+                              key={tag}
+                              size="sm"
+                              variant="soft"
+                              className="text-2xs"
+                            >
+                              {tag}
+                            </Chip>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                    <BookmarkPreview
+                      url={displayedCurrentTabBookmark.preview_image_url}
+                      alt={
+                        displayedCurrentTabBookmark.title ||
+                        displayedCurrentTabBookmark.url
+                      }
+                      className="h-14 w-20 flex-shrink-0"
+                    />
+                  </div>
+                </Card.Content>
+                <Card.Footer className="pt-2 flex items-center justify-between">
+                  <span className="text-2xs text-muted">
+                    {formatDistanceToNow(
+                      new Date(displayedCurrentTabBookmark.date_added),
+                      {
+                        addSuffix: true,
+                      },
+                    )}
                   </span>
-                </Card.Title>
-              </Card.Header>
-              <Card.Content className="pt-0">
-                <div className="flex items-start gap-2">
-                  <div className="min-w-0 flex-1">
-                    <Link
-                      href={displayedCurrentTabBookmark.url}
-                      target="_blank"
-                      className="text-2xs text-muted hover:text-primary transition-colors line-clamp-1"
-                    >
-                      {displayedCurrentTabBookmark.url}
-                    </Link>
-                    {displayedCurrentTabBookmark.tag_names.length > 0 && (
-                      <div className="flex flex-wrap gap-1.5 mt-1.5">
-                        {displayedCurrentTabBookmark.tag_names.map(tag => (
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    isDisabled={
+                      !currentTabBookmarkData ||
+                      isCurrentTabBookmarkLoading ||
+                      isCurrentTabBookmarkValidating
+                    }
+                    onPress={() =>
+                      toggleUnread(
+                        displayedCurrentTabBookmark.id,
+                        !displayedCurrentTabBookmark.unread,
+                        setBookmarks,
+                        mutateCurrentTabBookmark,
+                      )
+                    }
+                  >
+                    {displayedCurrentTabBookmark.unread
+                      ? 'Mark as read'
+                      : 'Mark as unread'}
+                  </Button>
+                </Card.Footer>
+              </Card>
+            )}
+          </div>
+        </div>
+        {/* Dynamic Gradient Mask - Attached to the bottom of the sticky area */}
+        <div
+          className={`absolute top-full left-0 right-0 h-8 bg-linear-to-b from-background to-transparent pointer-events-none z-10 transition-opacity duration-200 ${isScrolled ? 'opacity-100' : 'opacity-0'}`}
+        />
+      </div>
+
+      <div className="pt-2">
+        {filteredBookmarks.length > 0 ? (
+          <>
+            {filteredBookmarks.map(bookmark => (
+              <div
+                key={bookmark.id}
+                className={`flex items-start gap-1 py-2 px-2 hover:bg-default-100 transition-colors border-b border-default-200 last:border-b-0 ${unreadFilter === 'all' && !bookmark.unread ? 'opacity-50' : ''}`}
+              >
+                <button
+                  onClick={() =>
+                    toggleUnread(
+                      bookmark.id,
+                      !bookmark.unread,
+                      setBookmarks,
+                      mutateCurrentTabBookmark,
+                    )
+                  }
+                  className="group flex-shrink-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary cursor-pointer p-2 -mt-0.5 -ml-1.5 -mr-0.5 rounded-full hover:bg-default-200 active:bg-default-300 transition-colors"
+                  aria-label={
+                    bookmark.unread ? 'Mark as read' : 'Mark as unread'
+                  }
+                >
+                  <div
+                    className={`w-2.5 h-2.5 rounded-full transition-colors ${
+                      bookmark.unread
+                        ? 'bg-blue-500 group-hover:bg-blue-600 group-active:bg-blue-700'
+                        : 'bg-gray-300 group-hover:bg-gray-400 group-active:bg-gray-500'
+                    }`}
+                  />
+                </button>
+                <div className="flex-1 min-w-0">
+                  <Link
+                    href={bookmark.url}
+                    target="_blank"
+                    className="flex min-w-0 items-center gap-1.5 text-sm font-medium text-foreground hover:text-primary transition-colors"
+                  >
+                    <BookmarkFavicon url={bookmark.favicon_url} />
+                    <span className="line-clamp-1">
+                      {bookmark.title || bookmark.url}
+                    </span>
+                  </Link>
+                  {bookmark.description && (
+                    <p className="text-xs text-muted mt-0.5 line-clamp-2">
+                      {bookmark.description}
+                    </p>
+                  )}
+                  <div className="flex flex-col gap-1.5 mt-1.5">
+                    {bookmark.tag_names.length > 0 && (
+                      <div className="flex flex-wrap gap-1.5">
+                        {bookmark.tag_names.map(tag => (
                           <Chip
                             key={tag}
                             size="sm"
@@ -565,145 +696,42 @@ export default function BookmarksList({
                         ))}
                       </div>
                     )}
+                    <span className="text-2xs text-muted">
+                      {formatDistanceToNow(new Date(bookmark.date_added), {
+                        addSuffix: true,
+                      })}
+                    </span>
                   </div>
-                  <BookmarkPreview
-                    url={displayedCurrentTabBookmark.preview_image_url}
-                    alt={
-                      displayedCurrentTabBookmark.title ||
-                      displayedCurrentTabBookmark.url
-                    }
-                    className="h-14 w-20 flex-shrink-0"
-                  />
                 </div>
-              </Card.Content>
-              <Card.Footer className="pt-2 flex items-center justify-between">
-                <span className="text-2xs text-muted">
-                  {formatDistanceToNow(
-                    new Date(displayedCurrentTabBookmark.date_added),
-                    {
-                      addSuffix: true,
-                    },
-                  )}
-                </span>
+                <BookmarkPreview
+                  url={bookmark.preview_image_url}
+                  alt={bookmark.title || bookmark.url}
+                  className="h-12 w-16 flex-shrink-0 mt-0.5"
+                />
+              </div>
+            ))}
+            <div ref={loadMoreRef} className="py-4 flex justify-center">
+              {isLoadingMore && <Spinner />}
+              {!isLoadingMore && hasMore && !hasTriggeredLoadRef.current && (
                 <Button
                   size="sm"
                   variant="ghost"
-                  isDisabled={
-                    !currentTabBookmarkData ||
-                    isCurrentTabBookmarkLoading ||
-                    isCurrentTabBookmarkValidating
-                  }
-                  onPress={() =>
-                    toggleUnread(
-                      displayedCurrentTabBookmark.id,
-                      !displayedCurrentTabBookmark.unread,
-                      setBookmarks,
-                      mutateCurrentTabBookmark,
-                    )
-                  }
+                  onPress={() => setSize(size + 1)}
                 >
-                  {displayedCurrentTabBookmark.unread
-                    ? 'Mark as read'
-                    : 'Mark as unread'}
+                  Load more
                 </Button>
-              </Card.Footer>
-            </Card>
-          )}
-        </div>
-      </div>
-      {filteredBookmarks.length > 0 ? (
-        <>
-          {filteredBookmarks.map(bookmark => (
-            <div
-              key={bookmark.id}
-              className={`flex items-start gap-1 py-2 px-2 hover:bg-default-100 transition-colors border-b border-default-200 last:border-b-0 ${unreadFilter === 'all' && !bookmark.unread ? 'opacity-50' : ''}`}
-            >
-              <button
-                onClick={() =>
-                  toggleUnread(
-                    bookmark.id,
-                    !bookmark.unread,
-                    setBookmarks,
-                    mutateCurrentTabBookmark,
-                  )
-                }
-                className="group flex-shrink-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary cursor-pointer p-2 -mt-0.5 -ml-1.5 -mr-0.5 rounded-full hover:bg-default-200 active:bg-default-300 transition-colors"
-                aria-label={bookmark.unread ? 'Mark as read' : 'Mark as unread'}
-              >
-                <div
-                  className={`w-2.5 h-2.5 rounded-full transition-colors ${
-                    bookmark.unread
-                      ? 'bg-blue-500 group-hover:bg-blue-600 group-active:bg-blue-700'
-                      : 'bg-gray-300 group-hover:bg-gray-400 group-active:bg-gray-500'
-                  }`}
-                />
-              </button>
-              <div className="flex-1 min-w-0">
-                <Link
-                  href={bookmark.url}
-                  target="_blank"
-                  className="flex min-w-0 items-center gap-1.5 text-sm font-medium text-foreground hover:text-primary transition-colors"
-                >
-                  <BookmarkFavicon url={bookmark.favicon_url} />
-                  <span className="line-clamp-1">
-                    {bookmark.title || bookmark.url}
-                  </span>
-                </Link>
-                {bookmark.description && (
-                  <p className="text-xs text-muted mt-0.5 line-clamp-2">
-                    {bookmark.description}
-                  </p>
-                )}
-                <div className="flex flex-col gap-1.5 mt-1.5">
-                  {bookmark.tag_names.length > 0 && (
-                    <div className="flex flex-wrap gap-1.5">
-                      {bookmark.tag_names.map(tag => (
-                        <Chip
-                          key={tag}
-                          size="sm"
-                          variant="soft"
-                          className="text-2xs"
-                        >
-                          {tag}
-                        </Chip>
-                      ))}
-                    </div>
-                  )}
-                  <span className="text-2xs text-muted">
-                    {formatDistanceToNow(new Date(bookmark.date_added), {
-                      addSuffix: true,
-                    })}
-                  </span>
-                </div>
-              </div>
-              <BookmarkPreview
-                url={bookmark.preview_image_url}
-                alt={bookmark.title || bookmark.url}
-                className="h-12 w-16 flex-shrink-0 mt-0.5"
-              />
+              )}
+              {!isLoadingMore && !hasMore && (
+                <p className="text-muted text-sm">No more bookmarks</p>
+              )}
             </div>
-          ))}
-          <div ref={loadMoreRef} className="py-4 flex justify-center">
-            {isLoadingMore && <Spinner />}
-            {!isLoadingMore && hasMore && !hasTriggeredLoadRef.current && (
-              <Button
-                size="sm"
-                variant="ghost"
-                onPress={() => setSize(size + 1)}
-              >
-                Load more
-              </Button>
-            )}
-            {!isLoadingMore && !hasMore && (
-              <p className="text-muted text-sm">No more bookmarks</p>
-            )}
+          </>
+        ) : (
+          <div className="flex justify-center py-8">
+            <p className="text-muted text-sm">No {unreadFilter} bookmarks.</p>
           </div>
-        </>
-      ) : (
-        <div className="flex justify-center py-8">
-          <p className="text-muted text-sm">No {unreadFilter} bookmarks.</p>
-        </div>
-      )}
+        )}
+      </div>
     </div>
   )
 }
