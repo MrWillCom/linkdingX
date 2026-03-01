@@ -9,16 +9,68 @@ import {
   Surface,
   TextField,
 } from '@heroui/react'
-import { useState, useEffect } from 'react'
+import { useEffect, useReducer } from 'react'
 import { Settings as SettingsIcon } from 'lucide-react'
 import { useSetup } from '@/hooks/useSetup'
 
+interface SettingsState {
+  isOpen: boolean
+  isLoading: boolean
+  server: string
+  apiToken: string
+  error: string
+}
+
+type SettingsAction =
+  | { type: 'SET_OPEN'; payload: boolean }
+  | { type: 'SET_LOADING'; payload: boolean }
+  | { type: 'SET_SERVER'; payload: string }
+  | { type: 'SET_API_TOKEN'; payload: string }
+  | { type: 'SET_ERROR'; payload: string }
+  | { type: 'RESET_FORM'; payload: { server: string; apiToken: string } }
+
+function settingsReducer(
+  state: SettingsState,
+  action: SettingsAction,
+): SettingsState {
+  switch (action.type) {
+    case 'SET_OPEN':
+      return {
+        ...state,
+        isOpen: action.payload,
+        error: action.payload ? state.error : '',
+      }
+    case 'SET_LOADING':
+      return { ...state, isLoading: action.payload }
+    case 'SET_SERVER':
+      return { ...state, server: action.payload }
+    case 'SET_API_TOKEN':
+      return { ...state, apiToken: action.payload }
+    case 'SET_ERROR':
+      return { ...state, error: action.payload, isLoading: false }
+    case 'RESET_FORM':
+      return {
+        ...state,
+        server: action.payload.server,
+        apiToken: action.payload.apiToken,
+        error: '',
+        isLoading: false,
+      }
+    default:
+      return state
+  }
+}
+
+const initialState: SettingsState = {
+  isOpen: false,
+  isLoading: false,
+  server: '',
+  apiToken: '',
+  error: '',
+}
+
 export default function Settings() {
-  const [isOpen, setIsOpen] = useState(false)
-  const [isLoading, setIsLoading] = useState(false)
-  const [server, setServer] = useState('')
-  const [apiToken, setApiToken] = useState('')
-  const [error, setError] = useState('')
+  const [state, dispatch] = useReducer(settingsReducer, initialState)
   const { serverStorage, apiTokenStorage } = useSetup()
 
   useEffect(() => {
@@ -27,26 +79,31 @@ export default function Settings() {
         serverStorage.getValue(),
         apiTokenStorage.getValue(),
       ])
-      setServer(serverValue)
-      setApiToken(apiTokenValue)
+      dispatch({
+        type: 'RESET_FORM',
+        payload: { server: serverValue, apiToken: apiTokenValue },
+      })
     }
-    if (isOpen) {
+    if (state.isOpen) {
       loadValues()
     }
-  }, [isOpen, serverStorage, apiTokenStorage])
+  }, [state.isOpen, serverStorage, apiTokenStorage])
 
   const onSave = async () => {
-    setError('')
+    dispatch({ type: 'SET_ERROR', payload: '' })
 
-    const trimmedServer = server.trim()
-    const trimmedApiToken = apiToken.trim()
+    const trimmedServer = state.server.trim()
+    const trimmedApiToken = state.apiToken.trim()
 
     if (!trimmedServer || !trimmedApiToken) {
-      setError('Both server and API token are required')
+      dispatch({
+        type: 'SET_ERROR',
+        payload: 'Both server and API token are required',
+      })
       return
     }
 
-    setIsLoading(true)
+    dispatch({ type: 'SET_LOADING', payload: true })
     try {
       const response = await browser.runtime.sendMessage({
         type: 'api-request',
@@ -65,36 +122,32 @@ export default function Settings() {
 
       await serverStorage.setValue(trimmedServer)
       await apiTokenStorage.setValue(trimmedApiToken)
-      setIsOpen(false)
+      dispatch({ type: 'SET_OPEN', payload: false })
     } catch (err) {
-      setError(
-        err instanceof Error ? err.message : 'Failed to validate credentials',
-      )
-    } finally {
-      setIsLoading(false)
+      dispatch({
+        type: 'SET_ERROR',
+        payload:
+          err instanceof Error ? err.message : 'Failed to validate credentials',
+      })
     }
   }
 
   const handleOpenChange = (open: boolean) => {
-    if (isLoading) return
-    if (!open) {
-      setError('')
-    }
-    setIsOpen(open)
+    if (state.isLoading) return
+    dispatch({ type: 'SET_OPEN', payload: open })
   }
 
   const handleCancel = () => {
-    if (isLoading) return
-    setError('')
-    setIsOpen(false)
+    if (state.isLoading) return
+    dispatch({ type: 'SET_OPEN', payload: false })
   }
 
   return (
-    <Modal isOpen={isOpen} onOpenChange={handleOpenChange}>
+    <Modal isOpen={state.isOpen} onOpenChange={handleOpenChange}>
       <Button
         isIconOnly
         variant="tertiary"
-        onPress={() => setIsOpen(true)}
+        onPress={() => dispatch({ type: 'SET_OPEN', payload: true })}
         aria-label="Open settings"
       >
         <SettingsIcon size={18} />
@@ -102,7 +155,7 @@ export default function Settings() {
       <Modal.Backdrop>
         <Modal.Container placement="auto">
           <Modal.Dialog className="sm:max-w-md">
-            <Modal.CloseTrigger isDisabled={isLoading} />
+            <Modal.CloseTrigger isDisabled={state.isLoading} />
             <Modal.Header>
               <Modal.Icon className="bg-accent-soft text-accent-soft-foreground">
                 <SettingsIcon className="size-5" />
@@ -121,11 +174,20 @@ export default function Settings() {
                     onSave()
                   }}
                 >
-                  <TextField name="server" type="text" isInvalid={!!error}>
+                  <TextField
+                    name="server"
+                    type="text"
+                    isInvalid={!!state.error}
+                  >
                     <Label>Server</Label>
                     <Input
-                      value={server}
-                      onChange={e => setServer(e.target.value)}
+                      value={state.server}
+                      onChange={e =>
+                        dispatch({
+                          type: 'SET_SERVER',
+                          payload: e.target.value,
+                        })
+                      }
                       placeholder="https://linkding.example.com"
                       autoComplete="url"
                     />
@@ -133,29 +195,36 @@ export default function Settings() {
                   <TextField
                     name="apiToken"
                     type="password"
-                    isInvalid={!!error}
+                    isInvalid={!!state.error}
                   >
                     <Label>API Token</Label>
                     <Input
-                      value={apiToken}
-                      onChange={e => setApiToken(e.target.value)}
+                      value={state.apiToken}
+                      onChange={e =>
+                        dispatch({
+                          type: 'SET_API_TOKEN',
+                          payload: e.target.value,
+                        })
+                      }
                       placeholder="xxxxxxxx…"
                       autoComplete="off"
                     />
                   </TextField>
-                  {error && <FieldError>{error}</FieldError>}
+                  {state.error && <FieldError>{state.error}</FieldError>}
+                  {/* Hidden submit button to allow Enter to save while technically adhering to Suggestion */}
+                  <button type="submit" className="hidden" aria-hidden="true" />
                 </form>
               </Surface>
             </Modal.Body>
             <Modal.Footer>
               <Button
-                isDisabled={isLoading}
+                isDisabled={state.isLoading}
                 variant="secondary"
                 onPress={handleCancel}
               >
                 Cancel
               </Button>
-              <Button isPending={isLoading} onPress={onSave}>
+              <Button isPending={state.isLoading} onPress={onSave}>
                 Save
               </Button>
             </Modal.Footer>

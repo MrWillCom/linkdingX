@@ -1,20 +1,14 @@
-import { formatDistanceToNow } from 'date-fns'
-import { useCallback, useEffect, useRef, useState } from 'react'
-import useSWR, { type KeyedMutator } from 'swr'
+import { useCallback, useEffect, useRef, useState, useMemo } from 'react'
+import useSWR from 'swr'
 import useSWRInfinite from 'swr/infinite'
-import {
-  Button,
-  Card,
-  Chip,
-  Link,
-  ScrollShadow,
-  Spinner,
-  Tabs,
-} from '@heroui/react'
+import { Button, Spinner } from '@heroui/react'
 import { ExternalLink } from 'lucide-react'
 import Settings from './Settings'
+import { FilterTabs, type UnreadFilter } from './FilterTabs'
+import { CurrentTabCard } from './CurrentTabCard'
+import { BookmarkItem } from './BookmarkItem'
 
-interface Bookmark {
+export interface Bookmark {
   id: number
   url: string
   title: string
@@ -72,58 +66,6 @@ async function fetcher(key: string): Promise<BookmarksResponse> {
   }
 
   return response.data as BookmarksResponse
-}
-
-async function toggleUnread(
-  id: number,
-  newUnread: boolean,
-  setBookmarks: React.Dispatch<React.SetStateAction<Bookmark[]>>,
-  mutateCurrentTabBookmark?: KeyedMutator<Bookmark | null>,
-): Promise<void> {
-  const server = await serverStorage.getValue()
-  const apiToken = await apiTokenStorage.getValue()
-
-  if (!server || !apiToken) return
-
-  setBookmarks(prev =>
-    prev.map(b => (b.id === id ? { ...b, unread: newUnread } : b)),
-  )
-  if (mutateCurrentTabBookmark) {
-    await mutateCurrentTabBookmark(
-      prev => (prev && prev.id === id ? { ...prev, unread: newUnread } : prev),
-      {
-        revalidate: false,
-      },
-    )
-  }
-
-  const fullUrl = `${server}/api/bookmarks/${id}/`
-
-  const response = await browser.runtime.sendMessage({
-    type: 'api-patch',
-    url: fullUrl,
-    data: { unread: newUnread },
-    options: {
-      headers: {
-        Authorization: `Token ${apiToken}`,
-      },
-    },
-  })
-
-  if (!response.ok) {
-    setBookmarks(prev =>
-      prev.map(b => (b.id === id ? { ...b, unread: !newUnread } : b)),
-    )
-    if (mutateCurrentTabBookmark) {
-      await mutateCurrentTabBookmark(
-        prev =>
-          prev && prev.id === id ? { ...prev, unread: !newUnread } : prev,
-        {
-          revalidate: false,
-        },
-      )
-    }
-  }
 }
 
 const PAGE_SIZE = 15
@@ -197,78 +139,16 @@ async function fetchCurrentTabBookmark([
   )
 }
 
-type UnreadFilter = 'all' | 'unread' | 'read'
 type BookmarksListVariant = 'default' | 'expanded'
 
 interface BookmarksListProps {
   variant?: BookmarksListVariant
 }
 
-function hasMediaUrl(value: string | null | undefined): value is string {
-  return typeof value === 'string' && value.trim().length > 0
-}
-
-interface BookmarkFaviconProps {
-  url: string | null | undefined
-  className?: string
-}
-
-function BookmarkFavicon({ url, className = '' }: BookmarkFaviconProps) {
-  const [isHidden, setIsHidden] = useState(!hasMediaUrl(url))
-
-  useEffect(() => {
-    setIsHidden(!hasMediaUrl(url))
-  }, [url])
-
-  if (isHidden || !hasMediaUrl(url)) {
-    return null
-  }
-
-  return (
-    <img
-      src={url}
-      alt=""
-      aria-hidden="true"
-      loading="lazy"
-      className={`h-4 w-4 rounded-sm border border-default-200 object-cover flex-shrink-0 ${className}`}
-      onError={() => setIsHidden(true)}
-    />
-  )
-}
-
-interface BookmarkPreviewProps {
-  url: string | null | undefined
-  alt: string
-  className?: string
-}
-
-function BookmarkPreview({ url, alt, className = '' }: BookmarkPreviewProps) {
-  const [isHidden, setIsHidden] = useState(!hasMediaUrl(url))
-
-  useEffect(() => {
-    setIsHidden(!hasMediaUrl(url))
-  }, [url])
-
-  if (isHidden || !hasMediaUrl(url)) {
-    return null
-  }
-
-  return (
-    <img
-      src={url}
-      alt={alt}
-      loading="lazy"
-      className={`rounded-md border border-default-200 object-cover ${className}`}
-      onError={() => setIsHidden(true)}
-    />
-  )
-}
-
 export default function BookmarksList({
   variant = 'default',
 }: BookmarksListProps) {
   const [unreadFilter, setUnreadFilter] = useState<UnreadFilter>('all')
-  const [bookmarks, setBookmarks] = useState<Bookmark[]>([])
   const [currentTabUrl, setCurrentTabUrl] = useState<string | null>(null)
   const [displayedCurrentTabBookmark, setDisplayedCurrentTabBookmark] =
     useState<Bookmark | null>(null)
@@ -287,6 +167,10 @@ export default function BookmarksList({
       revalidateFirstPage: false,
       revalidateOnFocus: true,
     })
+
+  const bookmarks = useMemo(() => {
+    return data ? data.flatMap(page => page.results) : []
+  }, [data])
 
   const currentTabKey: CurrentTabBookmarkKey | null = currentTabUrl
     ? ['current-tab-bookmark', normalizeUrlForMatch(currentTabUrl)]
@@ -337,7 +221,7 @@ export default function BookmarksList({
           const hasMore = !data || data[data.length - 1]?.next !== null
           if (hasMore) {
             hasTriggeredLoadRef.current = true
-            setSize(size + 1)
+            setSize(prev => prev + 1)
           }
         }
       },
@@ -349,15 +233,9 @@ export default function BookmarksList({
     }
 
     return () => observer.disconnect()
-  }, [isLoadingMore, isValidating, data, setSize, size])
+  }, [isLoadingMore, isValidating, data, setSize])
 
   const hasMore = !data || data[data.length - 1]?.next !== null
-
-  useEffect(() => {
-    if (data) {
-      setBookmarks(data.flatMap(page => page.results))
-    }
-  }, [data])
 
   useEffect(() => {
     const syncCurrentTab = async () => {
@@ -437,11 +315,65 @@ export default function BookmarksList({
     return () => window.clearTimeout(timeoutId)
   }, [currentTabBookmarkData])
 
-  const filteredBookmarks = bookmarks.filter(bookmark => {
-    if (unreadFilter === 'unread') return bookmark.unread
-    if (unreadFilter === 'read') return !bookmark.unread
-    return true
-  })
+  const filteredBookmarks = useMemo(() => {
+    return bookmarks.filter(bookmark => {
+      if (unreadFilter === 'unread') return bookmark.unread
+      if (unreadFilter === 'read') return !bookmark.unread
+      return true
+    })
+  }, [bookmarks, unreadFilter])
+
+  const handleToggleUnread = async (id: number, currentUnread: boolean) => {
+    const server = await serverStorage.getValue()
+    const apiToken = await apiTokenStorage.getValue()
+
+    if (!server || !apiToken) return
+
+    const newUnread = !currentUnread
+
+    // Optimistic update for infinite list
+    await mutate(
+      prevData => {
+        if (!prevData) return prevData
+        return prevData.map(page => ({
+          ...page,
+          results: page.results.map(b =>
+            b.id === id ? { ...b, unread: newUnread } : b,
+          ),
+        }))
+      },
+      { revalidate: false },
+    )
+
+    // Optimistic update for current tab card if it matches
+    if (currentTabBookmarkData && currentTabBookmarkData.id === id) {
+      await mutateCurrentTabBookmark(
+        { ...currentTabBookmarkData, unread: newUnread },
+        { revalidate: false },
+      )
+    }
+
+    const fullUrl = `${server}/api/bookmarks/${id}/`
+
+    const response = await browser.runtime.sendMessage({
+      type: 'api-patch',
+      url: fullUrl,
+      data: { unread: newUnread },
+      options: {
+        headers: {
+          Authorization: `Token ${apiToken}`,
+        },
+      },
+    })
+
+    if (!response.ok) {
+      // Revert on error
+      mutate()
+      if (currentTabBookmarkData && currentTabBookmarkData.id === id) {
+        mutateCurrentTabBookmark()
+      }
+    }
+  }
 
   if (error) {
     return (
@@ -477,25 +409,10 @@ export default function BookmarksList({
     >
       <div className="sticky top-0 z-30 bg-background px-2 py-2">
         <div className="flex items-center justify-between h-9">
-          <Tabs
+          <FilterTabs
             selectedKey={unreadFilter}
-            onSelectionChange={key => setUnreadFilter(key as UnreadFilter)}
-          >
-            <Tabs.List>
-              <Tabs.Tab id="all">
-                All
-                <Tabs.Indicator />
-              </Tabs.Tab>
-              <Tabs.Tab id="unread">
-                Unread
-                <Tabs.Indicator />
-              </Tabs.Tab>
-              <Tabs.Tab id="read">
-                Read
-                <Tabs.Indicator />
-              </Tabs.Tab>
-            </Tabs.List>
-          </Tabs>
+            onSelectionChange={setUnreadFilter}
+          />
           {variant === 'default' && (
             <Button
               variant="tertiary"
@@ -523,111 +440,12 @@ export default function BookmarksList({
         >
           <div className="overflow-hidden">
             {displayedCurrentTabBookmark && (
-              <Card
-                variant={
-                  displayedCurrentTabBookmark.unread ? 'tertiary' : 'secondary'
-                }
-                className="border border-default-200 shadow-sm"
-              >
-                <Card.Header className="pb-1">
-                  <div className="flex items-center justify-between gap-2">
-                    <Card.Description className="text-2xs uppercase tracking-wide">
-                      Current page in Linkding
-                    </Card.Description>
-                    <div className="inline-flex items-center gap-1.5">
-                      <span
-                        className={`inline-block h-2 w-2 rounded-full ${
-                          displayedCurrentTabBookmark.unread
-                            ? 'bg-blue-500'
-                            : 'bg-gray-400'
-                        }`}
-                      />
-                      <span className="text-3xs text-muted uppercase tracking-wide">
-                        {displayedCurrentTabBookmark.unread ? 'Unread' : 'Read'}
-                      </span>
-                    </div>
-                  </div>
-                  <Card.Title className="text-sm line-clamp-1">
-                    <span className="flex min-w-0 items-center gap-1.5">
-                      <BookmarkFavicon
-                        url={displayedCurrentTabBookmark.favicon_url}
-                      />
-                      <span className="line-clamp-1">
-                        {displayedCurrentTabBookmark.title ||
-                          displayedCurrentTabBookmark.url}
-                      </span>
-                    </span>
-                  </Card.Title>
-                </Card.Header>
-                <Card.Content className="pt-0">
-                  <div className="flex items-start gap-2">
-                    <div className="min-w-0 flex-1">
-                      <Link
-                        href={displayedCurrentTabBookmark.url}
-                        target="_blank"
-                        className="text-2xs text-muted hover:text-primary transition-colors line-clamp-1"
-                      >
-                        {displayedCurrentTabBookmark.url}
-                      </Link>
-                      {displayedCurrentTabBookmark.tag_names.length > 0 && (
-                        <div className="flex flex-wrap gap-1.5 mt-1.5">
-                          {displayedCurrentTabBookmark.tag_names.map(tag => (
-                            <Chip
-                              key={tag}
-                              size="sm"
-                              variant="soft"
-                              className="text-2xs"
-                            >
-                              {tag}
-                            </Chip>
-                          ))}
-                        </div>
-                      )}
-                    </div>
-                    <BookmarkPreview
-                      url={displayedCurrentTabBookmark.preview_image_url}
-                      alt={
-                        displayedCurrentTabBookmark.title ||
-                        displayedCurrentTabBookmark.url
-                      }
-                      className="h-14 w-20 flex-shrink-0"
-                    />
-                  </div>
-                </Card.Content>
-                <Card.Footer className="pt-2 flex items-center justify-between">
-                  <span className="text-2xs text-muted">
-                    {formatDistanceToNow(
-                      new Date(displayedCurrentTabBookmark.date_added),
-                      {
-                        addSuffix: true,
-                      },
-                    )}
-                  </span>
-                  <Button
-                    size="sm"
-                    variant={
-                      displayedCurrentTabBookmark.unread ? 'primary' : 'ghost'
-                    }
-                    isDisabled={
-                      !currentTabBookmarkData ||
-                      isCurrentTabBookmarkLoading ||
-                      isCurrentTabBookmarkValidating
-                    }
-                    onPress={() =>
-                      toggleUnread(
-                        displayedCurrentTabBookmark.id,
-                        !displayedCurrentTabBookmark.unread,
-                        setBookmarks,
-                        mutateCurrentTabBookmark,
-                      )
-                    }
-                  >
-                    {displayedCurrentTabBookmark.unread
-                      ? 'Mark as read'
-                      : 'Mark as unread'}
-                  </Button>
-                </Card.Footer>
-              </Card>
+              <CurrentTabCard
+                bookmark={displayedCurrentTabBookmark}
+                isLoading={isCurrentTabBookmarkLoading}
+                isValidating={isCurrentTabBookmarkValidating}
+                onToggleUnread={handleToggleUnread}
+              />
             )}
           </div>
         </div>
@@ -641,76 +459,12 @@ export default function BookmarksList({
         {filteredBookmarks.length > 0 ? (
           <>
             {filteredBookmarks.map(bookmark => (
-              <div
+              <BookmarkItem
                 key={bookmark.id}
-                className={`flex items-start gap-1 py-2 px-2 hover:bg-default-100 transition-colors border-b border-default-200 last:border-b-0 ${unreadFilter === 'all' && !bookmark.unread ? 'opacity-50' : ''}`}
-              >
-                <button
-                  onClick={() =>
-                    toggleUnread(
-                      bookmark.id,
-                      !bookmark.unread,
-                      setBookmarks,
-                      mutateCurrentTabBookmark,
-                    )
-                  }
-                  className="group flex-shrink-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary cursor-pointer p-2 -mt-0.5 -ml-1.5 -mr-0.5 rounded-full hover:bg-default-200 active:bg-default-300 transition-colors"
-                  aria-label={
-                    bookmark.unread ? 'Mark as read' : 'Mark as unread'
-                  }
-                >
-                  <div
-                    className={`w-2.5 h-2.5 rounded-full transition-colors ${
-                      bookmark.unread
-                        ? 'bg-blue-500 group-hover:bg-blue-600 group-active:bg-blue-700'
-                        : 'bg-gray-300 group-hover:bg-gray-400 group-active:bg-gray-500'
-                    }`}
-                  />
-                </button>
-                <div className="flex-1 min-w-0">
-                  <Link
-                    href={bookmark.url}
-                    target="_blank"
-                    className="flex min-w-0 items-center gap-1.5 text-sm font-medium text-foreground hover:text-primary transition-colors"
-                  >
-                    <BookmarkFavicon url={bookmark.favicon_url} />
-                    <span className="line-clamp-1">
-                      {bookmark.title || bookmark.url}
-                    </span>
-                  </Link>
-                  {bookmark.description && (
-                    <p className="text-xs text-muted mt-0.5 line-clamp-2">
-                      {bookmark.description}
-                    </p>
-                  )}
-                  <div className="flex flex-col gap-1.5 mt-1.5">
-                    {bookmark.tag_names.length > 0 && (
-                      <div className="flex flex-wrap gap-1.5">
-                        {bookmark.tag_names.map(tag => (
-                          <Chip
-                            key={tag}
-                            size="sm"
-                            variant="soft"
-                            className="text-2xs"
-                          >
-                            {tag}
-                          </Chip>
-                        ))}
-                      </div>
-                    )}
-                    <span className="text-2xs text-muted">
-                      {formatDistanceToNow(new Date(bookmark.date_added), {
-                        addSuffix: true,
-                      })}
-                    </span>
-                  </div>
-                </div>
-                <BookmarkPreview
-                  url={bookmark.preview_image_url}
-                  alt={bookmark.title || bookmark.url}
-                  className="h-12 w-16 flex-shrink-0 mt-0.5"
-                />
-              </div>
+                bookmark={bookmark}
+                isDimmed={unreadFilter === 'all' && !bookmark.unread}
+                onToggleUnread={handleToggleUnread}
+              />
             ))}
             <div ref={loadMoreRef} className="py-4 flex justify-center">
               {isLoadingMore && <Spinner />}
@@ -718,7 +472,7 @@ export default function BookmarksList({
                 <Button
                   size="sm"
                   variant="ghost"
-                  onPress={() => setSize(size + 1)}
+                  onPress={() => setSize(prev => prev + 1)}
                 >
                   Load more
                 </Button>
