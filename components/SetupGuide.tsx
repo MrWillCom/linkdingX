@@ -1,6 +1,5 @@
-'use client'
-
 import { Card, Button } from '@heroui/react'
+import { browser } from '#imports'
 
 export default function SetupGuide() {
   const openSettings = () => {
