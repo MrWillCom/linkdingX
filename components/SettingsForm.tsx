@@ -7,6 +7,7 @@ import {
   Input,
   Label,
   TextField,
+  toast,
 } from '@heroui/react'
 import { useEffect, useReducer } from 'react'
 import { useSetup } from '@/hooks/useSetup'
@@ -93,10 +94,12 @@ export default function SettingsForm({
     const trimmedApiToken = state.apiToken.trim()
 
     if (!trimmedServer || !trimmedApiToken) {
+      const errorMsg = 'Both server and API token are required'
       dispatch({
         type: 'SET_ERROR',
-        payload: 'Both server and API token are required',
+        payload: errorMsg,
       })
+      toast.danger(errorMsg)
       return
     }
 
@@ -119,13 +122,16 @@ export default function SettingsForm({
 
       await serverStorage.setValue(trimmedServer)
       await apiTokenStorage.setValue(trimmedApiToken)
+      toast.success('Settings saved successfully')
       onSaved?.()
     } catch (err) {
+      const errorMsg =
+        err instanceof Error ? err.message : 'Failed to validate credentials'
       dispatch({
         type: 'SET_ERROR',
-        payload:
-          err instanceof Error ? err.message : 'Failed to validate credentials',
+        payload: errorMsg,
       })
+      toast.danger(errorMsg)
     }
   }
 
