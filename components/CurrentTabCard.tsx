@@ -38,6 +38,8 @@ interface CurrentTabCardProps {
   onDelete?: (id: number) => void
 }
 
+const MotionCard = motion.create(Card)
+
 export function CurrentTabCard({
   url: currentTabUrl,
   bookmark,
@@ -54,18 +56,16 @@ export function CurrentTabCard({
   const url = bookmark?.url || currentTabUrl || ''
   const description = bookmark?.description || metadata?.description || ''
 
-  const MotionCard = motion.create(Card)
-
   return (
     <MotionCard
       variant={
         !isBookmarked ? 'secondary' : bookmark.unread ? 'tertiary' : 'secondary'
       }
       layout
-      style={{ height: 'auto' }}
-      transition={{ duration: 0.2 }}
+      className="overflow-hidden"
+      transition={{ duration: 0.2, ease: 'easeInOut' }}
     >
-      <AnimatePresence mode="wait">
+      <AnimatePresence mode="wait" initial={false}>
         {!isBookmarked ? (
           <motion.div
             key="add"
