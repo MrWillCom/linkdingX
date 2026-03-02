@@ -58,18 +58,15 @@ export function CurrentTabCard({
     <motion.div
       layout
       style={{ height: 'auto' }}
-      initial={{ opacity: 0, y: -10 }}
-      animate={{ opacity: 1, y: 0 }}
-      exit={{ opacity: 0, y: -10 }}
       transition={{ duration: 0.2 }}
     >
       <AnimatePresence mode="wait">
         {!isBookmarked ? (
           <motion.div
             key="add"
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -10 }}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
             transition={{ duration: 0.2 }}
           >
             <Card
@@ -109,9 +106,9 @@ export function CurrentTabCard({
         ) : (
           <motion.div
             key="manage"
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -10 }}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
             transition={{ duration: 0.2 }}
           >
             <Card
