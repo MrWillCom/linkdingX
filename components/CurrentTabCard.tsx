@@ -109,16 +109,16 @@ export function CurrentTabCard({
                 <Card.Description className="text-2xs uppercase tracking-wide">
                   Current page in Linkding
                 </Card.Description>
-                <div className="inline-flex items-center gap-1.5">
-                  <span
-                    className={`inline-block h-2 w-2 rounded-full ${
-                      bookmark.unread ? 'bg-blue-500' : 'bg-gray-400'
-                    }`}
-                  />
-                  <span className="text-3xs text-muted uppercase tracking-wide">
+                <Chip
+                  size="sm"
+                  variant={bookmark.unread ? 'primary' : 'soft'}
+                  color={bookmark.unread ? 'accent' : 'default'}
+                  className="h-5 px-1.5"
+                >
+                  <Chip.Label className="text-3xs uppercase tracking-wide font-medium">
                     {bookmark.unread ? 'Unread' : 'Read'}
-                  </span>
-                </div>
+                  </Chip.Label>
+                </Chip>
               </div>
               <Card.Title className="text-sm line-clamp-1">
                 <span className="flex min-w-0 items-center gap-1.5">
