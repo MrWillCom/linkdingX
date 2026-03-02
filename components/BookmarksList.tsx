@@ -98,16 +98,25 @@ function normalizeUrlWithoutSearch(url: string): string {
 
 type CurrentTabBookmarkKey = readonly ['current-tab-bookmark', string]
 
+interface BookmarkCheckResponse {
+  bookmark: Bookmark | null
+  metadata: {
+    title: string
+    description: string
+    [key: string]: any
+  }
+}
+
 async function fetchCurrentTabBookmark([
   _type,
   url,
-]: CurrentTabBookmarkKey): Promise<Bookmark | null> {
+]: CurrentTabBookmarkKey): Promise<BookmarkCheckResponse | null> {
   const server = await serverStorage.getValue()
   const apiToken = await apiTokenStorage.getValue()
 
   if (!server || !apiToken) return null
 
-  const fullUrl = `${server}/api/bookmarks/?q=${encodeURIComponent(url)}&limit=20`
+  const fullUrl = `${server}/api/bookmarks/check/?url=${encodeURIComponent(url)}`
   const response = await browser.runtime.sendMessage({
     type: 'api-request',
     url: fullUrl,
@@ -120,22 +129,7 @@ async function fetchCurrentTabBookmark([
 
   if (!response.ok) return null
 
-  const results = (response.data as BookmarksResponse).results
-  const normalizedCurrentUrl = normalizeUrlForMatch(url)
-  const exactMatch = results.find(
-    bookmark => normalizeUrlForMatch(bookmark.url) === normalizedCurrentUrl,
-  )
-
-  if (exactMatch) return exactMatch
-
-  const normalizedCurrentUrlWithoutSearch = normalizeUrlWithoutSearch(url)
-  return (
-    results.find(
-      bookmark =>
-        normalizeUrlWithoutSearch(bookmark.url) ===
-        normalizedCurrentUrlWithoutSearch,
-    ) || null
-  )
+  return response.data as BookmarkCheckResponse
 }
 
 type BookmarksListVariant = 'default' | 'expanded'
@@ -175,11 +169,11 @@ export default function BookmarksList({
     ? ['current-tab-bookmark', normalizeUrlForMatch(currentTabUrl)]
     : null
   const {
-    data: currentTabBookmarkData,
+    data: currentTabCheckData,
     isLoading: isCurrentTabBookmarkLoading,
     isValidating: isCurrentTabBookmarkValidating,
     mutate: mutateCurrentTabBookmark,
-  } = useSWR<Bookmark | null, Error, CurrentTabBookmarkKey | null>(
+  } = useSWR<BookmarkCheckResponse | null, Error, CurrentTabBookmarkKey | null>(
     currentTabKey,
     fetchCurrentTabBookmark,
     {
@@ -287,23 +281,26 @@ export default function BookmarksList({
   }, [])
 
   useEffect(() => {
-    if (!currentTabBookmarkData) return
+    if (!currentTabCheckData?.bookmark) return
     const updatedBookmark = bookmarks.find(
-      b => b.id === currentTabBookmarkData.id,
+      b => b.id === currentTabCheckData.bookmark?.id,
     )
     if (
       updatedBookmark &&
-      updatedBookmark.unread !== currentTabBookmarkData.unread
+      updatedBookmark.unread !== currentTabCheckData.bookmark.unread
     ) {
-      mutateCurrentTabBookmark(updatedBookmark, {
-        revalidate: false,
-      })
+      mutateCurrentTabBookmark(
+        { ...currentTabCheckData, bookmark: updatedBookmark },
+        {
+          revalidate: false,
+        },
+      )
     }
-  }, [bookmarks, currentTabBookmarkData, mutateCurrentTabBookmark])
+  }, [bookmarks, currentTabCheckData, mutateCurrentTabBookmark])
 
   useEffect(() => {
-    if (currentTabBookmarkData) {
-      setDisplayedCurrentTabBookmark(currentTabBookmarkData)
+    if (currentTabCheckData) {
+      setDisplayedCurrentTabBookmark(currentTabCheckData.bookmark)
       return
     }
 
@@ -312,7 +309,7 @@ export default function BookmarksList({
     }, 220)
 
     return () => window.clearTimeout(timeoutId)
-  }, [currentTabBookmarkData])
+  }, [currentTabCheckData])
 
   const filteredBookmarks = useMemo(() => {
     return bookmarks.filter(bookmark => {
@@ -345,9 +342,15 @@ export default function BookmarksList({
     )
 
     // Optimistic update for current tab card if it matches
-    if (currentTabBookmarkData && currentTabBookmarkData.id === id) {
+    if (
+      currentTabCheckData?.bookmark &&
+      currentTabCheckData.bookmark.id === id
+    ) {
       await mutateCurrentTabBookmark(
-        { ...currentTabBookmarkData, unread: newUnread },
+        {
+          ...currentTabCheckData,
+          bookmark: { ...currentTabCheckData.bookmark, unread: newUnread },
+        },
         { revalidate: false },
       )
     }
@@ -368,9 +371,57 @@ export default function BookmarksList({
     if (!response.ok) {
       // Revert on error
       mutate()
-      if (currentTabBookmarkData && currentTabBookmarkData.id === id) {
+      if (
+        currentTabCheckData?.bookmark &&
+        currentTabCheckData.bookmark.id === id
+      ) {
         mutateCurrentTabBookmark()
       }
+    }
+  }
+
+  const handleAdd = async (url: string, title: string, description: string) => {
+    const server = await serverStorage.getValue()
+    const apiToken = await apiTokenStorage.getValue()
+
+    if (!server || !apiToken) return
+
+    const response = await browser.runtime.sendMessage({
+      type: 'api-post',
+      url: `${server}/api/bookmarks/`,
+      data: { url, title, description },
+      options: {
+        headers: {
+          Authorization: `Token ${apiToken}`,
+        },
+      },
+    })
+
+    if (response.ok) {
+      mutate()
+      mutateCurrentTabBookmark()
+    }
+  }
+
+  const handleDelete = async (id: number) => {
+    const server = await serverStorage.getValue()
+    const apiToken = await apiTokenStorage.getValue()
+
+    if (!server || !apiToken) return
+
+    const response = await browser.runtime.sendMessage({
+      type: 'api-delete',
+      url: `${server}/api/bookmarks/${id}/`,
+      options: {
+        headers: {
+          Authorization: `Token ${apiToken}`,
+        },
+      },
+    })
+
+    if (response.ok) {
+      mutate()
+      mutateCurrentTabBookmark()
     }
   }
 
@@ -442,18 +493,22 @@ export default function BookmarksList({
         </div>
         <div
           className={`grid transition-[grid-template-rows,margin-top,opacity] duration-300 ease-in-out ${
-            currentTabBookmarkData
+            currentTabCheckData
               ? 'grid-rows-[1fr] mt-2 opacity-100'
               : 'grid-rows-[0fr] mt-0 opacity-0 pointer-events-none'
           }`}
         >
           <div className="overflow-hidden">
-            {displayedCurrentTabBookmark && (
+            {currentTabCheckData && (
               <CurrentTabCard
-                bookmark={displayedCurrentTabBookmark}
+                url={currentTabUrl || ''}
+                bookmark={currentTabCheckData.bookmark}
+                metadata={currentTabCheckData.metadata}
                 isLoading={isCurrentTabBookmarkLoading}
                 isValidating={isCurrentTabBookmarkValidating}
                 onToggleUnread={handleToggleUnread}
+                onAdd={handleAdd}
+                onDelete={handleDelete}
               />
             )}
           </div>

@@ -44,5 +44,52 @@ export default defineBackground(() => {
         })
       return true
     }
+    if (message.type === 'api-post') {
+      const { url, data: postData, options } = message
+      const fetchOptions: RequestInit = {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...options?.headers,
+        },
+        body: JSON.stringify(postData),
+      }
+      fetch(url, fetchOptions)
+        .then(response => {
+          return response.json().then(data => ({
+            ok: response.ok,
+            status: response.status,
+            data,
+          }))
+        })
+        .then(sendResponse)
+        .catch(error => {
+          sendResponse({ ok: false, error: error.message })
+        })
+      return true
+    }
+    if (message.type === 'api-delete') {
+      const { url, options } = message
+      const fetchOptions: RequestInit = {
+        method: 'DELETE',
+        ...options,
+      }
+      fetch(url, fetchOptions)
+        .then(response => {
+          return response
+            .json()
+            .catch(() => ({}))
+            .then(data => ({
+              ok: response.ok,
+              status: response.status,
+              data,
+            }))
+        })
+        .then(sendResponse)
+        .catch(error => {
+          sendResponse({ ok: false, error: error.message })
+        })
+      return true
+    }
   })
 })
