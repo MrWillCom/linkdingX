@@ -122,6 +122,7 @@ export default function SettingsForm({
 
       await serverStorage.setValue(trimmedServer)
       await apiTokenStorage.setValue(trimmedApiToken)
+      dispatch({ type: 'SET_LOADING', payload: false })
       toast.success('Settings saved successfully')
       onSaved?.()
     } catch (err) {
@@ -195,8 +196,8 @@ export default function SettingsForm({
             Cancel
           </Button>
         )}
-        <Button isPending={state.isLoading} onPress={onSave}>
-          Save
+        <Button isDisabled={state.isLoading} onPress={onSave}>
+          {state.isLoading ? 'Saving...' : 'Save'}
         </Button>
       </div>
     </div>
