@@ -145,6 +145,10 @@ export default function BookmarksList({
   const { fetchMetadataFromStorage, defaultUnreadStorage } = useSetup()
   const [unreadFilter, setUnreadFilter] = useState<UnreadFilter>('all')
   const [currentTabUrl, setCurrentTabUrl] = useState<string | null>(null)
+  const [realtimeMetadata, setRealtimeMetadata] = useState<{
+    title: string
+    favicon: string | null
+  }>({ title: '', favicon: null })
   const [displayedCurrentTabBookmark, setDisplayedCurrentTabBookmark] =
     useState<Bookmark | null>(null)
 
@@ -245,12 +249,17 @@ export default function BookmarksList({
           activeTabUrl?.startsWith('https://')
         ) {
           setCurrentTabUrl(activeTabUrl)
+          setRealtimeMetadata({
+            title: tabs[0]?.title || '',
+            favicon: tabs[0]?.favIconUrl || null,
+          })
           return
         }
       } catch {
         // Ignore tab lookup errors and hide the card.
       }
       setCurrentTabUrl(null)
+      setRealtimeMetadata({ title: '', favicon: null })
     }
 
     const onActivated = () => {
@@ -258,18 +267,32 @@ export default function BookmarksList({
     }
     const onUpdated = (
       _tabId: number,
-      changeInfo: { url?: string },
-      tab: { active?: boolean },
+      changeInfo: { url?: string; title?: string; favIconUrl?: string },
+      tab: { active?: boolean; title?: string; favIconUrl?: string },
     ) => {
       if (!tab.active) return
-      if (!changeInfo.url) return
-      if (
-        changeInfo.url.startsWith('http://') ||
-        changeInfo.url.startsWith('https://')
-      ) {
-        setCurrentTabUrl(changeInfo.url)
-      } else {
-        setCurrentTabUrl(null)
+
+      if (changeInfo.title || changeInfo.favIconUrl) {
+        setRealtimeMetadata(prev => ({
+          title: changeInfo.title ?? tab.title ?? prev.title,
+          favicon: changeInfo.favIconUrl ?? tab.favIconUrl ?? prev.favicon,
+        }))
+      }
+
+      if (changeInfo.url) {
+        if (
+          changeInfo.url.startsWith('http://') ||
+          changeInfo.url.startsWith('https://')
+        ) {
+          setCurrentTabUrl(changeInfo.url)
+          setRealtimeMetadata({
+            title: tab.title || '',
+            favicon: tab.favIconUrl || null,
+          })
+        } else {
+          setCurrentTabUrl(null)
+          setRealtimeMetadata({ title: '', favicon: null })
+        }
       }
     }
     syncCurrentTab()
@@ -411,6 +434,26 @@ export default function BookmarksList({
     if (response.ok) {
       mutate()
       mutateCurrentTabBookmark()
+
+      // Start polling for server-side metadata updates
+      let attempts = 0
+      const maxAttempts = 5
+      const pollInterval = setInterval(async () => {
+        attempts++
+        const result = await mutateCurrentTabBookmark()
+        const bookmark = result?.bookmark
+
+        const hasArchive = !!bookmark?.web_archive_snapshot_url
+        const hasPreview = !!bookmark?.preview_image_url
+        const hasFavicon = !!bookmark?.favicon_url
+
+        if (
+          (hasArchive && hasPreview && hasFavicon) ||
+          attempts >= maxAttempts
+        ) {
+          clearInterval(pollInterval)
+        }
+      }, 2000)
     }
   }
 
@@ -516,6 +559,7 @@ export default function BookmarksList({
                   url={currentTabUrl || ''}
                   bookmark={currentTabCheckData.bookmark}
                   metadata={currentTabCheckData.metadata}
+                  realtimeMetadata={realtimeMetadata}
                   isLoading={isCurrentTabBookmarkLoading}
                   isValidating={isCurrentTabBookmarkValidating}
                   onToggleUnread={handleToggleUnread}

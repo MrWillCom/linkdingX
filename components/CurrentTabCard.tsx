@@ -30,6 +30,10 @@ interface CurrentTabCardProps {
     description: string
     [key: string]: any
   }
+  realtimeMetadata?: {
+    title: string
+    favicon: string | null
+  }
   isLoading: boolean
   isValidating: boolean
   onToggleUnread: (id: number, currentUnread: boolean) => void
@@ -41,6 +45,7 @@ export function CurrentTabCard({
   url: currentTabUrl,
   bookmark,
   metadata,
+  realtimeMetadata,
   isLoading,
   isValidating,
   onToggleUnread,
@@ -49,9 +54,15 @@ export function CurrentTabCard({
 }: CurrentTabCardProps) {
   const [isDeletePopoverOpen, setIsDeletePopoverOpen] = useState(false)
   const isBookmarked = !!bookmark
-  const title = bookmark?.title || metadata?.title || currentTabUrl || ''
+  const title =
+    bookmark?.title ||
+    realtimeMetadata?.title ||
+    metadata?.title ||
+    currentTabUrl ||
+    ''
   const url = bookmark?.url || currentTabUrl || ''
   const description = bookmark?.description || metadata?.description || ''
+  const favicon = bookmark?.favicon_url || realtimeMetadata?.favicon || null
 
   return (
     <Card
@@ -68,7 +79,7 @@ export function CurrentTabCard({
               </Card.Description>
               <Card.Title className="text-sm line-clamp-1">
                 <span className="flex min-w-0 items-center gap-1.5">
-                  <BookmarkFavicon url={null} />
+                  <BookmarkFavicon url={favicon} />
                   <span className="line-clamp-1">{title}</span>
                 </span>
               </Card.Title>
