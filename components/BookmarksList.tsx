@@ -6,6 +6,7 @@ import { ExternalLink, Settings as SettingsIcon } from 'lucide-react'
 import { FilterTabs, type UnreadFilter } from './FilterTabs'
 import { CurrentTabCard } from './CurrentTabCard'
 import { BookmarkItem } from './BookmarkItem'
+import { useSetup } from '@/hooks/useSetup'
 
 export interface Bookmark {
   id: number
@@ -141,6 +142,7 @@ interface BookmarksListProps {
 export default function BookmarksList({
   variant = 'default',
 }: BookmarksListProps) {
+  const { fetchMetadataFromStorage, defaultUnreadStorage } = useSetup()
   const [unreadFilter, setUnreadFilter] = useState<UnreadFilter>('all')
   const [currentTabUrl, setCurrentTabUrl] = useState<string | null>(null)
   const [displayedCurrentTabBookmark, setDisplayedCurrentTabBookmark] =
@@ -383,13 +385,22 @@ export default function BookmarksList({
   const handleAdd = async (url: string, title: string, description: string) => {
     const server = await serverStorage.getValue()
     const apiToken = await apiTokenStorage.getValue()
+    const fetchMetadataFrom = await fetchMetadataFromStorage.getValue()
+    const defaultUnread = await defaultUnreadStorage.getValue()
 
     if (!server || !apiToken) return
+
+    const payload = {
+      url,
+      title: fetchMetadataFrom === 'server' ? '' : title,
+      description: fetchMetadataFrom === 'server' ? '' : description,
+      unread: defaultUnread,
+    }
 
     const response = await browser.runtime.sendMessage({
       type: 'api-post',
       url: `${server}/api/bookmarks/`,
-      data: { url, title, description },
+      data: payload,
       options: {
         headers: {
           Authorization: `Token ${apiToken}`,
