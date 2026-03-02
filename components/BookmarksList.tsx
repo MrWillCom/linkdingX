@@ -1,3 +1,6 @@
+import { useLiveQuery } from 'dexie-react-hooks'
+import { db } from '@/utils/db'
+import { bookmarkService } from '@/utils/bookmarkService'
 import { useCallback, useEffect, useRef, useState, useMemo } from 'react'
 import useSWR from 'swr'
 import useSWRInfinite from 'swr/infinite'
@@ -166,12 +169,12 @@ export default function BookmarksList({
 
   const { data, error, size, setSize, isLoading, isValidating, mutate } =
     useSWRInfinite<BookmarksResponse>(getKey, fetcher, {
-      revalidateFirstPage: false,
+      revalidateFirstPage: true,
       revalidateOnFocus: true,
       onSuccess: data => {
-        const results = data.flatMap(page => page.results)
-        if (results.length > 0) {
-          db.bookmarks.bulkPut(results)
+        const allResults = data.flatMap(page => page.results)
+        if (allResults.length > 0) {
+          db.bookmarks.bulkPut(allResults)
         }
       },
     })
@@ -385,8 +388,7 @@ export default function BookmarksList({
     })
 
     if (response.ok) {
-      const newBookmark = response.data as Bookmark
-      await bookmarkService.addBookmark(newBookmark)
+      await bookmarkService.addBookmark(response.data as Bookmark)
       mutate()
       mutateCurrentTabBookmark()
 
