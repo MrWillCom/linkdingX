@@ -4,7 +4,10 @@ import type { Bookmark } from '@/components/BookmarksList'
 export const bookmarkService = {
   async toggleUnread(id: number, currentUnread: boolean) {
     const newUnread = !currentUnread
-    await db.bookmarks.update(id, { unread: newUnread, _sync_status: 'pending' })
+    await db.bookmarks.update(id, {
+      unread: newUnread,
+      _sync_status: 'pending',
+    })
     await db.sync_queue.add({
       action: 'update',
       bookmark_id: id,
@@ -14,7 +17,7 @@ export const bookmarkService = {
     // Trigger background sync
     browser.runtime.sendMessage({ type: 'sync-request' })
   },
-  
+
   async deleteBookmark(id: number) {
     await db.bookmarks.delete(id)
     await db.sync_queue.add({
@@ -28,5 +31,5 @@ export const bookmarkService = {
 
   async addBookmark(bookmark: Bookmark) {
     await db.bookmarks.add({ ...bookmark, _sync_status: 'synced' })
-  }
+  },
 }

@@ -1,3 +1,6 @@
+import { useLiveQuery } from 'dexie-react-hooks'
+import { db } from '@/utils/db'
+import { bookmarkService } from '@/utils/bookmarkService'
 import { useCallback, useEffect, useRef, useState, useMemo } from 'react'
 import useSWR from 'swr'
 import useSWRInfinite from 'swr/infinite'
@@ -163,13 +166,20 @@ export default function BookmarksList({
 
   const { data, error, size, setSize, isLoading, isValidating, mutate } =
     useSWRInfinite<BookmarksResponse>(getKey, fetcher, {
-      revalidateFirstPage: false,
+      revalidateFirstPage: true,
       revalidateOnFocus: true,
+      onSuccess: data => {
+        const allResults = data.flatMap(page => page.results)
+        if (allResults.length > 0) {
+          db.bookmarks.bulkPut(allResults)
+        }
+      },
     })
 
-  const bookmarks = useMemo(() => {
-    return data ? data.flatMap(page => page.results) : []
-  }, [data])
+  const bookmarks =
+    useLiveQuery(() =>
+      db.bookmarks.orderBy('date_added').reverse().toArray(),
+    ) || []
 
   const currentTabKey: CurrentTabBookmarkKey | null = currentTabUrl
     ? ['current-tab-bookmark', normalizeUrlForMatch(currentTabUrl)]
@@ -345,64 +355,7 @@ export default function BookmarksList({
   }, [bookmarks, unreadFilter])
 
   const handleToggleUnread = async (id: number, currentUnread: boolean) => {
-    const server = await serverStorage.getValue()
-    const apiToken = await apiTokenStorage.getValue()
-
-    if (!server || !apiToken) return
-
-    const newUnread = !currentUnread
-
-    // Optimistic update for infinite list
-    await mutate(
-      prevData => {
-        if (!prevData) return prevData
-        return prevData.map(page => ({
-          ...page,
-          results: page.results.map(b =>
-            b.id === id ? { ...b, unread: newUnread } : b,
-          ),
-        }))
-      },
-      { revalidate: false },
-    )
-
-    // Optimistic update for current tab card if it matches
-    if (
-      currentTabCheckData?.bookmark &&
-      currentTabCheckData.bookmark.id === id
-    ) {
-      await mutateCurrentTabBookmark(
-        {
-          ...currentTabCheckData,
-          bookmark: { ...currentTabCheckData.bookmark, unread: newUnread },
-        },
-        { revalidate: false },
-      )
-    }
-
-    const fullUrl = `${server}/api/bookmarks/${id}/`
-
-    const response = await browser.runtime.sendMessage({
-      type: 'api-patch',
-      url: fullUrl,
-      data: { unread: newUnread },
-      options: {
-        headers: {
-          Authorization: `Token ${apiToken}`,
-        },
-      },
-    })
-
-    if (!response.ok) {
-      // Revert on error
-      mutate()
-      if (
-        currentTabCheckData?.bookmark &&
-        currentTabCheckData.bookmark.id === id
-      ) {
-        mutateCurrentTabBookmark()
-      }
-    }
+    await bookmarkService.toggleUnread(id, currentUnread)
   }
 
   const handleAdd = async (url: string, title: string, description: string) => {
@@ -432,6 +385,7 @@ export default function BookmarksList({
     })
 
     if (response.ok) {
+      await bookmarkService.addBookmark(response.data as Bookmark)
       mutate()
       mutateCurrentTabBookmark()
 
@@ -442,6 +396,10 @@ export default function BookmarksList({
         attempts++
         const result = await mutateCurrentTabBookmark()
         const bookmark = result?.bookmark
+
+        if (bookmark) {
+          await db.bookmarks.put(bookmark)
+        }
 
         const hasArchive = !!bookmark?.web_archive_snapshot_url
         const hasPreview = !!bookmark?.preview_image_url
@@ -458,25 +416,7 @@ export default function BookmarksList({
   }
 
   const handleDelete = async (id: number) => {
-    const server = await serverStorage.getValue()
-    const apiToken = await apiTokenStorage.getValue()
-
-    if (!server || !apiToken) return
-
-    const response = await browser.runtime.sendMessage({
-      type: 'api-delete',
-      url: `${server}/api/bookmarks/${id}/`,
-      options: {
-        headers: {
-          Authorization: `Token ${apiToken}`,
-        },
-      },
-    })
-
-    if (response.ok) {
-      mutate()
-      mutateCurrentTabBookmark()
-    }
+    await bookmarkService.deleteBookmark(id)
   }
 
   if (error) {
