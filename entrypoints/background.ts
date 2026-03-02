@@ -1,9 +1,55 @@
+import { db } from '@/utils/db'
+
+async function processSyncQueue() {
+  const operations = await db.sync_queue.toArray()
+  const server = await storage.getItem<string>('local:server')
+  const apiToken = await storage.getItem<string>('local:apiToken')
+
+  if (!server || !apiToken) return
+
+  for (const op of operations) {
+    try {
+      let response
+      if (op.action === 'update') {
+        response = await fetch(`${server}/api/bookmarks/${op.bookmark_id}/`, {
+          method: 'PATCH',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Token ${apiToken}`,
+          },
+          body: JSON.stringify(op.payload),
+        })
+      } else if (op.action === 'delete') {
+        response = await fetch(`${server}/api/bookmarks/${op.bookmark_id}/`, {
+          method: 'DELETE',
+          headers: {
+            Authorization: `Token ${apiToken}`,
+          },
+        })
+      }
+
+      if (response && response.ok) {
+        if (op.id !== undefined) {
+          await db.sync_queue.delete(op.id)
+        }
+        await db.bookmarks.update(op.bookmark_id, { _sync_status: 'synced' })
+      }
+    } catch (error) {
+      console.error('Sync failed for operation:', op, error)
+    }
+  }
+}
+
 export default defineBackground(() => {
   console.log('Hello background!', { id: browser.runtime.id })
 
   browser.sidePanel.setPanelBehavior({ openPanelOnActionClick: true })
 
   browser.runtime.onMessage.addListener((message, _sender, sendResponse) => {
+    if (message.type === 'sync-request') {
+      processSyncQueue()
+      return false
+    }
     if (message.type === 'api-request') {
       const { url, options } = message
       fetch(url, options)
