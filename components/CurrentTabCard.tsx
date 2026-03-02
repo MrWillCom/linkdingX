@@ -2,7 +2,6 @@ import { useState } from 'react'
 import { formatDistanceToNow } from 'date-fns'
 import { Card, Link, Chip, Button, Popover } from '@heroui/react'
 import { Trash2 } from 'lucide-react'
-import { motion, AnimatePresence } from 'motion/react'
 import { BookmarkFavicon } from './BookmarkFavicon'
 import { BookmarkPreview } from './BookmarkPreview'
 
@@ -38,8 +37,6 @@ interface CurrentTabCardProps {
   onDelete?: (id: number) => void
 }
 
-const MotionCard = motion.create(Card)
-
 export function CurrentTabCard({
   url: currentTabUrl,
   bookmark,
@@ -57,23 +54,14 @@ export function CurrentTabCard({
   const description = bookmark?.description || metadata?.description || ''
 
   return (
-    <MotionCard
+    <Card
       variant={
         !isBookmarked ? 'secondary' : bookmark.unread ? 'tertiary' : 'secondary'
       }
-      layout
-      className="overflow-hidden"
-      transition={{ duration: 0.2, ease: 'easeInOut' }}
     >
-      <AnimatePresence mode="wait" initial={false}>
+      <div className="min-h-0">
         {!isBookmarked ? (
-          <motion.div
-            key="add"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.2 }}
-          >
+          <div key="add">
             <Card.Header className="pb-1">
               <Card.Description className="text-2xs uppercase tracking-wide">
                 Not in Linkding
@@ -102,15 +90,9 @@ export function CurrentTabCard({
                 Add to Linkding
               </Button>
             </Card.Footer>
-          </motion.div>
+          </div>
         ) : (
-          <motion.div
-            key="manage"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.2 }}
-          >
+          <div key="manage">
             <Card.Header className="pb-1">
               <div className="flex items-center justify-between gap-2">
                 <Card.Description className="text-2xs uppercase tracking-wide">
@@ -229,9 +211,9 @@ export function CurrentTabCard({
                 </Button>
               </div>
             </Card.Footer>
-          </motion.div>
+          </div>
         )}
-      </AnimatePresence>
-    </MotionCard>
+      </div>
+    </Card>
   )
 }

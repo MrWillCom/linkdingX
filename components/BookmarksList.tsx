@@ -1,7 +1,6 @@
 import { useCallback, useEffect, useRef, useState, useMemo } from 'react'
 import useSWR from 'swr'
 import useSWRInfinite from 'swr/infinite'
-import { motion } from 'motion/react'
 import { Button, Spinner } from '@heroui/react'
 import { ExternalLink, Settings as SettingsIcon } from 'lucide-react'
 import { FilterTabs, type UnreadFilter } from './FilterTabs'
@@ -503,30 +502,30 @@ export default function BookmarksList({
             </Button>
           )}
         </div>
-        <motion.div
-          layout
-          initial={false}
-          animate={{
-            marginTop: currentTabCheckData ? '0.5rem' : '0rem',
-            opacity: currentTabCheckData ? 1 : 0,
+        <div
+          className="grid grid-rows-[0fr] animate-[none] data-[open=true]:grid-rows-[1fr] origin-top"
+          style={{
+            overflow: 'hidden',
           }}
-          transition={{ duration: 0.3, ease: 'easeInOut' }}
+          data-open={!!currentTabCheckData}
         >
-          {currentTabCheckData && (
-            <div className="mt-2">
-              <CurrentTabCard
-                url={currentTabUrl || ''}
-                bookmark={currentTabCheckData.bookmark}
-                metadata={currentTabCheckData.metadata}
-                isLoading={isCurrentTabBookmarkLoading}
-                isValidating={isCurrentTabBookmarkValidating}
-                onToggleUnread={handleToggleUnread}
-                onAdd={handleAdd}
-                onDelete={handleDelete}
-              />
-            </div>
-          )}
-        </motion.div>
+          <div className="overflow-hidden min-h-0">
+            {currentTabCheckData && (
+              <div className="mt-2">
+                <CurrentTabCard
+                  url={currentTabUrl || ''}
+                  bookmark={currentTabCheckData.bookmark}
+                  metadata={currentTabCheckData.metadata}
+                  isLoading={isCurrentTabBookmarkLoading}
+                  isValidating={isCurrentTabBookmarkValidating}
+                  onToggleUnread={handleToggleUnread}
+                  onAdd={handleAdd}
+                  onDelete={handleDelete}
+                />
+              </div>
+            )}
+          </div>
+        </div>
         {/* Dynamic Gradient Mask - Attached to the bottom of the sticky area */}
         <div
           className={`absolute top-full left-0 right-0 h-8 bg-linear-to-b from-background to-transparent pointer-events-none z-10 transition-opacity duration-200 ${isScrolled ? 'opacity-100' : 'opacity-0'}`}
