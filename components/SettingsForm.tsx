@@ -10,6 +10,7 @@ import {
   toast,
   RadioGroup,
   Radio,
+  Description,
 } from '@heroui/react'
 import { useEffect, useReducer } from 'react'
 import { useSetup, type MetadataSource } from '@/hooks/useSetup'
@@ -256,9 +257,23 @@ export default function SettingsForm({
             <Label>Fetch Metadata From</Label>
             <div className="flex flex-col gap-2">
               <Radio value="browser">
-                Browser (fast, includes page context)
+                <Radio.Control>
+                  <Radio.Indicator />
+                </Radio.Control>
+                <Radio.Content>
+                  <Label>Browser</Label>
+                  <Description>Fast, includes page context</Description>
+                </Radio.Content>
               </Radio>
-              <Radio value="server">Server (Linkding crawls the URL)</Radio>
+              <Radio value="server">
+                <Radio.Control>
+                  <Radio.Indicator />
+                </Radio.Control>
+                <Radio.Content>
+                  <Label>Server</Label>
+                  <Description>Linkding crawls the URL</Description>
+                </Radio.Content>
+              </Radio>
             </div>
           </RadioGroup>
 
@@ -273,8 +288,22 @@ export default function SettingsForm({
           >
             <Label>Default Bookmark State</Label>
             <div className="flex flex-col gap-2">
-              <Radio value="unread">Unread</Radio>
-              <Radio value="read">Read</Radio>
+              <Radio value="unread">
+                <Radio.Control>
+                  <Radio.Indicator />
+                </Radio.Control>
+                <Radio.Content>
+                  <Label>Unread</Label>
+                </Radio.Content>
+              </Radio>
+              <Radio value="read">
+                <Radio.Control>
+                  <Radio.Indicator />
+                </Radio.Control>
+                <Radio.Content>
+                  <Label>Read</Label>
+                </Radio.Content>
+              </Radio>
             </div>
           </RadioGroup>
         </div>
