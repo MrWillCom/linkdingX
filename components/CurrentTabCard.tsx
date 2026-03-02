@@ -1,5 +1,6 @@
+import { useState } from 'react'
 import { formatDistanceToNow } from 'date-fns'
-import { Card, Link, Chip, Button } from '@heroui/react'
+import { Card, Link, Chip, Button, Popover } from '@heroui/react'
 import { Trash2 } from 'lucide-react'
 import { motion, AnimatePresence } from 'motion/react'
 import { BookmarkFavicon } from './BookmarkFavicon'
@@ -47,6 +48,7 @@ export function CurrentTabCard({
   onAdd,
   onDelete,
 }: CurrentTabCardProps) {
+  const [isDeletePopoverOpen, setIsDeletePopoverOpen] = useState(false)
   const isBookmarked = !!bookmark
   const title = bookmark?.title || metadata?.title || currentTabUrl || ''
   const url = bookmark?.url || currentTabUrl || ''
@@ -163,17 +165,50 @@ export function CurrentTabCard({
               })}
             </span>
             <div className="flex items-center gap-2">
-              <Button
-                size="sm"
-                variant="ghost"
-                isIconOnly
-                className="text-danger hover:bg-danger-50"
-                aria-label="Delete bookmark"
-                isDisabled={isLoading || isValidating}
-                onPress={() => onDelete?.(bookmark.id)}
+              <Popover
+                isOpen={isDeletePopoverOpen}
+                onOpenChange={open => setIsDeletePopoverOpen(open)}
               >
-                <Trash2 className="w-4 h-4" />
-              </Button>
+                <Popover.Trigger>
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    isIconOnly
+                    className="text-danger hover:bg-danger-50"
+                    aria-label="Delete bookmark"
+                    isDisabled={isLoading || isValidating}
+                  >
+                    <Trash2 className="w-4 h-4" />
+                  </Button>
+                </Popover.Trigger>
+                <Popover.Content placement="bottom end">
+                  <Popover.Arrow />
+                  <Popover.Dialog className="p-3">
+                    <Popover.Heading className="text-sm font-medium mb-3">
+                      Delete this bookmark?
+                    </Popover.Heading>
+                    <div className="flex gap-2 justify-end">
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        onPress={() => setIsDeletePopoverOpen(false)}
+                      >
+                        Cancel
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="danger"
+                        onPress={() => {
+                          onDelete?.(bookmark.id)
+                          setIsDeletePopoverOpen(false)
+                        }}
+                      >
+                        Delete
+                      </Button>
+                    </div>
+                  </Popover.Dialog>
+                </Popover.Content>
+              </Popover>
               <Button
                 size="sm"
                 variant={bookmark.unread ? 'primary' : 'ghost'}
