@@ -54,8 +54,13 @@ export function CurrentTabCard({
   const url = bookmark?.url || currentTabUrl || ''
   const description = bookmark?.description || metadata?.description || ''
 
+  const MotionCard = motion.create(Card)
+
   return (
-    <motion.div
+    <MotionCard
+      variant={
+        !isBookmarked ? 'secondary' : bookmark.unread ? 'tertiary' : 'secondary'
+      }
       layout
       style={{ height: 'auto' }}
       transition={{ duration: 0.2 }}
@@ -69,39 +74,34 @@ export function CurrentTabCard({
             exit={{ opacity: 0 }}
             transition={{ duration: 0.2 }}
           >
-            <Card
-              variant="secondary"
-              className="border border-default-200 shadow-sm"
-            >
-              <Card.Header className="pb-1">
-                <Card.Description className="text-2xs uppercase tracking-wide">
-                  Not in Linkding
-                </Card.Description>
-                <Card.Title className="text-sm line-clamp-1">
-                  <span className="flex min-w-0 items-center gap-1.5">
-                    <BookmarkFavicon url={null} />
-                    <span className="line-clamp-1">{title}</span>
-                  </span>
-                </Card.Title>
-              </Card.Header>
-              <Card.Footer className="pt-1 flex items-center justify-between">
-                <Link
-                  href={url}
-                  target="_blank"
-                  className="text-2xs text-muted hover:text-primary transition-colors line-clamp-1 flex-1 mr-2"
-                >
-                  {url}
-                </Link>
-                <Button
-                  size="sm"
-                  variant="primary"
-                  isDisabled={isLoading || isValidating}
-                  onPress={() => onAdd?.(url, title, description)}
-                >
-                  Add to Linkding
-                </Button>
-              </Card.Footer>
-            </Card>
+            <Card.Header className="pb-1">
+              <Card.Description className="text-2xs uppercase tracking-wide">
+                Not in Linkding
+              </Card.Description>
+              <Card.Title className="text-sm line-clamp-1">
+                <span className="flex min-w-0 items-center gap-1.5">
+                  <BookmarkFavicon url={null} />
+                  <span className="line-clamp-1">{title}</span>
+                </span>
+              </Card.Title>
+            </Card.Header>
+            <Card.Footer className="pt-1 flex items-center justify-between">
+              <Link
+                href={url}
+                target="_blank"
+                className="text-2xs text-muted hover:text-primary transition-colors line-clamp-1 flex-1 mr-2"
+              >
+                {url}
+              </Link>
+              <Button
+                size="sm"
+                variant="primary"
+                isDisabled={isLoading || isValidating}
+                onPress={() => onAdd?.(url, title, description)}
+              >
+                Add to Linkding
+              </Button>
+            </Card.Footer>
           </motion.div>
         ) : (
           <motion.div
@@ -111,132 +111,127 @@ export function CurrentTabCard({
             exit={{ opacity: 0 }}
             transition={{ duration: 0.2 }}
           >
-            <Card
-              variant={bookmark.unread ? 'tertiary' : 'secondary'}
-              className="border border-default-200 shadow-sm"
-            >
-              <Card.Header className="pb-1">
-                <div className="flex items-center justify-between gap-2">
-                  <Card.Description className="text-2xs uppercase tracking-wide">
-                    Current page in Linkding
-                  </Card.Description>
-                  <div className="inline-flex items-center gap-1.5">
-                    <span
-                      className={`inline-block h-2 w-2 rounded-full ${
-                        bookmark.unread ? 'bg-blue-500' : 'bg-gray-400'
-                      }`}
-                    />
-                    <span className="text-3xs text-muted uppercase tracking-wide">
-                      {bookmark.unread ? 'Unread' : 'Read'}
-                    </span>
-                  </div>
-                </div>
-                <Card.Title className="text-sm line-clamp-1">
-                  <span className="flex min-w-0 items-center gap-1.5">
-                    <BookmarkFavicon url={bookmark.favicon_url} />
-                    <span className="line-clamp-1">
-                      {bookmark.title || bookmark.url}
-                    </span>
-                  </span>
-                </Card.Title>
-              </Card.Header>
-              <Card.Content className="pt-0">
-                <div className="flex items-start gap-2">
-                  <div className="min-w-0 flex-1">
-                    <Link
-                      href={bookmark.url}
-                      target="_blank"
-                      className="text-2xs text-muted hover:text-primary transition-colors line-clamp-1"
-                    >
-                      {bookmark.url}
-                    </Link>
-                    {bookmark.tag_names.length > 0 && (
-                      <div className="flex flex-wrap gap-1.5 mt-1.5">
-                        {bookmark.tag_names.map(tag => (
-                          <Chip
-                            key={tag}
-                            size="sm"
-                            variant="soft"
-                            className="text-2xs"
-                          >
-                            {tag}
-                          </Chip>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-                  <BookmarkPreview
-                    url={bookmark.preview_image_url}
-                    alt={bookmark.title || bookmark.url}
-                    className="h-14 w-20 flex-shrink-0"
+            <Card.Header className="pb-1">
+              <div className="flex items-center justify-between gap-2">
+                <Card.Description className="text-2xs uppercase tracking-wide">
+                  Current page in Linkding
+                </Card.Description>
+                <div className="inline-flex items-center gap-1.5">
+                  <span
+                    className={`inline-block h-2 w-2 rounded-full ${
+                      bookmark.unread ? 'bg-blue-500' : 'bg-gray-400'
+                    }`}
                   />
+                  <span className="text-3xs text-muted uppercase tracking-wide">
+                    {bookmark.unread ? 'Unread' : 'Read'}
+                  </span>
                 </div>
-              </Card.Content>
-              <Card.Footer className="pt-2 flex items-center justify-between">
-                <span className="text-2xs text-muted">
-                  {formatDistanceToNow(new Date(bookmark.date_added), {
-                    addSuffix: true,
-                  })}
+              </div>
+              <Card.Title className="text-sm line-clamp-1">
+                <span className="flex min-w-0 items-center gap-1.5">
+                  <BookmarkFavicon url={bookmark.favicon_url} />
+                  <span className="line-clamp-1">
+                    {bookmark.title || bookmark.url}
+                  </span>
                 </span>
-                <div className="flex items-center gap-2">
-                  <Popover
-                    isOpen={isDeletePopoverOpen}
-                    onOpenChange={open => setIsDeletePopoverOpen(open)}
+              </Card.Title>
+            </Card.Header>
+            <Card.Content className="pt-0">
+              <div className="flex items-start gap-2">
+                <div className="min-w-0 flex-1">
+                  <Link
+                    href={bookmark.url}
+                    target="_blank"
+                    className="text-2xs text-muted hover:text-primary transition-colors line-clamp-1"
                   >
-                    <Popover.Trigger>
-                      <Button
-                        size="sm"
-                        variant="ghost"
-                        isIconOnly
-                        className="text-danger hover:bg-danger-50"
-                        aria-label="Delete bookmark"
-                        isDisabled={isLoading || isValidating}
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </Button>
-                    </Popover.Trigger>
-                    <Popover.Content placement="bottom end">
-                      <Popover.Arrow />
-                      <Popover.Dialog className="p-3">
-                        <Popover.Heading className="text-sm font-medium mb-3">
-                          Delete this bookmark?
-                        </Popover.Heading>
-                        <div className="flex gap-2 justify-end">
-                          <Button
-                            size="sm"
-                            variant="ghost"
-                            onPress={() => setIsDeletePopoverOpen(false)}
-                          >
-                            Cancel
-                          </Button>
-                          <Button
-                            size="sm"
-                            variant="danger"
-                            onPress={() => {
-                              onDelete?.(bookmark.id)
-                              setIsDeletePopoverOpen(false)
-                            }}
-                          >
-                            Delete
-                          </Button>
-                        </div>
-                      </Popover.Dialog>
-                    </Popover.Content>
-                  </Popover>
-                  <Button
-                    size="sm"
-                    variant={bookmark.unread ? 'primary' : 'ghost'}
-                    isDisabled={isLoading || isValidating}
-                    onPress={() => onToggleUnread(bookmark.id, bookmark.unread)}
-                  >
-                    {bookmark.unread ? 'Mark as read' : 'Mark as unread'}
-                  </Button>
+                    {bookmark.url}
+                  </Link>
+                  {bookmark.tag_names.length > 0 && (
+                    <div className="flex flex-wrap gap-1.5 mt-1.5">
+                      {bookmark.tag_names.map(tag => (
+                        <Chip
+                          key={tag}
+                          size="sm"
+                          variant="soft"
+                          className="text-2xs"
+                        >
+                          {tag}
+                        </Chip>
+                      ))}
+                    </div>
+                  )}
                 </div>
-              </Card.Footer>
-            </Card>
+                <BookmarkPreview
+                  url={bookmark.preview_image_url}
+                  alt={bookmark.title || bookmark.url}
+                  className="h-14 w-20 flex-shrink-0"
+                />
+              </div>
+            </Card.Content>
+            <Card.Footer className="pt-2 flex items-center justify-between">
+              <span className="text-2xs text-muted">
+                {formatDistanceToNow(new Date(bookmark.date_added), {
+                  addSuffix: true,
+                })}
+              </span>
+              <div className="flex items-center gap-2">
+                <Popover
+                  isOpen={isDeletePopoverOpen}
+                  onOpenChange={open => setIsDeletePopoverOpen(open)}
+                >
+                  <Popover.Trigger>
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      isIconOnly
+                      className="text-danger hover:bg-danger-50"
+                      aria-label="Delete bookmark"
+                      isDisabled={isLoading || isValidating}
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </Button>
+                  </Popover.Trigger>
+                  <Popover.Content placement="bottom end">
+                    <Popover.Arrow />
+                    <Popover.Dialog className="p-3">
+                      <Popover.Heading className="text-sm font-medium mb-3">
+                        Delete this bookmark?
+                      </Popover.Heading>
+                      <div className="flex gap-2 justify-end">
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          onPress={() => setIsDeletePopoverOpen(false)}
+                        >
+                          Cancel
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="danger"
+                          onPress={() => {
+                            onDelete?.(bookmark.id)
+                            setIsDeletePopoverOpen(false)
+                          }}
+                        >
+                          Delete
+                        </Button>
+                      </div>
+                    </Popover.Dialog>
+                  </Popover.Content>
+                </Popover>
+                <Button
+                  size="sm"
+                  variant={bookmark.unread ? 'primary' : 'ghost'}
+                  isDisabled={isLoading || isValidating}
+                  onPress={() => onToggleUnread(bookmark.id, bookmark.unread)}
+                >
+                  {bookmark.unread ? 'Mark as read' : 'Mark as unread'}
+                </Button>
+              </div>
+            </Card.Footer>
           </motion.div>
         )}
       </AnimatePresence>
-    </motion.div>
+    </MotionCard>
   )
 }
