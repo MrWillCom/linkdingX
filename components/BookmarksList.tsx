@@ -4,15 +4,11 @@ import { bookmarkService } from '@/utils/bookmarkService'
 import { useCallback, useEffect, useRef, useState, useMemo } from 'react'
 import useSWR from 'swr'
 import useSWRInfinite from 'swr/infinite'
-import { useLiveQuery } from 'dexie-react-hooks'
 import { Button, Spinner } from '@heroui/react'
 import { ExternalLink, Settings as SettingsIcon } from 'lucide-react'
-import { FilterTabs, type UnreadFilter } from './FilterTabs'
-import { CurrentTabCard } from './CurrentTabCard'
-import { BookmarkItem } from './BookmarkItem'
+import { storage } from '#imports'
 import { useSetup } from '@/hooks/useSetup'
-import { db } from '@/utils/db'
-import { bookmarkService } from '@/utils/bookmarkService'
+import { UnreadFilter } from '@/components/FilterTabs'
 
 export interface Bookmark {
   id: number
