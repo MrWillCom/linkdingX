@@ -8,14 +8,18 @@ import {
   Label,
   TextField,
   toast,
+  RadioGroup,
+  Radio,
 } from '@heroui/react'
 import { useEffect, useReducer } from 'react'
-import { useSetup } from '@/hooks/useSetup'
+import { useSetup, type MetadataSource } from '@/hooks/useSetup'
 
 interface SettingsState {
   isLoading: boolean
   server: string
   apiToken: string
+  fetchMetadataFrom: MetadataSource
+  defaultUnread: boolean
   error: string
 }
 
@@ -23,8 +27,18 @@ type SettingsAction =
   | { type: 'SET_LOADING'; payload: boolean }
   | { type: 'SET_SERVER'; payload: string }
   | { type: 'SET_API_TOKEN'; payload: string }
+  | { type: 'SET_METADATA_FROM'; payload: MetadataSource }
+  | { type: 'SET_DEFAULT_UNREAD'; payload: boolean }
   | { type: 'SET_ERROR'; payload: string }
-  | { type: 'RESET_FORM'; payload: { server: string; apiToken: string } }
+  | {
+      type: 'RESET_FORM'
+      payload: {
+        server: string
+        apiToken: string
+        fetchMetadataFrom: MetadataSource
+        defaultUnread: boolean
+      }
+    }
 
 function settingsReducer(
   state: SettingsState,
@@ -37,6 +51,10 @@ function settingsReducer(
       return { ...state, server: action.payload }
     case 'SET_API_TOKEN':
       return { ...state, apiToken: action.payload }
+    case 'SET_METADATA_FROM':
+      return { ...state, fetchMetadataFrom: action.payload }
+    case 'SET_DEFAULT_UNREAD':
+      return { ...state, defaultUnread: action.payload }
     case 'SET_ERROR':
       return { ...state, error: action.payload, isLoading: false }
     case 'RESET_FORM':
@@ -44,6 +62,8 @@ function settingsReducer(
         ...state,
         server: action.payload.server,
         apiToken: action.payload.apiToken,
+        fetchMetadataFrom: action.payload.fetchMetadataFrom,
+        defaultUnread: action.payload.defaultUnread,
         error: '',
         isLoading: false,
       }
@@ -56,6 +76,8 @@ const initialState: SettingsState = {
   isLoading: false,
   server: '',
   apiToken: '',
+  fetchMetadataFrom: 'browser',
+  defaultUnread: true,
   error: '',
 }
 
@@ -71,21 +93,43 @@ export default function SettingsForm({
   showCancel = true,
 }: SettingsFormProps) {
   const [state, dispatch] = useReducer(settingsReducer, initialState)
-  const { serverStorage, apiTokenStorage } = useSetup()
+  const {
+    serverStorage,
+    apiTokenStorage,
+    fetchMetadataFromStorage,
+    defaultUnreadStorage,
+  } = useSetup()
 
   useEffect(() => {
     async function loadValues() {
-      const [serverValue, apiTokenValue] = await Promise.all([
+      const [
+        serverValue,
+        apiTokenValue,
+        fetchMetadataValue,
+        defaultUnreadValue,
+      ] = await Promise.all([
         serverStorage.getValue(),
         apiTokenStorage.getValue(),
+        fetchMetadataFromStorage.getValue(),
+        defaultUnreadStorage.getValue(),
       ])
       dispatch({
         type: 'RESET_FORM',
-        payload: { server: serverValue || '', apiToken: apiTokenValue || '' },
+        payload: {
+          server: serverValue || '',
+          apiToken: apiTokenValue || '',
+          fetchMetadataFrom: fetchMetadataValue,
+          defaultUnread: defaultUnreadValue,
+        },
       })
     }
     loadValues()
-  }, [serverStorage, apiTokenStorage])
+  }, [
+    serverStorage,
+    apiTokenStorage,
+    fetchMetadataFromStorage,
+    defaultUnreadStorage,
+  ])
 
   const onSave = async () => {
     dispatch({ type: 'SET_ERROR', payload: '' })
@@ -120,8 +164,13 @@ export default function SettingsForm({
         throw new Error('Invalid server URL or API token')
       }
 
-      await serverStorage.setValue(trimmedServer)
-      await apiTokenStorage.setValue(trimmedApiToken)
+      await Promise.all([
+        serverStorage.setValue(trimmedServer),
+        apiTokenStorage.setValue(trimmedApiToken),
+        fetchMetadataFromStorage.setValue(state.fetchMetadataFrom),
+        defaultUnreadStorage.setValue(state.defaultUnread),
+      ])
+
       dispatch({ type: 'SET_LOADING', payload: false })
       toast.success('Settings saved successfully')
       onSaved?.()
@@ -139,50 +188,97 @@ export default function SettingsForm({
   return (
     <div className="flex flex-col gap-6">
       <Form
-        className="flex flex-col gap-4"
+        className="flex flex-col gap-6"
         onSubmit={e => {
           e.preventDefault()
           onSave()
         }}
       >
-        <TextField
-          name="server"
-          type="text"
-          isInvalid={!!state.error}
-          isRequired
-        >
-          <Label>Server</Label>
-          <Input
-            value={state.server}
-            onChange={e =>
+        <div className="flex flex-col gap-4">
+          <h2 className="text-sm font-semibold uppercase tracking-wider text-muted">
+            Connection
+          </h2>
+          <TextField
+            name="server"
+            type="text"
+            isInvalid={!!state.error}
+            isRequired
+          >
+            <Label>Server</Label>
+            <Input
+              value={state.server}
+              onChange={e =>
+                dispatch({
+                  type: 'SET_SERVER',
+                  payload: e.target.value,
+                })
+              }
+              placeholder="https://linkding.example.com"
+              autoComplete="url"
+            />
+          </TextField>
+          <TextField
+            name="apiToken"
+            type="password"
+            isInvalid={!!state.error}
+            isRequired
+          >
+            <Label>API Token</Label>
+            <Input
+              value={state.apiToken}
+              onChange={e =>
+                dispatch({
+                  type: 'SET_API_TOKEN',
+                  payload: e.target.value,
+                })
+              }
+              placeholder="xxxxxxxx…"
+              autoComplete="off"
+            />
+          </TextField>
+        </div>
+
+        <div className="h-px bg-default-200" />
+
+        <div className="flex flex-col gap-4">
+          <h2 className="text-sm font-semibold uppercase tracking-wider text-muted">
+            Preferences
+          </h2>
+          <RadioGroup
+            value={state.fetchMetadataFrom}
+            onChange={value =>
               dispatch({
-                type: 'SET_SERVER',
-                payload: e.target.value,
+                type: 'SET_METADATA_FROM',
+                payload: value as MetadataSource,
               })
             }
-            placeholder="https://linkding.example.com"
-            autoComplete="url"
-          />
-        </TextField>
-        <TextField
-          name="apiToken"
-          type="password"
-          isInvalid={!!state.error}
-          isRequired
-        >
-          <Label>API Token</Label>
-          <Input
-            value={state.apiToken}
-            onChange={e =>
+          >
+            <Label>Fetch Metadata From</Label>
+            <div className="flex flex-col gap-2">
+              <Radio value="browser">
+                Browser (fast, includes page context)
+              </Radio>
+              <Radio value="server">Server (Linkding crawls the URL)</Radio>
+            </div>
+          </RadioGroup>
+
+          <RadioGroup
+            value={state.defaultUnread ? 'unread' : 'read'}
+            onChange={value =>
               dispatch({
-                type: 'SET_API_TOKEN',
-                payload: e.target.value,
+                type: 'SET_DEFAULT_UNREAD',
+                payload: value === 'unread',
               })
             }
-            placeholder="xxxxxxxx…"
-            autoComplete="off"
-          />
-        </TextField>
+          >
+            <Label>Default Bookmark State</Label>
+            <div className="flex flex-col gap-2">
+              <Radio value="unread">Unread</Radio>
+              <Radio value="read">Read</Radio>
+            </div>
+          </RadioGroup>
+        </div>
+
         {state.error && <FieldError>{state.error}</FieldError>}
         <button type="submit" className="hidden" aria-hidden="true" />
       </Form>
