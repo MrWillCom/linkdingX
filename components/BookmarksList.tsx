@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState, useMemo } from 'react'
 import useSWR from 'swr'
 import useSWRInfinite from 'swr/infinite'
+import { motion } from 'motion/react'
 import { Button, Spinner } from '@heroui/react'
 import { ExternalLink, Settings as SettingsIcon } from 'lucide-react'
 import { FilterTabs, type UnreadFilter } from './FilterTabs'
@@ -502,15 +503,17 @@ export default function BookmarksList({
             </Button>
           )}
         </div>
-        <div
-          className={`grid transition-[grid-template-rows,margin-top,opacity] duration-300 ease-in-out ${
-            currentTabCheckData
-              ? 'grid-rows-[1fr] mt-2 opacity-100'
-              : 'grid-rows-[0fr] mt-0 opacity-0 pointer-events-none'
-          }`}
+        <motion.div
+          layout
+          initial={false}
+          animate={{
+            marginTop: currentTabCheckData ? '0.5rem' : '0rem',
+            opacity: currentTabCheckData ? 1 : 0,
+          }}
+          transition={{ duration: 0.3, ease: 'easeInOut' }}
         >
-          <div className="overflow-hidden">
-            {currentTabCheckData && (
+          {currentTabCheckData && (
+            <div className="mt-2">
               <CurrentTabCard
                 url={currentTabUrl || ''}
                 bookmark={currentTabCheckData.bookmark}
@@ -521,9 +524,9 @@ export default function BookmarksList({
                 onAdd={handleAdd}
                 onDelete={handleDelete}
               />
-            )}
-          </div>
-        </div>
+            </div>
+          )}
+        </motion.div>
         {/* Dynamic Gradient Mask - Attached to the bottom of the sticky area */}
         <div
           className={`absolute top-full left-0 right-0 h-8 bg-linear-to-b from-background to-transparent pointer-events-none z-10 transition-opacity duration-200 ${isScrolled ? 'opacity-100' : 'opacity-0'}`}
