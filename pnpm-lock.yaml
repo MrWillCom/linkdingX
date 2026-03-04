@@ -54,6 +54,9 @@ importers:
       '@wxt-dev/module-react':
         specifier: ^1.1.5
         version: 1.1.5(vite@7.3.1(@types/node@25.3.2)(jiti@2.6.1)(lightningcss@1.31.1))(wxt@0.20.18(@types/node@25.3.2)(jiti@2.6.1)(lightningcss@1.31.1)(rollup@4.59.0))
+      agentation:
+        specifier: ^2.2.1
+        version: 2.2.1(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
       prettier:
         specifier: 3.8.1
         version: 3.8.1
@@ -1390,6 +1393,17 @@ packages:
   adm-zip@0.5.16:
     resolution: {integrity: sha512-TGw5yVi4saajsSEgz25grObGHEUaDrniwvA2qwSC060KfqGPdglhvPMA2lPIoxs3PQIItj2iag35fONcQqgUaQ==}
     engines: {node: '>=12.0'}
+
+  agentation@2.2.1:
+    resolution: {integrity: sha512-yV9P1DggI7M3SRaRwLwt+xqE5lXqg5l8xtqCr8KzEkbnH8Wa6eRATU97uKnD7cC8FrsJP62Mmw0Xf5Xi5KV50Q==}
+    peerDependencies:
+      react: '>=18.0.0'
+      react-dom: '>=18.0.0'
+    peerDependenciesMeta:
+      react:
+        optional: true
+      react-dom:
+        optional: true
 
   ansi-align@3.0.1:
     resolution: {integrity: sha512-IOfwwBF5iczOjp/WeY4YxyjqAFMQoZufdQWDd19SEExbVLNXqvpzSJ/M7Za4/sCPmQ0+GRquoA7bGcINcxew6w==}
@@ -4581,6 +4595,11 @@ snapshots:
   acorn@8.16.0: {}
 
   adm-zip@0.5.16: {}
+
+  agentation@2.2.1(react-dom@19.2.4(react@19.2.4))(react@19.2.4):
+    optionalDependencies:
+      react: 19.2.4
+      react-dom: 19.2.4(react@19.2.4)
 
   ansi-align@3.0.1:
     dependencies:
