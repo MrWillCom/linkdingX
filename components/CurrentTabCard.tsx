@@ -1,7 +1,7 @@
-import { useState } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { formatDistanceToNow } from 'date-fns'
-import { Card, Link, Chip, Button, Popover } from '@heroui/react'
-import { Trash2 } from 'lucide-react'
+import { Card, Link, Chip, Button, Tooltip } from '@heroui/react'
+import { Trash2, AlertTriangle } from 'lucide-react'
 import { BookmarkFavicon } from './BookmarkFavicon'
 import { BookmarkPreview } from './BookmarkPreview'
 
@@ -52,8 +52,29 @@ export function CurrentTabCard({
   onAdd,
   onDelete,
 }: CurrentTabCardProps) {
-  const [isDeletePopoverOpen, setIsDeletePopoverOpen] = useState(false)
+  const [isConfirmingDelete, setIsConfirmingDelete] = useState(false)
+  const timerRef = useRef<NodeJS.Timeout | null>(null)
+
   const isBookmarked = !!bookmark
+  useEffect(() => {
+    return () => {
+      if (timerRef.current) clearTimeout(timerRef.current)
+    }
+  }, [])
+
+  const handleDeletePress = () => {
+    if (isConfirmingDelete) {
+      if (timerRef.current) clearTimeout(timerRef.current)
+      onDelete?.(bookmark!.id)
+      setIsConfirmingDelete(false)
+    } else {
+      setIsConfirmingDelete(true)
+      timerRef.current = setTimeout(() => {
+        setIsConfirmingDelete(false)
+      }, 5000)
+    }
+  }
+
   const title =
     bookmark?.title ||
     realtimeMetadata?.title ||
@@ -168,50 +189,36 @@ export function CurrentTabCard({
                 })}
               </span>
               <div className="flex items-center gap-2">
-                <Popover
-                  isOpen={isDeletePopoverOpen}
-                  onOpenChange={open => setIsDeletePopoverOpen(open)}
+                <Tooltip
+                  delay={0}
+                  closeDelay={0}
+                  isDisabled={!isConfirmingDelete}
                 >
-                  <Popover.Trigger>
+                  <Tooltip.Trigger>
                     <Button
                       size="sm"
-                      variant="ghost"
+                      variant={isConfirmingDelete ? 'danger' : 'ghost'}
                       isIconOnly
-                      className="text-danger hover:bg-danger-50"
-                      aria-label="Delete bookmark"
+                      className={
+                        !isConfirmingDelete
+                          ? 'text-danger hover:bg-danger-50'
+                          : 'bg-danger text-white'
+                      }
+                      aria-label={
+                        isConfirmingDelete
+                          ? 'Confirm delete bookmark'
+                          : 'Delete bookmark'
+                      }
                       isDisabled={isLoading || isValidating}
+                      onPress={handleDeletePress}
                     >
                       <Trash2 className="w-4 h-4" />
                     </Button>
-                  </Popover.Trigger>
-                  <Popover.Content placement="bottom end">
-                    <Popover.Arrow />
-                    <Popover.Dialog className="p-3">
-                      <Popover.Heading className="text-sm font-medium mb-3">
-                        Delete this bookmark?
-                      </Popover.Heading>
-                      <div className="flex gap-2 justify-end">
-                        <Button
-                          size="sm"
-                          variant="ghost"
-                          onPress={() => setIsDeletePopoverOpen(false)}
-                        >
-                          Cancel
-                        </Button>
-                        <Button
-                          size="sm"
-                          variant="danger"
-                          onPress={() => {
-                            onDelete?.(bookmark.id)
-                            setIsDeletePopoverOpen(false)
-                          }}
-                        >
-                          Delete
-                        </Button>
-                      </div>
-                    </Popover.Dialog>
-                  </Popover.Content>
-                </Popover>
+                  </Tooltip.Trigger>
+                  <Tooltip.Content placement="bottom" showArrow>
+                    Click again to confirm delete
+                  </Tooltip.Content>
+                </Tooltip>
                 <Button
                   size="sm"
                   variant={bookmark.unread ? 'primary' : 'ghost'}
