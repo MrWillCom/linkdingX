@@ -1,5 +1,6 @@
 import { db } from '@/utils/db'
 import { storage, defineBackground } from '#imports'
+import { toast } from '@heroui/react'
 
 interface Account {
   server: string
@@ -9,6 +10,7 @@ interface Account {
 const accountStorage = storage.defineItem<Account>('local:account')
 
 async function processSyncQueue() {
+  console.log('Syncing starting...')
   const account = await accountStorage.getValue()
   if (!account?.server || !account?.apiToken) return
 
@@ -36,17 +38,38 @@ async function processSyncQueue() {
           body,
         })
 
-        if (response.ok) {
+        const isDeletedOnServer =
+          response.status === 404 || response.status === 410
+        const isSuccess =
+          response.ok || (op.action === 'delete' && isDeletedOnServer)
+
+        if (isSuccess) {
           await db.sync_queue.delete(op.id!)
-          if (op.action === 'update') {
+          if (op.action === 'update' && response.ok) {
             await db.bookmarks.update(op.bookmark_id, {
               _sync_status: 'synced',
             })
           }
+        } else {
+          console.error(
+            `Sync failed for ${op.action} on bookmark ${op.bookmark_id}:`,
+            {
+              status: response.status,
+              statusText: response.statusText,
+              operation: op,
+            },
+          )
+
+          toast.danger(`Failed to sync ${op.action}`, {
+            description: `Server returned ${response.status}: ${response.statusText}`,
+          })
         }
       }
     } catch (error) {
       console.error('Failed to sync operation:', op, error)
+      toast.danger(`Network error during sync`, {
+        description: error instanceof Error ? error.message : String(error),
+      })
     }
   }
 }
