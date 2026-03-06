@@ -485,7 +485,7 @@ export default function BookmarksList({
           )}
         </div>
         <div
-          className="grid grid-rows-[0fr] animate-[none] data-[open=true]:grid-rows-[1fr] origin-top"
+          className="grid grid-rows-[0fr] animate-none data-[open=true]:grid-rows-[1fr] origin-top"
           style={{
             overflow: 'hidden',
           }}
