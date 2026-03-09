@@ -48,9 +48,29 @@ export function useBookmarksManager(unreadFilter: UnreadFilter) {
     useSWRInfinite<BookmarksResponse>(getKey, fetcher, {
       revalidateFirstPage: true,
       revalidateOnFocus: true,
-      onSuccess: data => {
+      onSuccess: async data => {
         const all = data.flatMap(p => p.results)
-        if (all.length) db.bookmarks.bulkPut(all)
+        if (all.length === 0) return
+
+        // Basic optimization: compare lengths or some heuristic to avoid always writing
+        // Since we reverse order and fetch by date, we can check if the first bookmark matches
+        const existing = await db.bookmarks
+          .orderBy('date_added')
+          .reverse()
+          .limit(1)
+          .toArray()
+
+        if (
+          existing.length > 0 &&
+          existing[0].id === all[0].id &&
+          existing[0].date_modified === all[0].date_modified &&
+          all.length <= existing.length // Heuristic: if we have more, we probably need to update
+        ) {
+          // Likely no changes in the first page at least, could be deeper changes but this reduces simple redundant writes
+          return
+        }
+
+        db.bookmarks.bulkPut(all)
       },
     })
 

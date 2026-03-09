@@ -139,13 +139,22 @@ export default function BookmarksList({
   const [isScrolled, setIsScrolled] = useState(false)
   const hasTriggeredLoadRef = useRef(false)
 
+  // Use refs to provide stable access to changing state/functions in the observer
+  const stateRef = useRef({ isLoadingMore, hasMore, loadMore })
+  useEffect(() => {
+    stateRef.current = { isLoadingMore, hasMore, loadMore }
+  }, [isLoadingMore, hasMore, loadMore])
+
   const handleScroll = (e: React.UIEvent<HTMLDivElement>) => {
     setIsScrolled(e.currentTarget.scrollTop > 0)
   }
 
   useEffect(() => {
+    if (!loadMoreRef.current) return
+
     const observer = new IntersectionObserver(
       entries => {
+        const { isLoadingMore, hasMore, loadMore } = stateRef.current
         if (entries[0].isIntersecting && !isLoadingMore) {
           if (hasMore) {
             hasTriggeredLoadRef.current = true
@@ -156,12 +165,9 @@ export default function BookmarksList({
       { threshold: 0.1 },
     )
 
-    if (loadMoreRef.current) {
-      observer.observe(loadMoreRef.current)
-    }
-
+    observer.observe(loadMoreRef.current)
     return () => observer.disconnect()
-  }, [isLoadingMore, hasMore, loadMore])
+  }, [])
 
   useEffect(() => {
     if (!currentTabCheckData?.bookmark) return

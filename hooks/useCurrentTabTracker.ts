@@ -1,6 +1,7 @@
 import { useEffect, useReducer } from 'react'
 
 interface State {
+  currentTabId: number | null
   currentTabUrl: string | null
   realtimeMetadata: {
     title: string
@@ -11,6 +12,7 @@ interface State {
 type Action =
   | {
       type: 'SET_TAB'
+      id: number | null
       url: string | null
       title?: string
       favicon?: string | null
@@ -21,6 +23,7 @@ function reducer(state: State, action: Action): State {
   switch (action.type) {
     case 'SET_TAB':
       return {
+        currentTabId: action.id,
         currentTabUrl: action.url,
         realtimeMetadata: {
           title: action.title ?? '',
@@ -42,6 +45,7 @@ function reducer(state: State, action: Action): State {
 
 export function useCurrentTabTracker() {
   const [state, dispatch] = useReducer(reducer, {
+    currentTabId: null,
     currentTabUrl: null,
     realtimeMetadata: { title: '', favicon: null },
   })
@@ -57,6 +61,7 @@ export function useCurrentTabTracker() {
         if (activeTab?.url?.startsWith('http')) {
           dispatch({
             type: 'SET_TAB',
+            id: activeTab.id ?? null,
             url: activeTab.url,
             title: activeTab.title,
             favicon: activeTab.favIconUrl,
@@ -64,16 +69,17 @@ export function useCurrentTabTracker() {
           return
         }
       } catch {}
-      dispatch({ type: 'SET_TAB', url: null })
+      dispatch({ type: 'SET_TAB', id: null, url: null })
     }
 
     const onActivated = () => syncCurrentTab()
     const onUpdated = (
-      _id: number,
+      id: number,
       change: { title?: string; favIconUrl?: string; url?: string },
       tab: { active?: boolean; title?: string; favIconUrl?: string },
     ) => {
-      if (!tab.active) return
+      // Ensure we only update if the tab being updated is the one we are currently tracking
+      if (!tab.active || id !== state.currentTabId) return
       if (change.title || change.favIconUrl) {
         dispatch({
           type: 'UPDATE_METADATA',
@@ -85,12 +91,13 @@ export function useCurrentTabTracker() {
         if (change.url.startsWith('http')) {
           dispatch({
             type: 'SET_TAB',
+            id,
             url: change.url,
             title: tab.title,
             favicon: tab.favIconUrl,
           })
         } else {
-          dispatch({ type: 'SET_TAB', url: null })
+          dispatch({ type: 'SET_TAB', id, url: null })
         }
       }
     }
@@ -102,7 +109,7 @@ export function useCurrentTabTracker() {
       browser.tabs.onActivated.removeListener(onActivated)
       browser.tabs.onUpdated.removeListener(onUpdated)
     }
-  }, [])
+  }, [state.currentTabId])
 
   return state
 }
