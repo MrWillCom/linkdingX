@@ -1,0 +1,11 @@
+{
+  "$schema": "https://opencode.ai/config.json",
+  "permission": {
+    "bash": {
+      "pnpm format": "allow",
+      "pnpm compile": "allow",
+      "pnpm run format": "allow",
+      "pnpm run compile": "allow"
+    }
+  }
+}
