@@ -1,23 +1,52 @@
 import { db } from '@/utils/db'
 import { storage, defineBackground } from '#imports'
-import { toast } from '@heroui/react'
 
-interface Account {
-  server: string
-  apiToken: string
+const serverStorage = storage.defineItem<string>('local:server', {
+  fallback: '',
+})
+
+const apiTokenStorage = storage.defineItem<string>('local:apiToken', {
+  fallback: '',
+})
+
+async function notifyUI(
+  type: 'success' | 'danger' | 'warning',
+  message: string,
+  description?: string,
+) {
+  try {
+    await browser.runtime.sendMessage({
+      type: 'sync-notification',
+      payload: { type, message, description },
+    })
+  } catch (e) {
+    // UI might not be open, which is fine
+    console.debug('Could not send notification to UI (likely closed):', e)
+  }
 }
-
-const accountStorage = storage.defineItem<Account>('local:account')
 
 async function processSyncQueue() {
   console.log('Syncing starting...')
-  const account = await accountStorage.getValue()
-  if (!account?.server || !account?.apiToken) return
+  const server = await serverStorage.getValue()
+  const apiToken = await apiTokenStorage.getValue()
+
+  if (!server || !apiToken) {
+    console.warn('Sync skipped: Missing server or API token', {
+      server: !!server,
+      apiToken: !!apiToken,
+    })
+    return
+  }
 
   const operations = await db.sync_queue.toArray()
+  if (operations.length === 0) {
+    console.log('Sync skipped: Queue is empty')
+    return
+  }
+
   for (const op of operations) {
     try {
-      let url = `${account.server}/api/bookmarks/${op.bookmark_id}/`
+      let url = `${server}/api/bookmarks/${op.bookmark_id}/`
       let method = ''
       let body: string | undefined
 
@@ -29,10 +58,11 @@ async function processSyncQueue() {
       }
 
       if (method) {
+        console.log(`Executing ${op.action} for bookmark ${op.bookmark_id}...`)
         const response = await fetch(url, {
           method,
           headers: {
-            Authorization: `Token ${account.apiToken}`,
+            Authorization: `Token ${apiToken}`,
             'Content-Type': 'application/json',
           },
           body,
@@ -44,6 +74,7 @@ async function processSyncQueue() {
           response.ok || (op.action === 'delete' && isDeletedOnServer)
 
         if (isSuccess) {
+          console.log(`Successfully synced ${op.action} for ${op.bookmark_id}`)
           await db.sync_queue.delete(op.id!)
           if (op.action === 'update' && response.ok) {
             await db.bookmarks.update(op.bookmark_id, {
@@ -51,25 +82,32 @@ async function processSyncQueue() {
             })
           }
         } else {
+          const errorData = await response.json().catch(() => ({}))
+          const errorMessage = errorData.detail || response.statusText
           console.error(
             `Sync failed for ${op.action} on bookmark ${op.bookmark_id}:`,
             {
               status: response.status,
               statusText: response.statusText,
+              detail: errorMessage,
               operation: op,
             },
           )
 
-          toast.danger(`Failed to sync ${op.action}`, {
-            description: `Server returned ${response.status}: ${response.statusText}`,
-          })
+          await notifyUI(
+            'danger',
+            `Failed to sync ${op.action}`,
+            `Server returned ${response.status}: ${errorMessage}`,
+          )
         }
       }
     } catch (error) {
       console.error('Failed to sync operation:', op, error)
-      toast.danger(`Network error during sync`, {
-        description: error instanceof Error ? error.message : String(error),
-      })
+      await notifyUI(
+        'danger',
+        `Network error during sync`,
+        error instanceof Error ? error.message : String(error),
+      )
     }
   }
 }
