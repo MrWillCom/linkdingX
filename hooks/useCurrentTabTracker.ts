@@ -68,8 +68,12 @@ export function useCurrentTabTracker() {
           })
           return
         }
-      } catch {}
-      dispatch({ type: 'SET_TAB', id: null, url: null })
+        // Explicitly reset if not an HTTP(S) tab
+        dispatch({ type: 'SET_TAB', id: null, url: null })
+      } catch {
+        // Explicitly reset if error occurs
+        dispatch({ type: 'SET_TAB', id: null, url: null })
+      }
     }
 
     const onActivated = () => syncCurrentTab()
@@ -97,7 +101,8 @@ export function useCurrentTabTracker() {
             favicon: tab.favIconUrl,
           })
         } else {
-          dispatch({ type: 'SET_TAB', id, url: null })
+          // If URL changes to something non-HTTP, clear the state immediately
+          dispatch({ type: 'SET_TAB', id: null, url: null })
         }
       }
     }
