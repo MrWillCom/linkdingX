@@ -12,7 +12,7 @@ import {
   Radio,
   Description,
 } from '@heroui/react'
-import { useEffect, useReducer } from 'react'
+import { useEffect, useReducer, useState } from 'react'
 import { useSetup, type MetadataSource } from '@/hooks/useSetup'
 
 interface SettingsState {
@@ -93,6 +93,7 @@ export default function SettingsForm({
   onCancel,
   showCancel = true,
 }: SettingsFormProps) {
+  const [isModalOpen, setIsModalOpen] = useState(false)
   const [state, dispatch] = useReducer(settingsReducer, initialState)
   const {
     serverStorage,
@@ -306,6 +307,29 @@ export default function SettingsForm({
               </Radio>
             </div>
           </RadioGroup>
+        </div>
+
+        <div className="h-px bg-default-200" />
+
+        <div className="flex flex-col gap-4">
+          <h2 className="text-sm font-semibold uppercase tracking-wider text-muted">
+            Maintenance
+          </h2>
+          <div className="flex flex-col gap-2">
+            <Description>
+              Clear local cache and sync queue. This will not delete your
+              bookmarks on the server.
+            </Description>
+            <div className="flex items-center gap-2">
+              <Button
+                variant="secondary"
+                onPress={() => setIsModalOpen(true)}
+                className="w-fit"
+              >
+                Clean Local Data...
+              </Button>
+            </div>
+          </div>
         </div>
 
         {state.error && <FieldError>{state.error}</FieldError>}
