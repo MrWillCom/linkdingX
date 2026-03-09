@@ -52,12 +52,14 @@ export function useCurrentTabTracker() {
 
   useEffect(() => {
     const syncCurrentTab = async () => {
+      console.log('[useCurrentTabTracker] syncCurrentTab')
       try {
         const tabs = await browser.tabs.query({
           currentWindow: true,
           active: true,
         })
         const activeTab = tabs[0]
+        console.log('[useCurrentTabTracker] activeTab:', activeTab?.url)
         if (activeTab?.url?.startsWith('http')) {
           dispatch({
             type: 'SET_TAB',
@@ -69,21 +71,40 @@ export function useCurrentTabTracker() {
           return
         }
         // Explicitly reset if not an HTTP(S) tab
+        console.log('[useCurrentTabTracker] Not an HTTP tab, resetting')
         dispatch({ type: 'SET_TAB', id: null, url: null })
-      } catch {
+      } catch (err) {
         // Explicitly reset if error occurs
+        console.error('[useCurrentTabTracker] Error syncing tab:', err)
         dispatch({ type: 'SET_TAB', id: null, url: null })
       }
     }
 
-    const onActivated = () => syncCurrentTab()
+    const onActivated = () => {
+      console.log('[useCurrentTabTracker] onActivated')
+      syncCurrentTab()
+    }
     const onUpdated = (
       id: number,
       change: { title?: string; favIconUrl?: string; url?: string },
       tab: { active?: boolean; title?: string; favIconUrl?: string },
     ) => {
+      console.log('[useCurrentTabTracker] onUpdated', {
+        id,
+        change,
+        active: tab.active,
+      })
       // Ensure we only update if the tab being updated is the one we are currently tracking
-      if (!tab.active || id !== state.currentTabId) return
+      if (!tab.active || id !== state.currentTabId) {
+        console.log(
+          '[useCurrentTabTracker] Update ignored (not active or wrong ID)',
+          {
+            id,
+            currentTabId: state.currentTabId,
+          },
+        )
+        return
+      }
       if (change.title || change.favIconUrl) {
         dispatch({
           type: 'UPDATE_METADATA',

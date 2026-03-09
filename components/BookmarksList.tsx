@@ -123,8 +123,14 @@ export default function BookmarksList({
       refreshInterval: 300000,
       refreshWhenHidden: false,
       refreshWhenOffline: false,
-      keepPreviousData: true,
+      keepPreviousData: false, // Changed from true to false
     },
+  )
+
+  console.log('[BookmarksList] currentTabKey:', currentTabKey)
+  console.log(
+    '[BookmarksList] currentTabCheckData exists:',
+    !!currentTabCheckData,
   )
 
   useEffect(() => {
