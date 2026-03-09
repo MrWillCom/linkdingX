@@ -416,6 +416,7 @@ export default function BookmarksList({
 
   const handleDelete = async (id: number) => {
     await bookmarkService.deleteBookmark(id)
+    mutateCurrentTabBookmark(null, { revalidate: false })
   }
 
   if (error) {
