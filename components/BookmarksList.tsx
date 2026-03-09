@@ -422,7 +422,11 @@ export default function BookmarksList({
 
   const handleDelete = async (id: number) => {
     await bookmarkService.deleteBookmark(id)
-    mutateCurrentTabBookmark(null, { revalidate: false })
+    // Update SWR cache while preserving metadata to keep the card visible
+    mutateCurrentTabBookmark(
+      prev => (prev ? { ...prev, bookmark: null } : null),
+      { revalidate: false },
+    )
   }
 
   if (error) {
