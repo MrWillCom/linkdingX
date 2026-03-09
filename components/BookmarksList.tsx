@@ -2,13 +2,14 @@ import { db } from '@/utils/db'
 import { bookmarkService } from '@/utils/bookmarkService'
 import { useEffect, useRef, useState } from 'react'
 import useSWR from 'swr'
-import { Button, Spinner } from '@heroui/react'
-import { ExternalLink, Settings as SettingsIcon } from 'lucide-react'
+import { Spinner } from '@heroui/react'
 import { storage } from '#imports'
 import { useSetup } from '@/hooks/useSetup'
 import { UnreadFilter } from '@/components/FilterTabs'
 import { useCurrentTabTracker } from '@/hooks/useCurrentTabTracker'
 import { useBookmarksManager } from '@/hooks/useBookmarksManager'
+import { BookmarksHeader } from './BookmarksHeader'
+import { BookmarksInfiniteList } from './BookmarksInfiniteList'
 
 export interface Bookmark {
   id: number
@@ -109,8 +110,6 @@ export default function BookmarksList({
     error,
   } = useBookmarksManager(unreadFilter)
 
-  const [displayedCurrentTabBookmark, setDisplayedCurrentTabBookmark] =
-    useState<Bookmark | null>(null)
   const [isPollingMetadata, setIsPollingMetadata] = useState(false)
 
   const currentTabKey: CurrentTabBookmarkKey | null = currentTabUrl
@@ -191,19 +190,6 @@ export default function BookmarksList({
     }
   }, [filteredBookmarks, currentTabCheckData, mutateCurrentTabBookmark])
 
-  useEffect(() => {
-    if (currentTabCheckData) {
-      setDisplayedCurrentTabBookmark(currentTabCheckData.bookmark)
-      return
-    }
-
-    const timeoutId = window.setTimeout(() => {
-      setDisplayedCurrentTabBookmark(null)
-    }, 220)
-
-    return () => window.clearTimeout(timeoutId)
-  }, [currentTabCheckData])
-
   const handleToggleUnread = async (id: number, currentUnread: boolean) => {
     await bookmarkService.toggleUnread(id, currentUnread)
   }
@@ -242,7 +228,6 @@ export default function BookmarksList({
       mutateBookmarks()
       mutateCurrentTabBookmark()
 
-      // Start polling for server-side metadata updates
       let attempts = 0
       const maxAttempts = 5
       const pollInterval = setInterval(async () => {
@@ -285,9 +270,12 @@ export default function BookmarksList({
     return (
       <div className="p-4 flex flex-col items-center gap-4">
         <p className="text-danger">Error: {error.message}</p>
-        <Button variant="secondary" size="sm" onPress={() => mutateBookmarks()}>
+        <button
+          className="px-3 py-1 bg-secondary text-white rounded-md text-sm"
+          onClick={() => mutateBookmarks()}
+        >
           Retry
-        </Button>
+        </button>
       </div>
     )
   }
@@ -300,114 +288,40 @@ export default function BookmarksList({
     )
   }
 
-  if (filteredBookmarks.length === 0 && !isLoading) {
-    return (
-      <div className="flex justify-center py-8">
-        <p className="text-muted text-sm">No bookmarks yet.</p>
-      </div>
-    )
-  }
-
   return (
     <div
       onScroll={handleScroll}
       className={`h-screen overflow-y-auto relative ${variant === 'expanded' ? 'max-w-3xl mx-auto' : ''}`}
     >
-      <div className="sticky top-0 z-30 bg-background px-2 py-2">
-        <div className="flex items-center justify-between h-9">
-          <FilterTabs
-            selectedKey={unreadFilter}
-            onSelectionChange={setUnreadFilter}
-          />
-          {variant === 'default' && (
-            <Button
-              variant="tertiary"
-              size="sm"
-              isIconOnly
-              aria-label="Open in new tab"
-              onPress={async () => {
-                const url = browser.runtime.getURL(
-                  '/home.html' as '/sidepanel.html',
-                )
-                await browser.tabs.create({ url })
-              }}
-            >
-              <ExternalLink className="w-4 h-4" />
-            </Button>
-          )}
-          {variant === 'expanded' && (
-            <Button
-              variant="tertiary"
-              size="sm"
-              isIconOnly
-              aria-label="Open settings"
-              onPress={() => browser.runtime.openOptionsPage()}
-            >
-              <SettingsIcon size={18} />
-            </Button>
-          )}
-        </div>
-        <div
-          className="grid grid-rows-[0fr] animate-none data-[open=true]:grid-rows-[1fr] origin-top"
-          style={{
-            overflow: 'hidden',
-          }}
-          data-open={!!currentTabCheckData}
-        >
-          <div className="overflow-hidden min-h-0">
-            {currentTabCheckData && (
-              <div className="mt-2">
-                <CurrentTabCard
-                  url={currentTabUrl || ''}
-                  bookmark={currentTabCheckData.bookmark}
-                  metadata={currentTabCheckData.metadata}
-                  realtimeMetadata={realtimeMetadata}
-                  isLoading={isCurrentTabBookmarkLoading}
-                  isValidating={
-                    isCurrentTabBookmarkValidating && !isPollingMetadata
-                  }
-                  onToggleUnread={handleToggleUnread}
-                  onAdd={handleAdd}
-                  onDelete={handleDelete}
-                />
-              </div>
-            )}
-          </div>
-        </div>
-        <div
-          className={`absolute top-full left-0 right-0 h-8 bg-linear-to-b from-background to-transparent pointer-events-none z-10 transition-opacity duration-200 ${isScrolled ? 'opacity-100' : 'opacity-0'}`}
-        />
-      </div>
+      <BookmarksHeader
+        unreadFilter={unreadFilter}
+        onUnreadFilterChange={setUnreadFilter}
+        variant={variant}
+        currentTabUrl={currentTabUrl}
+        currentTabCheckData={currentTabCheckData}
+        realtimeMetadata={realtimeMetadata}
+        isCurrentTabBookmarkLoading={!!isCurrentTabBookmarkLoading}
+        isCurrentTabBookmarkValidating={!!isCurrentTabBookmarkValidating}
+        isPollingMetadata={!!isPollingMetadata}
+        onToggleUnread={handleToggleUnread}
+        onAdd={handleAdd}
+        onDelete={handleDelete}
+      />
 
-      <div className="pt-2">
-        {filteredBookmarks.length > 0 ? (
-          <>
-            {filteredBookmarks.map(bookmark => (
-              <BookmarkItem
-                key={bookmark.id}
-                bookmark={bookmark}
-                isDimmed={unreadFilter === 'all' && !bookmark.unread}
-                onToggleUnread={handleToggleUnread}
-              />
-            ))}
-            <div ref={loadMoreRef} className="py-4 flex justify-center">
-              {isLoadingMore && <Spinner />}
-              {!isLoadingMore && hasMore && !hasTriggeredLoadRef.current && (
-                <Button size="sm" variant="ghost" onPress={() => loadMore()}>
-                  Load more
-                </Button>
-              )}
-              {!isLoadingMore && !hasMore && (
-                <p className="text-muted text-sm">No more bookmarks</p>
-              )}
-            </div>
-          </>
-        ) : (
-          <div className="flex justify-center py-8">
-            <p className="text-muted text-sm">No {unreadFilter} bookmarks.</p>
-          </div>
-        )}
-      </div>
+      <div
+        className={`absolute top-[44px] left-0 right-0 h-8 bg-linear-to-b from-background to-transparent pointer-events-none z-10 transition-opacity duration-200 ${isScrolled ? 'opacity-100' : 'opacity-0'}`}
+      />
+
+      <BookmarksInfiniteList
+        filteredBookmarks={filteredBookmarks}
+        unreadFilter={unreadFilter}
+        isLoadingMore={isLoadingMore}
+        hasMore={hasMore}
+        hasTriggeredLoadRef={hasTriggeredLoadRef}
+        loadMoreRef={loadMoreRef}
+        loadMore={loadMore}
+        onToggleUnread={handleToggleUnread}
+      />
     </div>
   )
 }
