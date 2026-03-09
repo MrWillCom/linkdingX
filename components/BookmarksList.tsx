@@ -1,14 +1,14 @@
-import { useLiveQuery } from 'dexie-react-hooks'
 import { db } from '@/utils/db'
 import { bookmarkService } from '@/utils/bookmarkService'
-import { useCallback, useEffect, useRef, useState, useMemo } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import useSWR from 'swr'
-import useSWRInfinite from 'swr/infinite'
 import { Button, Spinner } from '@heroui/react'
 import { ExternalLink, Settings as SettingsIcon } from 'lucide-react'
 import { storage } from '#imports'
 import { useSetup } from '@/hooks/useSetup'
 import { UnreadFilter } from '@/components/FilterTabs'
+import { useCurrentTabTracker } from '@/hooks/useCurrentTabTracker'
+import { useBookmarksManager } from '@/hooks/useBookmarksManager'
 
 export interface Bookmark {
   id: number
@@ -27,13 +27,6 @@ export interface Bookmark {
   date_modified: string
 }
 
-interface BookmarksResponse {
-  count: number
-  next: string | null
-  previous: string | null
-  results: Bookmark[]
-}
-
 const serverStorage = storage.defineItem<string>('local:server', {
   fallback: '',
 })
@@ -41,36 +34,6 @@ const serverStorage = storage.defineItem<string>('local:server', {
 const apiTokenStorage = storage.defineItem<string>('local:apiToken', {
   fallback: '',
 })
-
-async function fetcher(key: string): Promise<BookmarksResponse> {
-  const server = await serverStorage.getValue()
-  const apiToken = await apiTokenStorage.getValue()
-
-  if (!server || !apiToken) {
-    throw new Error('Setup not complete')
-  }
-
-  const fullUrl = `${server}${key}`
-  const options: RequestInit = {
-    headers: {
-      Authorization: `Token ${apiToken}`,
-    },
-  }
-
-  const response = await browser.runtime.sendMessage({
-    type: 'api-request',
-    url: fullUrl,
-    options,
-  })
-
-  if (!response.ok) {
-    throw new Error(response.data?.detail || 'Failed to fetch bookmarks')
-  }
-
-  return response.data as BookmarksResponse
-}
-
-const PAGE_SIZE = 15
 
 function normalizeUrlForMatch(url: string): string {
   try {
@@ -81,19 +44,6 @@ function normalizeUrlForMatch(url: string): string {
         ? parsed.pathname.slice(0, -1)
         : parsed.pathname
     return `${parsed.origin}${normalizedPath}${parsed.search}`
-  } catch {
-    return url
-  }
-}
-
-function normalizeUrlWithoutSearch(url: string): string {
-  try {
-    const parsed = new URL(url)
-    const normalizedPath =
-      parsed.pathname.endsWith('/') && parsed.pathname !== '/'
-        ? parsed.pathname.slice(0, -1)
-        : parsed.pathname
-    return `${parsed.origin}${normalizedPath}`
   } catch {
     return url
   }
@@ -114,8 +64,10 @@ async function fetchCurrentTabBookmark([
   _type,
   url,
 ]: CurrentTabBookmarkKey): Promise<BookmarkCheckResponse | null> {
-  const server = await serverStorage.getValue()
-  const apiToken = await apiTokenStorage.getValue()
+  const [server, apiToken] = await Promise.all([
+    serverStorage.getValue(),
+    apiTokenStorage.getValue(),
+  ])
 
   if (!server || !apiToken) return null
 
@@ -146,44 +98,25 @@ export default function BookmarksList({
 }: BookmarksListProps) {
   const { fetchMetadataFromStorage, defaultUnreadStorage } = useSetup()
   const [unreadFilter, setUnreadFilter] = useState<UnreadFilter>('all')
-  const [currentTabUrl, setCurrentTabUrl] = useState<string | null>(null)
-  const [realtimeMetadata, setRealtimeMetadata] = useState<{
-    title: string
-    favicon: string | null
-  }>({ title: '', favicon: null })
+  const { currentTabUrl, realtimeMetadata } = useCurrentTabTracker()
+  const {
+    filteredBookmarks,
+    isLoading,
+    isLoadingMore,
+    hasMore,
+    loadMore,
+    mutate: mutateBookmarks,
+    error,
+  } = useBookmarksManager(unreadFilter)
+
   const [displayedCurrentTabBookmark, setDisplayedCurrentTabBookmark] =
     useState<Bookmark | null>(null)
   const [isPollingMetadata, setIsPollingMetadata] = useState(false)
 
-  const getKey = useCallback(
-    (pageIndex: number, previousPageData: BookmarksResponse | null) => {
-      if (previousPageData && !previousPageData.next) return null
-      const offset = pageIndex * PAGE_SIZE
-      return `/api/bookmarks/?limit=${PAGE_SIZE}&offset=${offset}`
-    },
-    [],
-  )
-
-  const { data, error, size, setSize, isLoading, isValidating, mutate } =
-    useSWRInfinite<BookmarksResponse>(getKey, fetcher, {
-      revalidateFirstPage: true,
-      revalidateOnFocus: true,
-      onSuccess: data => {
-        const allResults = data.flatMap(page => page.results)
-        if (allResults.length > 0) {
-          db.bookmarks.bulkPut(allResults)
-        }
-      },
-    })
-
-  const bookmarks =
-    useLiveQuery(() =>
-      db.bookmarks.orderBy('date_added').reverse().toArray(),
-    ) || []
-
   const currentTabKey: CurrentTabBookmarkKey | null = currentTabUrl
     ? ['current-tab-bookmark', normalizeUrlForMatch(currentTabUrl)]
     : null
+
   const {
     data: currentTabCheckData,
     isLoading: isCurrentTabBookmarkLoading,
@@ -206,11 +139,11 @@ export default function BookmarksList({
 
   useEffect(() => {
     const interval = setInterval(() => {
-      mutate()
+      mutateBookmarks()
     }, 60000)
 
     return () => clearInterval(interval)
-  }, [mutate])
+  }, [mutateBookmarks])
 
   const loadMoreRef = useRef<HTMLDivElement>(null)
   const [isScrolled, setIsScrolled] = useState(false)
@@ -220,17 +153,13 @@ export default function BookmarksList({
     setIsScrolled(e.currentTarget.scrollTop > 0)
   }
 
-  const isLoadingMore =
-    isLoading || (size > 0 && data && typeof data[size - 1] === 'undefined')
-
   useEffect(() => {
     const observer = new IntersectionObserver(
       entries => {
-        if (entries[0].isIntersecting && !isLoadingMore && !isValidating) {
-          const hasMore = !data || data[data.length - 1]?.next !== null
+        if (entries[0].isIntersecting && !isLoadingMore) {
           if (hasMore) {
             hasTriggeredLoadRef.current = true
-            setSize(prev => prev + 1)
+            loadMore()
           }
         }
       },
@@ -242,82 +171,11 @@ export default function BookmarksList({
     }
 
     return () => observer.disconnect()
-  }, [isLoadingMore, isValidating, data, setSize])
-
-  const hasMore = !data || data[data.length - 1]?.next !== null
-
-  useEffect(() => {
-    const syncCurrentTab = async () => {
-      try {
-        const tabs = await browser.tabs.query({
-          currentWindow: true,
-          active: true,
-        })
-        const activeTabUrl = tabs[0]?.url
-        if (
-          activeTabUrl?.startsWith('http://') ||
-          activeTabUrl?.startsWith('https://')
-        ) {
-          setCurrentTabUrl(activeTabUrl)
-          setRealtimeMetadata({
-            title: tabs[0]?.title || '',
-            favicon: tabs[0]?.favIconUrl || null,
-          })
-          return
-        }
-      } catch {
-        // Ignore tab lookup errors and hide the card.
-      }
-      setCurrentTabUrl(null)
-      setRealtimeMetadata({ title: '', favicon: null })
-    }
-
-    const onActivated = () => {
-      syncCurrentTab()
-    }
-    const onUpdated = (
-      _tabId: number,
-      changeInfo: { url?: string; title?: string; favIconUrl?: string },
-      tab: { active?: boolean; title?: string; favIconUrl?: string },
-    ) => {
-      if (!tab.active) return
-
-      if (changeInfo.title || changeInfo.favIconUrl) {
-        setRealtimeMetadata(prev => ({
-          title: changeInfo.title ?? tab.title ?? prev.title,
-          favicon: changeInfo.favIconUrl ?? tab.favIconUrl ?? prev.favicon,
-        }))
-      }
-
-      if (changeInfo.url) {
-        if (
-          changeInfo.url.startsWith('http://') ||
-          changeInfo.url.startsWith('https://')
-        ) {
-          setCurrentTabUrl(changeInfo.url)
-          setRealtimeMetadata({
-            title: tab.title || '',
-            favicon: tab.favIconUrl || null,
-          })
-        } else {
-          setCurrentTabUrl(null)
-          setRealtimeMetadata({ title: '', favicon: null })
-        }
-      }
-    }
-    syncCurrentTab()
-    browser.tabs.onActivated.addListener(onActivated)
-    browser.tabs.onUpdated.addListener(onUpdated)
-
-    return () => {
-      browser.tabs.onActivated.removeListener(onActivated)
-      browser.tabs.onUpdated.removeListener(onUpdated)
-    }
-  }, [])
+  }, [isLoadingMore, hasMore, loadMore])
 
   useEffect(() => {
     if (!currentTabCheckData?.bookmark) return
-    const updatedBookmark = bookmarks.find(
+    const updatedBookmark = filteredBookmarks.find(
       b => b.id === currentTabCheckData.bookmark?.id,
     )
     if (
@@ -331,7 +189,7 @@ export default function BookmarksList({
         },
       )
     }
-  }, [bookmarks, currentTabCheckData, mutateCurrentTabBookmark])
+  }, [filteredBookmarks, currentTabCheckData, mutateCurrentTabBookmark])
 
   useEffect(() => {
     if (currentTabCheckData) {
@@ -346,23 +204,18 @@ export default function BookmarksList({
     return () => window.clearTimeout(timeoutId)
   }, [currentTabCheckData])
 
-  const filteredBookmarks = useMemo(() => {
-    return bookmarks.filter(bookmark => {
-      if (unreadFilter === 'unread') return bookmark.unread
-      if (unreadFilter === 'read') return !bookmark.unread
-      return true
-    })
-  }, [bookmarks, unreadFilter])
-
   const handleToggleUnread = async (id: number, currentUnread: boolean) => {
     await bookmarkService.toggleUnread(id, currentUnread)
   }
 
   const handleAdd = async (url: string, title: string, description: string) => {
-    const server = await serverStorage.getValue()
-    const apiToken = await apiTokenStorage.getValue()
-    const fetchMetadataFrom = await fetchMetadataFromStorage.getValue()
-    const defaultUnread = await defaultUnreadStorage.getValue()
+    const [server, apiToken, fetchMetadataFrom, defaultUnread] =
+      await Promise.all([
+        serverStorage.getValue(),
+        apiTokenStorage.getValue(),
+        fetchMetadataFromStorage.getValue(),
+        defaultUnreadStorage.getValue(),
+      ])
 
     if (!server || !apiToken) return
 
@@ -386,7 +239,7 @@ export default function BookmarksList({
 
     if (response.ok) {
       await bookmarkService.addBookmark(response.data as Bookmark)
-      mutate()
+      mutateBookmarks()
       mutateCurrentTabBookmark()
 
       // Start polling for server-side metadata updates
@@ -422,7 +275,6 @@ export default function BookmarksList({
 
   const handleDelete = async (id: number) => {
     await bookmarkService.deleteBookmark(id)
-    // Update SWR cache while preserving metadata to keep the card visible
     mutateCurrentTabBookmark(
       prev => (prev ? { ...prev, bookmark: null } : null),
       { revalidate: false },
@@ -433,7 +285,7 @@ export default function BookmarksList({
     return (
       <div className="p-4 flex flex-col items-center gap-4">
         <p className="text-danger">Error: {error.message}</p>
-        <Button variant="secondary" size="sm" onPress={() => mutate()}>
+        <Button variant="secondary" size="sm" onPress={() => mutateBookmarks()}>
           Retry
         </Button>
       </div>
@@ -448,7 +300,7 @@ export default function BookmarksList({
     )
   }
 
-  if (bookmarks.length === 0 && !isLoading) {
+  if (filteredBookmarks.length === 0 && !isLoading) {
     return (
       <div className="flex justify-center py-8">
         <p className="text-muted text-sm">No bookmarks yet.</p>
@@ -522,7 +374,6 @@ export default function BookmarksList({
             )}
           </div>
         </div>
-        {/* Dynamic Gradient Mask - Attached to the bottom of the sticky area */}
         <div
           className={`absolute top-full left-0 right-0 h-8 bg-linear-to-b from-background to-transparent pointer-events-none z-10 transition-opacity duration-200 ${isScrolled ? 'opacity-100' : 'opacity-0'}`}
         />
@@ -542,11 +393,7 @@ export default function BookmarksList({
             <div ref={loadMoreRef} className="py-4 flex justify-center">
               {isLoadingMore && <Spinner />}
               {!isLoadingMore && hasMore && !hasTriggeredLoadRef.current && (
-                <Button
-                  size="sm"
-                  variant="ghost"
-                  onPress={() => setSize(prev => prev + 1)}
-                >
+                <Button size="sm" variant="ghost" onPress={() => loadMore()}>
                   Load more
                 </Button>
               )}
