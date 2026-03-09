@@ -6,7 +6,7 @@ import { UnreadFilter } from '@/components/FilterTabs'
 interface BookmarksInfiniteListProps {
   filteredBookmarks: Bookmark[]
   unreadFilter: UnreadFilter
-  isLoadingMore: boolean
+  isLoadingMore: boolean | undefined
   hasMore: boolean
   hasTriggeredLoadRef: React.RefObject<boolean | null>
   loadMoreRef: React.RefObject<HTMLDivElement | null>

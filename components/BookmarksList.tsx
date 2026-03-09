@@ -8,7 +8,7 @@ import { useSetup } from '@/hooks/useSetup'
 import { UnreadFilter } from '@/components/FilterTabs'
 import { useCurrentTabTracker } from '@/hooks/useCurrentTabTracker'
 import { useBookmarksManager } from '@/hooks/useBookmarksManager'
-import { BookmarksHeader } from './BookmarksHeader'
+import { BookmarksHeader, BookmarkCheckResponse } from './BookmarksHeader'
 import { BookmarksInfiniteList } from './BookmarksInfiniteList'
 
 export interface Bookmark {
@@ -51,15 +51,6 @@ function normalizeUrlForMatch(url: string): string {
 }
 
 type CurrentTabBookmarkKey = readonly ['current-tab-bookmark', string]
-
-interface BookmarkCheckResponse {
-  bookmark: Bookmark | null
-  metadata: {
-    title: string
-    description: string
-    [key: string]: any
-  }
-}
 
 async function fetchCurrentTabBookmark([
   _type,
@@ -295,18 +286,15 @@ export default function BookmarksList({
         onUnreadFilterChange={setUnreadFilter}
         variant={variant}
         currentTabUrl={currentTabUrl}
-        currentTabCheckData={currentTabCheckData}
+        currentTabCheckData={currentTabCheckData ?? null}
         realtimeMetadata={realtimeMetadata}
-        isCurrentTabBookmarkLoading={!!isCurrentTabBookmarkLoading}
-        isCurrentTabBookmarkValidating={!!isCurrentTabBookmarkValidating}
-        isPollingMetadata={!!isPollingMetadata}
+        isCurrentTabBookmarkLoading={isCurrentTabBookmarkLoading ?? false}
+        isCurrentTabBookmarkValidating={isCurrentTabBookmarkValidating ?? false}
+        isPollingMetadata={isPollingMetadata ?? false}
         onToggleUnread={handleToggleUnread}
         onAdd={handleAdd}
         onDelete={handleDelete}
-      />
-
-      <div
-        className={`absolute top-[44px] left-0 right-0 h-8 bg-linear-to-b from-background to-transparent pointer-events-none z-10 transition-opacity duration-200 ${isScrolled ? 'opacity-100' : 'opacity-0'}`}
+        isScrolled={isScrolled}
       />
 
       <BookmarksInfiniteList

@@ -71,7 +71,8 @@ export function useBookmarksManager(unreadFilter: UnreadFilter) {
     filteredBookmarks,
     isLoading,
     isValidating,
-    isLoadingMore: !!isLoading || !!(size > 0 && data && !data[size - 1]),
+    isLoadingMore:
+      isLoading || (size > 0 && data && typeof data[size - 1] === 'undefined'),
     hasMore: !data || data[data.length - 1]?.next !== null,
     loadMore: () => setSize(s => s + 1),
     mutate,

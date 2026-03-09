@@ -4,19 +4,32 @@ import { FilterTabs, UnreadFilter } from '@/components/FilterTabs'
 import { CurrentTabCard } from '@/components/CurrentTabCard'
 import { Bookmark } from './BookmarksList'
 
+export interface BookmarkCheckResponse {
+  bookmark: Bookmark | null
+  metadata: {
+    title: string
+    description: string
+    [key: string]: any
+  }
+}
+
 interface BookmarksHeaderProps {
   unreadFilter: UnreadFilter
   onUnreadFilterChange: (filter: UnreadFilter) => void
   variant: 'default' | 'expanded'
   currentTabUrl: string | null
-  currentTabCheckData: any
-  realtimeMetadata: any
-  isCurrentTabBookmarkLoading: boolean | undefined
-  isCurrentTabBookmarkValidating: boolean | undefined
-  isPollingMetadata: boolean | undefined
+  currentTabCheckData: BookmarkCheckResponse | null
+  realtimeMetadata: {
+    title: string
+    favicon: string | null
+  }
+  isCurrentTabBookmarkLoading: boolean
+  isCurrentTabBookmarkValidating: boolean
+  isPollingMetadata: boolean
   onToggleUnread: (id: number, current: boolean) => Promise<void>
   onAdd: (url: string, title: string, desc: string) => Promise<void>
   onDelete: (id: number) => Promise<void>
+  isScrolled: boolean
 }
 
 export function BookmarksHeader({
@@ -32,6 +45,7 @@ export function BookmarksHeader({
   onToggleUnread,
   onAdd,
   onDelete,
+  isScrolled,
 }: BookmarksHeaderProps) {
   return (
     <div className="sticky top-0 z-30 bg-background px-2 py-2">
@@ -91,6 +105,9 @@ export function BookmarksHeader({
           )}
         </div>
       </div>
+      <div
+        className={`absolute top-full left-0 right-0 h-8 bg-linear-to-b from-background to-transparent pointer-events-none z-10 transition-opacity duration-200 ${isScrolled ? 'opacity-100' : 'opacity-0'}`}
+      />
     </div>
   )
 }

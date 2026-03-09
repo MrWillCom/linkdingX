@@ -68,7 +68,11 @@ export function useCurrentTabTracker() {
     }
 
     const onActivated = () => syncCurrentTab()
-    const onUpdated = (_id: number, change: any, tab: any) => {
+    const onUpdated = (
+      _id: number,
+      change: { title?: string; favIconUrl?: string; url?: string },
+      tab: { active?: boolean; title?: string; favIconUrl?: string },
+    ) => {
       if (!tab.active) return
       if (change.title || change.favIconUrl) {
         dispatch({
