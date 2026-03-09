@@ -2,7 +2,7 @@ import { db } from '@/utils/db'
 import { bookmarkService } from '@/utils/bookmarkService'
 import { useEffect, useRef, useState } from 'react'
 import useSWR from 'swr'
-import { Spinner } from '@heroui/react'
+import { Button, Spinner } from '@heroui/react'
 import { storage } from '#imports'
 import { useSetup } from '@/hooks/useSetup'
 import { UnreadFilter } from '@/components/FilterTabs'
@@ -270,12 +270,9 @@ export default function BookmarksList({
     return (
       <div className="p-4 flex flex-col items-center gap-4">
         <p className="text-danger">Error: {error.message}</p>
-        <button
-          className="px-3 py-1 bg-secondary text-white rounded-md text-sm"
-          onClick={() => mutateBookmarks()}
-        >
+        <Button variant="secondary" size="sm" onPress={() => mutateBookmarks()}>
           Retry
-        </button>
+        </Button>
       </div>
     )
   }
