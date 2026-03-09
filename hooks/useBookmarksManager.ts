@@ -52,8 +52,17 @@ export function useBookmarksManager(unreadFilter: UnreadFilter) {
         const all = data.flatMap(p => p.results)
         if (all.length === 0) return
 
+        // Get IDs of bookmarks that are currently pending deletion
+        const pendingDeletions = await db.sync_queue
+          .where('action')
+          .equals('delete')
+          .toArray()
+        const deletionIds = new Set(pendingDeletions.map(op => op.bookmark_id))
+
+        // Filter out bookmarks from the server that we are currently deleting locally
+        const filtered = all.filter(b => !deletionIds.has(b.id))
+
         // Basic optimization: compare lengths or some heuristic to avoid always writing
-        // Since we reverse order and fetch by date, we can check if the first bookmark matches
         const existing = await db.bookmarks
           .orderBy('date_added')
           .reverse()
@@ -62,22 +71,30 @@ export function useBookmarksManager(unreadFilter: UnreadFilter) {
 
         if (
           existing.length > 0 &&
-          existing[0].id === all[0].id &&
-          existing[0].date_modified === all[0].date_modified &&
-          all.length <= existing.length // Heuristic: if we have more, we probably need to update
+          existing[0].id === filtered[0]?.id &&
+          existing[0].date_modified === filtered[0]?.date_modified &&
+          filtered.length <= existing.length
         ) {
-          // Likely no changes in the first page at least, could be deeper changes but this reduces simple redundant writes
           return
         }
 
-        db.bookmarks.bulkPut(all)
+        // Put only the bookmarks that aren't pending deletion
+        if (filtered.length > 0) {
+          await db.bookmarks.bulkPut(filtered)
+        }
       },
     })
 
   const bookmarks =
-    useLiveQuery(() =>
-      db.bookmarks.orderBy('date_added').reverse().toArray(),
-    ) || []
+    useLiveQuery(async () => {
+      const all = await db.bookmarks.orderBy('date_added').reverse().toArray()
+      const pendingDeletions = await db.sync_queue
+        .where('action')
+        .equals('delete')
+        .toArray()
+      const deletionIds = new Set(pendingDeletions.map(op => op.bookmark_id))
+      return all.filter(b => !deletionIds.has(b.id))
+    }) || []
 
   const filteredBookmarks = useMemo(() => {
     return bookmarks.filter(b => {
