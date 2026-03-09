@@ -381,61 +381,67 @@ export default function SettingsForm({
       </div>
 
       <Modal isOpen={isModalOpen} onOpenChange={setIsModalOpen}>
-        <Modal.Backdrop />
+        <Modal.Backdrop variant="blur" />
         <Modal.Container>
           <Modal.Dialog>
-            <Modal.Header>
-              <Modal.Heading>Clean Local Data</Modal.Heading>
-              <Modal.CloseTrigger />
-            </Modal.Header>
-            <Modal.Body>
-              <div className="flex flex-col gap-4">
-                <Description>
-                  Select the local data you want to remove. This will not affect
-                  your data on the Linkding server.
-                </Description>
-                <div className="flex flex-col gap-3">
-                  <Checkbox
-                    isSelected={cleanBookmarks}
-                    onChange={setCleanBookmarks}
-                  >
-                    <Checkbox.Control>
-                      <Checkbox.Indicator />
-                    </Checkbox.Control>
-                    <Checkbox.Content>
-                      <Label>Bookmarks Cache</Label>
-                      <Description>
-                        Forces a full re-sync of all bookmarks.
-                      </Description>
-                    </Checkbox.Content>
-                  </Checkbox>
+            {({ close }) => (
+              <>
+                <Modal.Header>
+                  <Modal.Heading>Clean Local Data</Modal.Heading>
+                  <Modal.CloseTrigger />
+                </Modal.Header>
+                <Modal.Body>
+                  <div className="flex flex-col gap-4">
+                    <Description>
+                      Select the local data you want to remove. This will not
+                      affect your data on the Linkding server.
+                    </Description>
+                    <div className="flex flex-col gap-3">
+                      <Checkbox
+                        isSelected={cleanBookmarks}
+                        onChange={setCleanBookmarks}
+                      >
+                        <Checkbox.Control>
+                          <Checkbox.Indicator />
+                        </Checkbox.Control>
+                        <Checkbox.Content>
+                          <Label>Bookmarks Cache</Label>
+                          <Description>
+                            Forces a full re-sync of all bookmarks.
+                          </Description>
+                        </Checkbox.Content>
+                      </Checkbox>
 
-                  <Checkbox
-                    isSelected={cleanSyncQueue}
-                    onChange={setCleanSyncQueue}
-                  >
-                    <Checkbox.Control>
-                      <Checkbox.Indicator />
-                    </Checkbox.Control>
-                    <Checkbox.Content>
-                      <Label>Sync Queue</Label>
-                      <Description className="text-danger">
-                        Warning: This will discard any pending changes that
-                        haven't been sent to the server.
-                      </Description>
-                    </Checkbox.Content>
-                  </Checkbox>
-                </div>
-              </div>
-            </Modal.Body>
-            <Modal.Footer>
-              <Button variant="tertiary" onPress={() => setIsModalOpen(false)}>
-                Cancel
-              </Button>
-              <Button variant="danger" onPress={handleClean}>
-                Clean Selected Data
-              </Button>
-            </Modal.Footer>
+                      <Checkbox
+                        isSelected={cleanSyncQueue}
+                        onChange={setCleanSyncQueue}
+                      >
+                        <Checkbox.Control>
+                          <Checkbox.Indicator />
+                        </Checkbox.Control>
+                        <Checkbox.Content>
+                          <Label>Sync Queue</Label>
+                          {cleanSyncQueue && (
+                            <Description className="text-danger">
+                              Warning: This will discard any pending changes
+                              that haven't been sent to the server.
+                            </Description>
+                          )}
+                        </Checkbox.Content>
+                      </Checkbox>
+                    </div>
+                  </div>
+                </Modal.Body>
+                <Modal.Footer>
+                  <Button variant="tertiary" onPress={close}>
+                    Cancel
+                  </Button>
+                  <Button variant="danger" onPress={handleClean}>
+                    Clean Selected Data
+                  </Button>
+                </Modal.Footer>
+              </>
+            )}
           </Modal.Dialog>
         </Modal.Container>
       </Modal>
