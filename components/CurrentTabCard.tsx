@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react'
 import { formatDistanceToNow } from 'date-fns'
 import { Card, Link, Chip, Button, Tooltip } from '@heroui/react'
-import { Trash2, AlertTriangle } from 'lucide-react'
+import { Trash2, AlertTriangle, PlusIcon } from 'lucide-react'
 import { BookmarkFavicon } from './BookmarkFavicon'
 import { BookmarkPreview } from './BookmarkPreview'
 
@@ -119,7 +119,7 @@ export function CurrentTabCard({
                 isDisabled={isLoading || isValidating}
                 onPress={() => onAdd?.(url, title, description)}
               >
-                Add to Linkding
+                <PlusIcon className="size-4" />
               </Button>
             </Card.Footer>
           </div>
@@ -221,7 +221,8 @@ export function CurrentTabCard({
                 </Tooltip>
                 <Button
                   size="sm"
-                  variant={bookmark.unread ? 'primary' : 'ghost'}
+                  variant="primary"
+                  className="w-36"
                   isDisabled={isLoading || isValidating}
                   onPress={() => onToggleUnread(bookmark.id, bookmark.unread)}
                 >
