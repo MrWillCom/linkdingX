@@ -153,6 +153,7 @@ export default function BookmarksList({
   }>({ title: '', favicon: null })
   const [displayedCurrentTabBookmark, setDisplayedCurrentTabBookmark] =
     useState<Bookmark | null>(null)
+  const [isPollingMetadata, setIsPollingMetadata] = useState(false)
 
   const getKey = useCallback(
     (pageIndex: number, previousPageData: BookmarksResponse | null) => {
@@ -393,22 +394,27 @@ export default function BookmarksList({
       const maxAttempts = 5
       const pollInterval = setInterval(async () => {
         attempts++
-        const result = await mutateCurrentTabBookmark()
-        const bookmark = result?.bookmark
+        setIsPollingMetadata(true)
+        try {
+          const result = await mutateCurrentTabBookmark()
+          const bookmark = result?.bookmark
 
-        if (bookmark) {
-          await db.bookmarks.put(bookmark)
-        }
+          if (bookmark) {
+            await db.bookmarks.put(bookmark)
+          }
 
-        const hasArchive = !!bookmark?.web_archive_snapshot_url
-        const hasPreview = !!bookmark?.preview_image_url
-        const hasFavicon = !!bookmark?.favicon_url
+          const hasArchive = !!bookmark?.web_archive_snapshot_url
+          const hasPreview = !!bookmark?.preview_image_url
+          const hasFavicon = !!bookmark?.favicon_url
 
-        if (
-          (hasArchive && hasPreview && hasFavicon) ||
-          attempts >= maxAttempts
-        ) {
-          clearInterval(pollInterval)
+          if (
+            (hasArchive && hasPreview && hasFavicon) ||
+            attempts >= maxAttempts
+          ) {
+            clearInterval(pollInterval)
+          }
+        } finally {
+          setIsPollingMetadata(false)
         }
       }, 2000)
     }
@@ -501,7 +507,9 @@ export default function BookmarksList({
                   metadata={currentTabCheckData.metadata}
                   realtimeMetadata={realtimeMetadata}
                   isLoading={isCurrentTabBookmarkLoading}
-                  isValidating={isCurrentTabBookmarkValidating}
+                  isValidating={
+                    isCurrentTabBookmarkValidating && !isPollingMetadata
+                  }
                   onToggleUnread={handleToggleUnread}
                   onAdd={handleAdd}
                   onDelete={handleDelete}
