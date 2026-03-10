@@ -82,10 +82,9 @@ export function BookmarksHeader({
       </div>
       <div
         className="grid grid-rows-[0fr] animate-none data-[open=true]:grid-rows-[1fr] origin-top"
-        style={{ overflow: 'hidden' }}
         data-open={!!currentTabCheckData}
       >
-        <div className="overflow-hidden min-h-0">
+        <div className="min-h-0">
           {currentTabCheckData && (
             <div className="mt-2">
               <CurrentTabCard
