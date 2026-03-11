@@ -50,16 +50,13 @@ When you first open linkdingX, you'll be guided through the connection process:
 
 Seamlessly toggle between **All**, **Unread**, and **Archived** bookmarks using the integrated filter tabs.
 
-### Real-time Tab Tracking
+### Current Tab Intelligence
 
-linkdingX automatically detects if the website you are currently visiting is already in your collection, allowing for quick unread toggling or deletion.
+linkdingX automatically detects if the website you're visiting is already in your bookmarks.
 
-### Maintenance & Health
-
-Built-in tools to manage your local state:
-
-- **Cache Cleaning**: Re-sync your entire library from the server if local state becomes inconsistent.
-- **Sync Status**: Real-time visual feedback on background synchronization progress.
+- **Real-time Status**: Instant visual feedback if the tab is saved.
+- **Quick Actions**: One-click to save, edit, or delete the current page.
+- **Metadata Detection**: Automatically pulls page titles and descriptions.
 
 ---
 
@@ -75,5 +72,3 @@ For detailed development guidelines, project structure, and coding standards, pl
 - `pnpm format`: Format code with Prettier.
 
 ---
-
-_linkdingX is an unofficial companion and is not affiliated with the official linkding project._
