@@ -45,8 +45,7 @@ export function BookmarksHeader({
   onDelete,
   isScrolled,
 }: BookmarksHeaderProps) {
-  const isVisible =
-    !!currentTabBookmark || !!currentTabMetadata || isCurrentTabBookmarkLoading
+  const isVisible = !!currentTabUrl
 
   return (
     <div className="sticky top-0 z-30 bg-background px-2 py-2">
