@@ -122,9 +122,7 @@ export function CurrentTabCard({
               </div>
             </Card.Content>
             <Card.Footer className="pt-1 flex items-center justify-between">
-              <span className="text-2xs text-muted">
-                {isLoading ? 'Checking Linkding...' : 'Not in your bookmarks'}
-              </span>
+              <span className="text-2xs text-muted" />
               <Button
                 size="sm"
                 variant="primary"
@@ -170,6 +168,11 @@ export function CurrentTabCard({
                   >
                     {bookmark.url}
                   </Link>
+                  {description && (
+                    <p className="text-2xs text-muted mt-1.5 line-clamp-2">
+                      {description}
+                    </p>
+                  )}
                   {bookmark.tag_names.length > 0 && (
                     <div className="flex flex-wrap gap-1.5 mt-1.5">
                       {bookmark.tag_names.map(tag => (
