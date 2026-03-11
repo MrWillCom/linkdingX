@@ -1,4 +1,4 @@
-# 🔖 linkdingX
+# linkdingX
 
 **The persistent, offline-first sidepanel companion for your linkding instance.**
 
