@@ -1,14 +1,13 @@
 import { db } from '@/utils/db'
 import { bookmarkService } from '@/utils/bookmarkService'
 import { useEffect, useRef, useState } from 'react'
-import useSWR from 'swr'
 import { Button, Spinner } from '@heroui/react'
 import { storage } from '#imports'
 import { useSetup } from '@/hooks/useSetup'
 import { UnreadFilter } from '@/components/FilterTabs'
-import { useCurrentTabTracker } from '@/hooks/useCurrentTabTracker'
 import { useBookmarksManager } from '@/hooks/useBookmarksManager'
-import { BookmarksHeader, BookmarkCheckResponse } from './BookmarksHeader'
+import { useCurrentTabBookmark } from '@/hooks/useCurrentTabBookmark'
+import { BookmarksHeader } from './BookmarksHeader'
 import { BookmarksInfiniteList } from './BookmarksInfiniteList'
 
 export interface Bookmark {
@@ -36,49 +35,6 @@ const apiTokenStorage = storage.defineItem<string>('local:apiToken', {
   fallback: '',
 })
 
-function normalizeUrlForMatch(url: string): string {
-  try {
-    const parsed = new URL(url)
-    parsed.hash = ''
-    const normalizedPath =
-      parsed.pathname.endsWith('/') && parsed.pathname !== '/'
-        ? parsed.pathname.slice(0, -1)
-        : parsed.pathname
-    return `${parsed.origin}${normalizedPath}${parsed.search}`
-  } catch {
-    return url
-  }
-}
-
-type CurrentTabBookmarkKey = readonly ['current-tab-bookmark', string]
-
-async function fetchCurrentTabBookmark([
-  _type,
-  url,
-]: CurrentTabBookmarkKey): Promise<BookmarkCheckResponse | null> {
-  const [server, apiToken] = await Promise.all([
-    serverStorage.getValue(),
-    apiTokenStorage.getValue(),
-  ])
-
-  if (!server || !apiToken) return null
-
-  const fullUrl = `${server}/api/bookmarks/check/?url=${encodeURIComponent(url)}`
-  const response = await browser.runtime.sendMessage({
-    type: 'api-request',
-    url: fullUrl,
-    options: {
-      headers: {
-        Authorization: `Token ${apiToken}`,
-      },
-    },
-  })
-
-  if (!response.ok) return null
-
-  return response.data as BookmarkCheckResponse
-}
-
 type BookmarksListVariant = 'default' | 'expanded'
 
 interface BookmarksListProps {
@@ -90,7 +46,6 @@ export default function BookmarksList({
 }: BookmarksListProps) {
   const { fetchMetadataFromStorage, defaultUnreadStorage } = useSetup()
   const [unreadFilter, setUnreadFilter] = useState<UnreadFilter>('all')
-  const { currentTabUrl, realtimeMetadata } = useCurrentTabTracker()
   const {
     filteredBookmarks,
     isLoading,
@@ -101,37 +56,13 @@ export default function BookmarksList({
     error,
   } = useBookmarksManager(unreadFilter)
 
-  const [isPollingMetadata, setIsPollingMetadata] = useState(false)
-
-  const currentTabKey: CurrentTabBookmarkKey | null = currentTabUrl
-    ? ['current-tab-bookmark', normalizeUrlForMatch(currentTabUrl)]
-    : null
-
   const {
-    data: currentTabCheckData,
+    bookmark: currentTabBookmark,
+    serverMetadata: currentTabMetadata,
+    realtimeMetadata,
     isLoading: isCurrentTabBookmarkLoading,
-    isValidating: isCurrentTabBookmarkValidating,
-    mutate: mutateCurrentTabBookmark,
-  } = useSWR<BookmarkCheckResponse | null, Error, CurrentTabBookmarkKey | null>(
-    currentTabKey,
-    fetchCurrentTabBookmark,
-    {
-      revalidateOnFocus: false,
-      revalidateOnReconnect: false,
-      revalidateIfStale: false,
-      dedupingInterval: 300000,
-      refreshInterval: 300000,
-      refreshWhenHidden: false,
-      refreshWhenOffline: false,
-      keepPreviousData: false, // Changed from true to false
-    },
-  )
-
-  console.log('[BookmarksList] currentTabKey:', currentTabKey)
-  console.log(
-    '[BookmarksList] currentTabCheckData exists:',
-    !!currentTabCheckData,
-  )
+    currentTabUrl,
+  } = useCurrentTabBookmark()
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -175,24 +106,6 @@ export default function BookmarksList({
     return () => observer.disconnect()
   }, [])
 
-  useEffect(() => {
-    if (!currentTabCheckData?.bookmark) return
-    const updatedBookmark = filteredBookmarks.find(
-      b => b.id === currentTabCheckData.bookmark?.id,
-    )
-    if (
-      updatedBookmark &&
-      updatedBookmark.unread !== currentTabCheckData.bookmark.unread
-    ) {
-      mutateCurrentTabBookmark(
-        { ...currentTabCheckData, bookmark: updatedBookmark },
-        {
-          revalidate: false,
-        },
-      )
-    }
-  }, [filteredBookmarks, currentTabCheckData, mutateCurrentTabBookmark])
-
   const handleToggleUnread = async (id: number, currentUnread: boolean) => {
     await bookmarkService.toggleUnread(id, currentUnread)
   }
@@ -229,44 +142,11 @@ export default function BookmarksList({
     if (response.ok) {
       await bookmarkService.addBookmark(response.data as Bookmark)
       mutateBookmarks()
-      mutateCurrentTabBookmark()
-
-      let attempts = 0
-      const maxAttempts = 5
-      const pollInterval = setInterval(async () => {
-        attempts++
-        setIsPollingMetadata(true)
-        try {
-          const result = await mutateCurrentTabBookmark()
-          const bookmark = result?.bookmark
-
-          if (bookmark) {
-            await db.bookmarks.put(bookmark)
-          }
-
-          const hasArchive = !!bookmark?.web_archive_snapshot_url
-          const hasPreview = !!bookmark?.preview_image_url
-          const hasFavicon = !!bookmark?.favicon_url
-
-          if (
-            (hasArchive && hasPreview && hasFavicon) ||
-            attempts >= maxAttempts
-          ) {
-            clearInterval(pollInterval)
-          }
-        } finally {
-          setIsPollingMetadata(false)
-        }
-      }, 2000)
     }
   }
 
   const handleDelete = async (id: number) => {
     await bookmarkService.deleteBookmark(id)
-    mutateCurrentTabBookmark(
-      prev => (prev ? { ...prev, bookmark: null } : null),
-      { revalidate: false },
-    )
   }
 
   if (error) {
@@ -298,11 +178,10 @@ export default function BookmarksList({
         onUnreadFilterChange={setUnreadFilter}
         variant={variant}
         currentTabUrl={currentTabUrl}
-        currentTabCheckData={currentTabCheckData ?? null}
+        currentTabBookmark={currentTabBookmark}
+        currentTabMetadata={currentTabMetadata}
         realtimeMetadata={realtimeMetadata}
-        isCurrentTabBookmarkLoading={isCurrentTabBookmarkLoading ?? false}
-        isCurrentTabBookmarkValidating={isCurrentTabBookmarkValidating ?? false}
-        isPollingMetadata={isPollingMetadata ?? false}
+        isCurrentTabBookmarkLoading={isCurrentTabBookmarkLoading}
         onToggleUnread={handleToggleUnread}
         onAdd={handleAdd}
         onDelete={handleDelete}

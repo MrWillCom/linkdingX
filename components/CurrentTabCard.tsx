@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react'
 import { formatDistanceToNow } from 'date-fns'
 import { Card, Link, Chip, Button, Tooltip } from '@heroui/react'
-import { Trash2, AlertTriangle, PlusIcon } from 'lucide-react'
+import { Trash2, PlusIcon } from 'lucide-react'
 import { BookmarkFavicon } from './BookmarkFavicon'
 import { BookmarkPreview } from './BookmarkPreview'
 
@@ -24,7 +24,7 @@ interface Bookmark {
 
 interface CurrentTabCardProps {
   url: string
-  bookmark: Bookmark | null
+  bookmark: Bookmark | null | undefined
   metadata?: {
     title: string
     description: string
@@ -35,7 +35,6 @@ interface CurrentTabCardProps {
     favicon: string | null
   }
   isLoading: boolean
-  isValidating: boolean
   onToggleUnread: (id: number, currentUnread: boolean) => void
   onAdd?: (url: string, title: string, description: string) => void
   onDelete?: (id: number) => void
@@ -47,7 +46,6 @@ export function CurrentTabCard({
   metadata,
   realtimeMetadata,
   isLoading,
-  isValidating,
   onToggleUnread,
   onAdd,
   onDelete,
@@ -116,7 +114,7 @@ export function CurrentTabCard({
               <Button
                 size="sm"
                 variant="primary"
-                isDisabled={isLoading || isValidating}
+                isDisabled={isLoading}
                 onPress={() => onAdd?.(url, title, description)}
               >
                 <PlusIcon className="size-4" />
@@ -209,7 +207,7 @@ export function CurrentTabCard({
                           ? 'Confirm delete bookmark'
                           : 'Delete bookmark'
                       }
-                      isDisabled={isLoading || isValidating}
+                      isDisabled={isLoading}
                       onPress={handleDeletePress}
                     >
                       <Trash2 className="w-4 h-4" />
@@ -223,7 +221,7 @@ export function CurrentTabCard({
                   size="sm"
                   variant="primary"
                   className="w-36"
-                  isDisabled={isLoading || isValidating}
+                  isDisabled={isLoading}
                   onPress={() => onToggleUnread(bookmark.id, bookmark.unread)}
                 >
                   {bookmark.unread ? 'Mark as read' : 'Mark as unread'}
