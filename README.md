@@ -2,7 +2,7 @@
 
 The persistent, offline-first sidepanel companion for your linkding instance.
 
-[ ![linkdingX Sidepanel Preview](public/icon/128.png) ] _(Placeholder for high-quality sidepanel screenshot)_
+![linkdingX Sidepanel Preview](screenshots/screenshot-chrome.webp)
 
 ## Getting Started
 
