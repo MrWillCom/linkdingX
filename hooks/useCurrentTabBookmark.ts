@@ -30,14 +30,17 @@ export function useCurrentTabBookmark() {
         type: 'api-request',
         url: `/api/bookmarks/check/?url=${encodeURIComponent(currentTabUrl)}`,
       })
-      .then((res) => {
+      .then(res => {
         if (res.ok) {
           setServerData(res.data)
         } else {
-          console.error('[useCurrentTabBookmark] Server check failed:', res.error)
+          console.error(
+            '[useCurrentTabBookmark] Server check failed:',
+            res.error,
+          )
         }
       })
-      .catch((err) => {
+      .catch(err => {
         console.error('[useCurrentTabBookmark] API request error:', err)
       })
       .finally(() => setIsLoading(false))
