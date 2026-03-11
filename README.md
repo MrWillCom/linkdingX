@@ -32,6 +32,7 @@ A polished, native-feeling interface built with **HeroUI v3** and **React 19**, 
 
 [ ![Chrome Web Store](https://img.shields.io/badge/Chrome-Web%20Store-blue?style=for-the-badge&logo=google-chrome) ](https://chrome.google.com/webstore)
 [ ![Firefox Add-ons](https://img.shields.io/badge/Firefox-Add--ons-orange?style=for-the-badge&logo=firefox-browser) ](https://addons.mozilla.org)
+[ ![Microsoft Edge Add-ons](https://img.shields.io/badge/Edge-Add--ons-0078D4?style=for-the-badge&logo=microsoft-edge) ](https://microsoftedge.microsoft.com/addons)
 
 ### 2. Connection Setup
 
