@@ -103,14 +103,28 @@ export function CurrentTabCard({
                 </span>
               </Card.Title>
             </Card.Header>
+            <Card.Content className="pt-0">
+              <div className="flex items-start gap-2">
+                <div className="min-w-0 flex-1">
+                  <Link
+                    href={url}
+                    target="_blank"
+                    className="text-2xs text-muted hover:text-primary transition-colors line-clamp-1"
+                  >
+                    {url}
+                  </Link>
+                  {description && (
+                    <p className="text-2xs text-muted mt-1.5 line-clamp-2">
+                      {description}
+                    </p>
+                  )}
+                </div>
+              </div>
+            </Card.Content>
             <Card.Footer className="pt-1 flex items-center justify-between">
-              <Link
-                href={url}
-                target="_blank"
-                className="text-2xs text-muted hover:text-primary transition-colors line-clamp-1 flex-1 mr-2"
-              >
-                {url}
-              </Link>
+              <span className="text-2xs text-muted">
+                {isLoading ? 'Checking Linkding...' : 'Not in your bookmarks'}
+              </span>
               <Button
                 size="sm"
                 variant="primary"
@@ -141,10 +155,8 @@ export function CurrentTabCard({
               </div>
               <Card.Title className="text-sm line-clamp-1">
                 <span className="flex min-w-0 items-center gap-1.5">
-                  <BookmarkFavicon url={bookmark.favicon_url} />
-                  <span className="line-clamp-1">
-                    {bookmark.title || bookmark.url}
-                  </span>
+                  <BookmarkFavicon url={favicon} />
+                  <span className="line-clamp-1">{title}</span>
                 </span>
               </Card.Title>
             </Card.Header>
