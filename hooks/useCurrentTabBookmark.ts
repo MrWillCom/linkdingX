@@ -17,12 +17,12 @@ export function useCurrentTabBookmark() {
     [currentTabUrl],
   )
 
-  // 2. Stateless Check when URL changes
+  // 2. Background Sync (Enhancement)
   useEffect(() => {
-    // Clear state on URL change to prevent stale data
-    setServerData(null)
-
-    if (!currentTabUrl || bookmark) return
+    if (!currentTabUrl || bookmark) {
+      setServerData(null)
+      return
+    }
 
     setIsLoading(true)
     browser.runtime
@@ -33,16 +33,11 @@ export function useCurrentTabBookmark() {
       .then(res => {
         if (res.ok) {
           setServerData(res.data)
-        } else {
-          console.error(
-            '[useCurrentTabBookmark] Server check failed:',
-            res.error,
-          )
         }
       })
-      .catch(err => {
-        console.error('[useCurrentTabBookmark] API request error:', err)
-      })
+      .catch(err =>
+        console.error('[useCurrentTabBookmark] Background sync failed:', err),
+      )
       .finally(() => setIsLoading(false))
   }, [currentTabUrl, !!bookmark])
 
