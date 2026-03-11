@@ -1,9 +1,4 @@
-# linkdingX
-
-[![WXT](https://img.shields.io/badge/built%20with-WXT-blue?style=flat-square)](https://wxt.dev)
-[![React](https://img.shields.io/badge/React-19-61dafb?style=flat-square&logo=react)](https://react.dev)
-[![HeroUI](https://img.shields.io/badge/HeroUI-v3-orange?style=flat-square)](https://v3.heroui.com)
-[![Tailwind](https://img.shields.io/badge/Tailwind-v4-38b2ac?style=flat-square&logo=tailwind-css)](https://tailwindcss.com)
+# 🔖 linkdingX
 
 **The persistent, offline-first sidepanel companion for your linkding instance.**
 
@@ -13,29 +8,30 @@
 
 Standard extensions vanish the moment you click away. **linkdingX** is built for power users who need a persistent, high-performance workspace while browsing.
 
-### ⚡️ Instant Local Search
+### Instant Local Search
 
 Powered by **Dexie.js (IndexedDB)**, linkdingX caches your entire library locally. Search thousands of bookmarks in sub-milliseconds, even if your self-hosted server is slow or offline.
 
-### 🧱 Persistent Sidepanel
+### Persistent Sidepanel
 
 Built using the **Chrome Side Panel API**. Open it once, and it stays with you across tabs. No more losing your search or tags when you click back into the webpage.
 
-### 📡 Fire-and-Forget Sync
+### Fire-and-Forget Sync
 
 Add, delete, or toggle unread status instantly. Your changes are queued locally and synchronized automatically in the background via a robust sync queue.
 
-### 💎 Modern Aesthetic
+### Modern Aesthetic
 
 A polished, native-feeling interface built with **HeroUI v3** and **React 19**, featuring full dark mode support and smooth animations.
 
 ---
 
-## 🚀 Getting Started
+## Getting Started
 
 ### 1. Installation
 
-_Currently in development. Load the unpacked extension from the `dist/` folder after running `pnpm build`._
+[ ![Chrome Web Store](https://img.shields.io/badge/Chrome-Web%20Store-blue?style=for-the-badge&logo=google-chrome) ](https://chrome.google.com/webstore)
+[ ![Firefox Add-ons](https://img.shields.io/badge/Firefox-Add--ons-orange?style=for-the-badge&logo=firefox-browser) ](https://addons.mozilla.org)
 
 ### 2. Connection Setup
 
@@ -48,7 +44,7 @@ When you first open linkdingX, you'll be guided through the connection process:
 
 ---
 
-## 🛠 Features in Depth
+## Features in Depth
 
 ### Unified Bookmarks View
 
@@ -67,7 +63,7 @@ Built-in tools to manage your local state:
 
 ---
 
-## 💻 Developer Information
+## Developer Information
 
 For detailed development guidelines, project structure, and coding standards, please refer to [AGENTS.md](./AGENTS.md).
 
