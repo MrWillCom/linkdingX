@@ -65,7 +65,7 @@ export function BookmarksHeader({
               await browser.tabs.create({ url })
             }}
           >
-            <ExternalLink className="w-4 h-4" />
+            <ExternalLink className="w-4 h-4" aria-hidden="true" />
           </Button>
         )}
         {variant === 'expanded' && (
@@ -76,12 +76,12 @@ export function BookmarksHeader({
             aria-label="Open settings"
             onPress={() => browser.runtime.openOptionsPage()}
           >
-            <SettingsIcon size={18} />
+            <SettingsIcon size={18} aria-hidden="true" />
           </Button>
         )}
       </div>
       <div
-        className="grid grid-rows-[0fr] animate-none data-[open=true]:grid-rows-[1fr] origin-top"
+        className="grid grid-rows-[0fr] transition-[grid-template-rows] duration-200 ease-in-out data-[open=true]:grid-rows-[1fr] origin-top"
         data-open={isVisible}
       >
         <div className="min-h-0">
