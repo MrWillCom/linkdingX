@@ -126,89 +126,159 @@ export default defineBackground(() => {
     }
     if (message.type === 'api-request') {
       const { url, options } = message
-      fetch(url, options)
-        .then(response => {
-          return response.json().then(data => ({
-            ok: response.ok,
-            status: response.status,
-            data,
-          }))
-        })
-        .then(sendResponse)
-        .catch(error => {
-          sendResponse({ ok: false, error: error.message })
-        })
+      Promise.all([serverStorage.getValue(), apiTokenStorage.getValue()]).then(
+        ([server, apiToken]) => {
+          if (!server || !apiToken) {
+            sendResponse({ ok: false, error: 'Missing server or API token' })
+            return
+          }
+
+          const fullUrl = url.startsWith('http') ? url : `${server}${url}`
+          const fetchOptions: RequestInit = {
+            ...options,
+            headers: {
+              Authorization: `Token ${apiToken}`,
+              'Content-Type': 'application/json',
+              ...options?.headers,
+            },
+          }
+
+          fetch(fullUrl, fetchOptions)
+            .then(response => {
+              return response
+                .json()
+                .catch(() => ({}))
+                .then(data => ({
+                  ok: response.ok,
+                  status: response.status,
+                  data,
+                }))
+            })
+            .then(sendResponse)
+            .catch(error => {
+              sendResponse({ ok: false, error: error.message })
+            })
+        },
+      )
       return true
     }
     if (message.type === 'api-patch') {
       const { url, data: patchData, options } = message
-      const fetchOptions: RequestInit = {
-        method: 'PATCH',
-        headers: {
-          'Content-Type': 'application/json',
-          ...options?.headers,
+      Promise.all([serverStorage.getValue(), apiTokenStorage.getValue()]).then(
+        ([server, apiToken]) => {
+          if (!server || !apiToken) {
+            sendResponse({ ok: false, error: 'Missing server or API token' })
+            return
+          }
+
+          const fullUrl = url.startsWith('http') ? url : `${server}${url}`
+          const fetchOptions: RequestInit = {
+            method: 'PATCH',
+            ...options,
+            headers: {
+              Authorization: `Token ${apiToken}`,
+              'Content-Type': 'application/json',
+              ...options?.headers,
+            },
+            body: JSON.stringify(patchData),
+          }
+
+          fetch(fullUrl, fetchOptions)
+            .then(response => {
+              return response
+                .json()
+                .catch(() => ({}))
+                .then(data => ({
+                  ok: response.ok,
+                  status: response.status,
+                  data,
+                }))
+            })
+            .then(sendResponse)
+            .catch(error => {
+              sendResponse({ ok: false, error: error.message })
+            })
         },
-        body: JSON.stringify(patchData),
-      }
-      fetch(url, fetchOptions)
-        .then(response => {
-          return response.json().then(data => ({
-            ok: response.ok,
-            status: response.status,
-            data,
-          }))
-        })
-        .then(sendResponse)
-        .catch(error => {
-          sendResponse({ ok: false, error: error.message })
-        })
+      )
       return true
     }
     if (message.type === 'api-post') {
       const { url, data: postData, options } = message
-      const fetchOptions: RequestInit = {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          ...options?.headers,
+      Promise.all([serverStorage.getValue(), apiTokenStorage.getValue()]).then(
+        ([server, apiToken]) => {
+          if (!server || !apiToken) {
+            sendResponse({ ok: false, error: 'Missing server or API token' })
+            return
+          }
+
+          const fullUrl = url.startsWith('http') ? url : `${server}${url}`
+          const fetchOptions: RequestInit = {
+            method: 'POST',
+            ...options,
+            headers: {
+              Authorization: `Token ${apiToken}`,
+              'Content-Type': 'application/json',
+              ...options?.headers,
+            },
+            body: JSON.stringify(postData),
+          }
+
+          fetch(fullUrl, fetchOptions)
+            .then(response => {
+              return response
+                .json()
+                .catch(() => ({}))
+                .then(data => ({
+                  ok: response.ok,
+                  status: response.status,
+                  data,
+                }))
+            })
+            .then(sendResponse)
+            .catch(error => {
+              sendResponse({ ok: false, error: error.message })
+            })
         },
-        body: JSON.stringify(postData),
-      }
-      fetch(url, fetchOptions)
-        .then(response => {
-          return response.json().then(data => ({
-            ok: response.ok,
-            status: response.status,
-            data,
-          }))
-        })
-        .then(sendResponse)
-        .catch(error => {
-          sendResponse({ ok: false, error: error.message })
-        })
+      )
       return true
     }
     if (message.type === 'api-delete') {
       const { url, options } = message
-      const fetchOptions: RequestInit = {
-        method: 'DELETE',
-        ...options,
-      }
-      fetch(url, fetchOptions)
-        .then(response => {
-          return response
-            .json()
-            .catch(() => ({}))
-            .then(data => ({
-              ok: response.ok,
-              status: response.status,
-              data,
-            }))
-        })
-        .then(sendResponse)
-        .catch(error => {
-          sendResponse({ ok: false, error: error.message })
-        })
+      Promise.all([serverStorage.getValue(), apiTokenStorage.getValue()]).then(
+        ([server, apiToken]) => {
+          if (!server || !apiToken) {
+            sendResponse({ ok: false, error: 'Missing server or API token' })
+            return
+          }
+
+          const fullUrl = url.startsWith('http') ? url : `${server}${url}`
+          const fetchOptions: RequestInit = {
+            method: 'DELETE',
+            ...options,
+            headers: {
+              Authorization: `Token ${apiToken}`,
+              'Content-Type': 'application/json',
+              ...options?.headers,
+            },
+          }
+
+          fetch(fullUrl, fetchOptions)
+            .then(response => {
+              return response
+                .json()
+                .catch(() => ({}))
+                .then(data => ({
+                  ok: response.ok,
+                  status: response.status,
+                  data,
+                }))
+            })
+            .then(sendResponse)
+            .catch(error => {
+              sendResponse({ ok: false, error: error.message })
+            })
+        },
+      )
       return true
     }
   })
