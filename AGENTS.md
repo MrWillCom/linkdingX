@@ -118,6 +118,13 @@ Follow the rules in `.agents/skills/vercel-react-best-practices/AGENTS.md`:
 - **Entrypoints**: Defined in `entrypoints/` (background, sidepanel, content).
 - **Manifest**: Managed in `wxt.config.ts`.
 
+### Offline-First & Instant UI
+
+- **Data Hierarchy**: Always prioritize local data (IndexedDB/Cache) and browser-provided metadata over server responses.
+- **Background Hub**: Foreground components should primarily listen to the local database (e.g., via `useLiveQuery`). Background scripts should handle server synchronization and update the local database.
+- **Immediate Feedback**: Never hide UI elements (like a "Current Tab" card) while waiting for server verification. Show the component immediately using browser fallbacks (e.g., `browser.tabs` title/favicon).
+- **Fallback Resilience**: Components must gracefully handle the absence of server metadata by falling back to local/realtime data without showing "loading" flickers or disappearing.
+
 ---
 
 ## Lessons Learned & Known Issues
