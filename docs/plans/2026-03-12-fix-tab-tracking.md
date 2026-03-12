@@ -1,3 +1,33 @@
+# Fix Current Tab Tracking Logic
+
+> **For Claude:** REQUIRED SUB-SKILL: Use superpowers:executing-plans to implement this plan task-by-task.
+
+**Goal:** Ensure the current tab card in the side panel accurately reflects the active tab, even when new tabs are opened via `target="_blank"` or when window focus changes.
+
+**Architecture:** Refactor `useCurrentTabTracker.ts` to use a more robust set of browser event listeners and manage internal state with refs to avoid unnecessary re-subscriptions and race conditions.
+
+**Tech Stack:** React, WXT (#imports), browser.tabs API, browser.windows API.
+
+---
+
+### Task 1: Refactor useCurrentTabTracker.ts
+
+**Files:**
+
+- Modify: `hooks/useCurrentTabTracker.ts`
+
+**Step 1: Update imports and state management**
+Add `useRef` to track the current tab ID and URL outside of the React render cycle to prevent effect re-runs.
+
+**Step 2: Add missing event listeners**
+Include `browser.tabs.onCreated`, `browser.tabs.onRemoved`, and `browser.windows.onFocusChanged`.
+
+**Step 3: Refine tab filtering**
+Ensure only `http` and `https` tabs update the state, explicitly resetting for internal or restricted tabs.
+
+**Step 4: Implementation**
+
+```typescript
 import { useEffect, useReducer, useRef } from 'react'
 
 interface State {
@@ -55,14 +85,12 @@ export function useCurrentTabTracker() {
 
   useEffect(() => {
     const syncCurrentTab = async () => {
-      console.log('[useCurrentTabTracker] syncCurrentTab')
       try {
         const tabs = await browser.tabs.query({
           currentWindow: true,
           active: true,
         })
         const activeTab = tabs[0]
-        console.log('[useCurrentTabTracker] activeTab:', activeTab?.url)
 
         if (activeTab?.url?.startsWith('http')) {
           currentTabIdRef.current = activeTab.id ?? null
@@ -77,7 +105,6 @@ export function useCurrentTabTracker() {
         }
 
         // Reset if not an HTTP(S) tab
-        console.log('[useCurrentTabTracker] Not an HTTP tab, resetting')
         currentTabIdRef.current = null
         dispatch({ type: 'SET_TAB', id: null, url: null })
       } catch (err) {
@@ -87,20 +114,14 @@ export function useCurrentTabTracker() {
       }
     }
 
-    const onActivated = () => {
-      console.log('[useCurrentTabTracker] onActivated')
-      syncCurrentTab()
-    }
+    const onActivated = () => syncCurrentTab()
     const onCreated = (tab: any) => {
-      console.log('[useCurrentTabTracker] onCreated', tab.id, tab.active)
       if (tab.active) syncCurrentTab()
     }
     const onRemoved = (tabId: number) => {
-      console.log('[useCurrentTabTracker] onRemoved', tabId)
       if (tabId === currentTabIdRef.current) syncCurrentTab()
     }
     const onWindowFocusChanged = (windowId: number) => {
-      console.log('[useCurrentTabTracker] onWindowFocusChanged', windowId)
       if (windowId !== browser.windows.WINDOW_ID_NONE) syncCurrentTab()
     }
 
@@ -109,21 +130,12 @@ export function useCurrentTabTracker() {
       change: { title?: string; favIconUrl?: string; url?: string },
       tab: { active?: boolean; title?: string; favIconUrl?: string },
     ) => {
-      console.log('[useCurrentTabTracker] onUpdated', {
-        id,
-        change,
-        active: tab.active,
-      })
-
       // Only care about updates to the active tab we're tracking
       if (!tab.active) return
 
       if (id !== currentTabIdRef.current) {
         // If an active tab we weren't tracking just updated its URL to something valid
         if (change.url?.startsWith('http')) {
-          console.log(
-            '[useCurrentTabTracker] New active tab detected via update',
-          )
           syncCurrentTab()
         }
         return
@@ -147,9 +159,6 @@ export function useCurrentTabTracker() {
             favicon: tab.favIconUrl,
           })
         } else {
-          console.log(
-            '[useCurrentTabTracker] URL changed to non-HTTP, resetting',
-          )
           currentTabIdRef.current = null
           dispatch({ type: 'SET_TAB', id: null, url: null })
         }
@@ -175,3 +184,16 @@ export function useCurrentTabTracker() {
 
   return state
 }
+```
+
+**Step 5: Verify via compilation**
+
+Run: `pnpm compile`
+Expected: Successfully compiled without TypeScript errors.
+
+**Step 6: Commit**
+
+```bash
+git add hooks/useCurrentTabTracker.ts
+git commit -m "fix: robust tab tracking with onCreated and onFocusChanged listeners"
+```
