@@ -15,7 +15,7 @@ const db = new Dexie('LinkdingDB') as Dexie & {
 }
 
 db.version(1).stores({
-  bookmarks: 'id, url, unread, date_added, _sync_status',
+  bookmarks: 'id, url, unread, date_added, _sync_status, _local_modified_at',
   sync_queue: '++id, bookmark_id, action',
 })
 
