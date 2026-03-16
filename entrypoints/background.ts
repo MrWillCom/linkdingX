@@ -9,6 +9,10 @@ const apiTokenStorage = storage.defineItem<string>('local:apiToken', {
   fallback: '',
 })
 
+const syncErrorStorage = storage.defineItem<boolean>('local:syncError', {
+  fallback: false,
+})
+
 async function notifyUI(
   type: 'success' | 'danger' | 'warning',
   message: string,
@@ -83,6 +87,7 @@ async function processSyncQueue() {
             })
           }
         } else {
+          await syncErrorStorage.setValue(true)
           const errorData = await response.json().catch(() => ({}))
           const errorMessage = errorData.detail || response.statusText
           console.error(
@@ -104,12 +109,18 @@ async function processSyncQueue() {
       }
     } catch (error) {
       console.error('Failed to sync operation:', op, error)
+      await syncErrorStorage.setValue(true)
       await notifyUI(
         'danger',
         `Network error during sync`,
         error instanceof Error ? error.message : String(error),
       )
     }
+  }
+
+  const remaining = await db.sync_queue.count()
+  if (remaining === 0) {
+    await syncErrorStorage.setValue(false)
   }
 }
 
