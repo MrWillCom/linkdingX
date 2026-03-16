@@ -52,15 +52,39 @@ export function useBookmarksManager(unreadFilter: UnreadFilter) {
         const all = data.flatMap(p => p.results)
         if (all.length === 0) return
 
-        // Get IDs of bookmarks that are currently pending deletion
+        // 1. Get IDs of bookmarks that are currently pending deletion
         const pendingDeletions = await db.sync_queue
           .where('action')
           .equals('delete')
           .toArray()
         const deletionIds = new Set(pendingDeletions.map(op => op.bookmark_id))
 
-        // Filter out bookmarks from the server that we are currently deleting locally
-        const filtered = all.filter(b => !deletionIds.has(b.id))
+        // 2. Double-Locking: Get bookmarks with local modifications
+        const localLocks = await db.bookmarks
+          .where('_local_modified_at')
+          .notEqual('')
+          .toArray()
+        const lockMap = new Map(
+          localLocks.map(b => [b.id, b._local_modified_at!]),
+        )
+
+        // 3. Filter server results
+        const filtered = all.filter(serverBookmark => {
+          // Skip if pending deletion
+          if (deletionIds.has(serverBookmark.id)) return false
+
+          // Check for stale data against local lock
+          const localLockTime = lockMap.get(serverBookmark.id)
+          if (localLockTime) {
+            const serverTime = new Date(serverBookmark.date_modified).getTime()
+            const lockTime = new Date(localLockTime).getTime()
+            if (serverTime < lockTime) {
+              // Server data is stale, keep local version
+              return false
+            }
+          }
+          return true
+        })
 
         // Basic optimization: compare lengths or some heuristic to avoid always writing
         const existing = await db.bookmarks
@@ -73,12 +97,13 @@ export function useBookmarksManager(unreadFilter: UnreadFilter) {
           existing.length > 0 &&
           existing[0].id === filtered[0]?.id &&
           existing[0].date_modified === filtered[0]?.date_modified &&
-          filtered.length <= existing.length
+          filtered.length <= existing.length &&
+          localLocks.length === 0
         ) {
           return
         }
 
-        // Put only the bookmarks that aren't pending deletion
+        // Put only the bookmarks that aren't pending deletion or stale
         if (filtered.length > 0) {
           await db.bookmarks.bulkPut(filtered)
         }
