@@ -10,7 +10,10 @@ export interface SyncOperation {
 }
 
 const db = new Dexie('LinkdingDB') as Dexie & {
-  bookmarks: EntityTable<Bookmark & { _sync_status?: string }, 'id'>
+  bookmarks: EntityTable<
+    Bookmark & { _sync_status?: string; _local_modified_at?: string },
+    'id'
+  >
   sync_queue: EntityTable<SyncOperation, 'id'>
 }
 
