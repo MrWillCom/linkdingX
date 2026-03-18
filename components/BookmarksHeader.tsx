@@ -134,6 +134,7 @@ export function BookmarksHeader({
               onPress={async () => {
                 const url = browser.runtime.getURL('/home.html')
                 await browser.tabs.create({ url })
+                window.close() // Close the side panel
               }}
             >
               <ExternalLink className="w-4 h-4" aria-hidden="true" />
