@@ -169,35 +169,34 @@ export default function BookmarksList({
   }
 
   return (
-    <div
-      onScroll={handleScroll}
-      className={`h-screen overflow-y-auto relative ${variant === 'expanded' ? 'max-w-3xl mx-auto' : ''}`}
-    >
-      <BookmarksHeader
-        unreadFilter={unreadFilter}
-        onUnreadFilterChange={setUnreadFilter}
-        variant={variant}
-        currentTabUrl={currentTabUrl}
-        currentTabBookmark={currentTabBookmark}
-        currentTabMetadata={currentTabMetadata}
-        realtimeMetadata={realtimeMetadata}
-        isCurrentTabBookmarkLoading={isCurrentTabBookmarkLoading}
-        onToggleUnread={handleToggleUnread}
-        onAdd={handleAdd}
-        onDelete={handleDelete}
-        isScrolled={isScrolled}
-      />
+    <div onScroll={handleScroll} className="h-screen overflow-y-auto relative">
+      <div className={variant === 'expanded' ? 'max-w-3xl mx-auto' : ''}>
+        <BookmarksHeader
+          unreadFilter={unreadFilter}
+          onUnreadFilterChange={setUnreadFilter}
+          variant={variant}
+          currentTabUrl={currentTabUrl}
+          currentTabBookmark={currentTabBookmark}
+          currentTabMetadata={currentTabMetadata}
+          realtimeMetadata={realtimeMetadata}
+          isCurrentTabBookmarkLoading={isCurrentTabBookmarkLoading}
+          onToggleUnread={handleToggleUnread}
+          onAdd={handleAdd}
+          onDelete={handleDelete}
+          isScrolled={isScrolled}
+        />
 
-      <BookmarksInfiniteList
-        filteredBookmarks={filteredBookmarks}
-        unreadFilter={unreadFilter}
-        isLoadingMore={isLoadingMore}
-        hasMore={hasMore}
-        hasTriggeredLoadRef={hasTriggeredLoadRef}
-        loadMoreRef={loadMoreRef}
-        loadMore={loadMore}
-        onToggleUnread={handleToggleUnread}
-      />
+        <BookmarksInfiniteList
+          filteredBookmarks={filteredBookmarks}
+          unreadFilter={unreadFilter}
+          isLoadingMore={isLoadingMore}
+          hasMore={hasMore}
+          hasTriggeredLoadRef={hasTriggeredLoadRef}
+          loadMoreRef={loadMoreRef}
+          loadMore={loadMore}
+          onToggleUnread={handleToggleUnread}
+        />
+      </div>
     </div>
   )
 }
