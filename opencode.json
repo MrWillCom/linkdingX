@@ -4,8 +4,10 @@
     "bash": {
       "pnpm format": "allow",
       "pnpm compile": "allow",
+      "pnpm build": "allow",
       "pnpm run format": "allow",
-      "pnpm run compile": "allow"
+      "pnpm run compile": "allow",
+      "pnpm run build": "allow"
     }
   }
 }
