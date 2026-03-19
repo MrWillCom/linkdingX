@@ -14,7 +14,6 @@ import {
   Modal,
   Checkbox,
   NumberField,
-  Slider,
 } from '@heroui/react'
 import { useEffect, useReducer, useState } from 'react'
 import { useSetup, type MetadataSource } from '@/hooks/useSetup'
@@ -369,23 +368,6 @@ export default function SettingsForm({
             </NumberField.Group>
             <Description>Number of bookmarks to fetch per page.</Description>
           </NumberField>
-
-          <Slider
-            minValue={1}
-            maxValue={1000}
-            value={state.fetchLimit}
-            onChange={val =>
-              dispatch({
-                type: 'SET_FETCH_LIMIT',
-                payload: Array.isArray(val) ? val[0] : val,
-              })
-            }
-          >
-            <Slider.Track>
-              <Slider.Fill />
-              <Slider.Thumb />
-            </Slider.Track>
-          </Slider>
         </div>
 
         <div className="h-px bg-default-200" />
