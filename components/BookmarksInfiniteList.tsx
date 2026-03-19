@@ -36,16 +36,17 @@ export function BookmarksInfiniteList({
               onToggleUnread={onToggleUnread}
             />
           ))}
-          <div ref={loadMoreRef} className="py-4 flex justify-center">
-            {isLoadingMore && <Spinner />}
-            {!isLoadingMore &&
-              hasMore &&
-              !hasTriggeredLoadRef.current?.valueOf() && (
-                <Button size="sm" variant="ghost" onPress={() => loadMore()}>
-                  Load more
-                </Button>
-              )}
-            {!isLoadingMore && !hasMore && (
+          <div
+            ref={loadMoreRef}
+            className="py-4 flex flex-col items-center gap-4"
+          >
+            {isLoadingMore && <Spinner size="sm" />}
+            {!isLoadingMore && hasMore && !hasTriggeredLoadRef.current && (
+              <Button size="sm" variant="ghost" onPress={() => loadMore()}>
+                Load more
+              </Button>
+            )}
+            {!isLoadingMore && !hasMore && filteredBookmarks.length > 0 && (
               <p className="text-muted text-sm">No more bookmarks</p>
             )}
           </div>
