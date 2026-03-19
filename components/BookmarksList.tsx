@@ -76,6 +76,13 @@ export default function BookmarksList({
   const [isScrolled, setIsScrolled] = useState(false)
   const hasTriggeredLoadRef = useRef(false)
 
+  // Reset triggered flag when loading more finishes
+  useEffect(() => {
+    if (!isLoadingMore) {
+      hasTriggeredLoadRef.current = false
+    }
+  }, [isLoadingMore])
+
   // Use refs to provide stable access to changing state/functions in the observer
   const stateRef = useRef({ isLoadingMore, hasMore, loadMore })
   useEffect(() => {
@@ -84,6 +91,16 @@ export default function BookmarksList({
 
   const handleScroll = (e: React.UIEvent<HTMLDivElement>) => {
     setIsScrolled(e.currentTarget.scrollTop > 0)
+
+    // Fallback: Check if we're near the bottom manually during scroll
+    const { isLoadingMore, hasMore, loadMore } = stateRef.current
+    if (hasMore && !isLoadingMore) {
+      const { scrollTop, scrollHeight, clientHeight } = e.currentTarget
+      if (scrollHeight - scrollTop - clientHeight < 400) {
+        hasTriggeredLoadRef.current = true
+        loadMore()
+      }
+    }
   }
 
   useEffect(() => {
@@ -99,7 +116,10 @@ export default function BookmarksList({
           }
         }
       },
-      { threshold: 0.1 },
+      {
+        rootMargin: '200px',
+        threshold: 0,
+      },
     )
 
     observer.observe(loadMoreRef.current)
