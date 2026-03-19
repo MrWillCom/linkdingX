@@ -25,6 +25,10 @@ const defaultUnreadStorage = storage.defineItem<boolean>(
   },
 )
 
+const fetchLimitStorage = storage.defineItem<number>('local:fetchLimit', {
+  fallback: 50,
+})
+
 export function useSetup() {
   const [isSetupComplete, setIsSetupComplete] = useState(false)
   const [isLoading, setIsLoading] = useState(true)
@@ -54,5 +58,6 @@ export function useSetup() {
     apiTokenStorage,
     fetchMetadataFromStorage,
     defaultUnreadStorage,
+    fetchLimitStorage,
   }
 }
