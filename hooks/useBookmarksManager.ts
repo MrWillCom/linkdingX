@@ -3,6 +3,7 @@ import useSWRInfinite from 'swr/infinite'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { db } from '@/utils/db'
 import { storage } from '#imports'
+import { useSetup } from '@/hooks/useSetup'
 import { UnreadFilter } from '@/components/FilterTabs'
 import type { Bookmark } from '@/components/BookmarksList'
 
@@ -13,7 +14,7 @@ interface BookmarksResponse {
   results: Bookmark[]
 }
 
-const PAGE_SIZE = 15
+const DEFAULT_PAGE_SIZE = 15
 const serverStorage = storage.defineItem<string>('local:server', {
   fallback: '',
 })
@@ -39,10 +40,17 @@ async function fetcher(key: string): Promise<BookmarksResponse> {
 }
 
 export function useBookmarksManager(unreadFilter: UnreadFilter) {
-  const getKey = useCallback((idx: number, prev: BookmarksResponse | null) => {
-    if (prev && !prev.next) return null
-    return `/api/bookmarks/?limit=${PAGE_SIZE}&offset=${idx * PAGE_SIZE}`
-  }, [])
+  const { fetchLimitStorage } = useSetup()
+  const fetchLimit =
+    useLiveQuery(() => fetchLimitStorage.getValue()) ?? DEFAULT_PAGE_SIZE
+
+  const getKey = useCallback(
+    (idx: number, prev: BookmarksResponse | null) => {
+      if (prev && !prev.next) return null
+      return `/api/bookmarks/?limit=${fetchLimit}&offset=${idx * fetchLimit}`
+    },
+    [fetchLimit],
+  )
 
   const { data, size, setSize, isLoading, isValidating, mutate, error } =
     useSWRInfinite<BookmarksResponse>(getKey, fetcher, {
@@ -133,7 +141,7 @@ export function useBookmarksManager(unreadFilter: UnreadFilter) {
   useEffect(() => {
     const hasMoreData = !data || data[data.length - 1]?.next !== null
     if (!isLoading && !isValidating && hasMoreData) {
-      const threshold = (size * PAGE_SIZE) / 2
+      const threshold = (size * fetchLimit) / 2
       if (filteredBookmarks.length < threshold) {
         const timer = setTimeout(() => {
           setSize(s => s + 1)
@@ -141,7 +149,15 @@ export function useBookmarksManager(unreadFilter: UnreadFilter) {
         return () => clearTimeout(timer)
       }
     }
-  }, [filteredBookmarks.length, size, isLoading, isValidating, data, setSize])
+  }, [
+    filteredBookmarks.length,
+    size,
+    isLoading,
+    isValidating,
+    data,
+    setSize,
+    fetchLimit,
+  ])
 
   return {
     filteredBookmarks,
