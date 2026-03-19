@@ -13,6 +13,8 @@ import {
   Description,
   Modal,
   Checkbox,
+  NumberField,
+  Slider,
 } from '@heroui/react'
 import { useEffect, useReducer, useState } from 'react'
 import { useSetup, type MetadataSource } from '@/hooks/useSetup'
@@ -351,21 +353,39 @@ export default function SettingsForm({
             </div>
           </RadioGroup>
 
-          <TextField name="fetchLimit" type="number" isRequired>
+          <NumberField
+            minValue={1}
+            maxValue={1000}
+            value={state.fetchLimit}
+            onChange={val =>
+              dispatch({ type: 'SET_FETCH_LIMIT', payload: val || 50 })
+            }
+          >
             <Label>Fetch Limit</Label>
-            <Input
-              value={state.fetchLimit.toString()}
-              onChange={e =>
-                dispatch({
-                  type: 'SET_FETCH_LIMIT',
-                  payload: parseInt(e.target.value) || 50,
-                })
-              }
-              min={1}
-              max={1000}
-            />
+            <NumberField.Group>
+              <NumberField.DecrementButton />
+              <NumberField.Input />
+              <NumberField.IncrementButton />
+            </NumberField.Group>
             <Description>Number of bookmarks to fetch per page.</Description>
-          </TextField>
+          </NumberField>
+
+          <Slider
+            minValue={1}
+            maxValue={1000}
+            value={state.fetchLimit}
+            onChange={val =>
+              dispatch({
+                type: 'SET_FETCH_LIMIT',
+                payload: Array.isArray(val) ? val[0] : val,
+              })
+            }
+          >
+            <Slider.Track>
+              <Slider.Fill />
+              <Slider.Thumb />
+            </Slider.Track>
+          </Slider>
         </div>
 
         <div className="h-px bg-default-200" />
