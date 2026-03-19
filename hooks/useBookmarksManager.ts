@@ -1,4 +1,4 @@
-import { useCallback, useMemo } from 'react'
+import { useCallback, useMemo, useEffect } from 'react'
 import useSWRInfinite from 'swr/infinite'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { db } from '@/utils/db'
@@ -128,6 +128,20 @@ export function useBookmarksManager(unreadFilter: UnreadFilter) {
       return true
     })
   }, [bookmarks, unreadFilter])
+
+  // Recursive auto-pagination: if filtered results are too thin, fetch more
+  useEffect(() => {
+    const hasMoreData = !data || data[data.length - 1]?.next !== null
+    if (!isLoading && !isValidating && hasMoreData) {
+      const threshold = (size * PAGE_SIZE) / 2
+      if (filteredBookmarks.length < threshold) {
+        const timer = setTimeout(() => {
+          setSize(s => s + 1)
+        }, 100)
+        return () => clearTimeout(timer)
+      }
+    }
+  }, [filteredBookmarks.length, size, isLoading, isValidating, data, setSize])
 
   return {
     filteredBookmarks,
