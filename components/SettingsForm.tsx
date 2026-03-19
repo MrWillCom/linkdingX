@@ -24,6 +24,7 @@ interface SettingsState {
   apiToken: string
   fetchMetadataFrom: MetadataSource
   defaultUnread: boolean
+  fetchLimit: number
   error: string
 }
 
@@ -33,6 +34,7 @@ type SettingsAction =
   | { type: 'SET_API_TOKEN'; payload: string }
   | { type: 'SET_METADATA_FROM'; payload: MetadataSource }
   | { type: 'SET_DEFAULT_UNREAD'; payload: boolean }
+  | { type: 'SET_FETCH_LIMIT'; payload: number }
   | { type: 'SET_ERROR'; payload: string }
   | {
       type: 'RESET_FORM'
@@ -41,6 +43,7 @@ type SettingsAction =
         apiToken: string
         fetchMetadataFrom: MetadataSource
         defaultUnread: boolean
+        fetchLimit: number
       }
     }
 
@@ -59,6 +62,8 @@ function settingsReducer(
       return { ...state, fetchMetadataFrom: action.payload }
     case 'SET_DEFAULT_UNREAD':
       return { ...state, defaultUnread: action.payload }
+    case 'SET_FETCH_LIMIT':
+      return { ...state, fetchLimit: action.payload }
     case 'SET_ERROR':
       return { ...state, error: action.payload, isLoading: false }
     case 'RESET_FORM':
@@ -68,6 +73,7 @@ function settingsReducer(
         apiToken: action.payload.apiToken,
         fetchMetadataFrom: action.payload.fetchMetadataFrom,
         defaultUnread: action.payload.defaultUnread,
+        fetchLimit: action.payload.fetchLimit,
         error: '',
         isLoading: false,
       }
@@ -82,6 +88,7 @@ const initialState: SettingsState = {
   apiToken: '',
   fetchMetadataFrom: 'browser',
   defaultUnread: true,
+  fetchLimit: 50,
   error: '',
 }
 
@@ -105,6 +112,7 @@ export default function SettingsForm({
     apiTokenStorage,
     fetchMetadataFromStorage,
     defaultUnreadStorage,
+    fetchLimitStorage,
   } = useSetup()
 
   useEffect(() => {
@@ -114,11 +122,13 @@ export default function SettingsForm({
         apiTokenValue,
         fetchMetadataValue,
         defaultUnreadValue,
+        fetchLimitValue,
       ] = await Promise.all([
         serverStorage.getValue(),
         apiTokenStorage.getValue(),
         fetchMetadataFromStorage.getValue(),
         defaultUnreadStorage.getValue(),
+        fetchLimitStorage.getValue(),
       ])
       dispatch({
         type: 'RESET_FORM',
@@ -127,6 +137,7 @@ export default function SettingsForm({
           apiToken: apiTokenValue || '',
           fetchMetadataFrom: fetchMetadataValue,
           defaultUnread: defaultUnreadValue,
+          fetchLimit: fetchLimitValue,
         },
       })
     }
@@ -136,6 +147,7 @@ export default function SettingsForm({
     apiTokenStorage,
     fetchMetadataFromStorage,
     defaultUnreadStorage,
+    fetchLimitStorage,
   ])
 
   const onSave = async () => {
@@ -176,6 +188,7 @@ export default function SettingsForm({
         apiTokenStorage.setValue(trimmedApiToken),
         fetchMetadataFromStorage.setValue(state.fetchMetadataFrom),
         defaultUnreadStorage.setValue(state.defaultUnread),
+        fetchLimitStorage.setValue(state.fetchLimit),
       ])
 
       dispatch({ type: 'SET_LOADING', payload: false })
@@ -337,6 +350,22 @@ export default function SettingsForm({
               </Radio>
             </div>
           </RadioGroup>
+
+          <TextField name="fetchLimit" type="number" isRequired>
+            <Label>Fetch Limit</Label>
+            <Input
+              value={state.fetchLimit.toString()}
+              onChange={e =>
+                dispatch({
+                  type: 'SET_FETCH_LIMIT',
+                  payload: parseInt(e.target.value) || 50,
+                })
+              }
+              min={1}
+              max={1000}
+            />
+            <Description>Number of bookmarks to fetch per page.</Description>
+          </TextField>
         </div>
 
         <div className="h-px bg-default-200" />
