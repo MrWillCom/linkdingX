@@ -25,7 +25,7 @@ export function BookmarksInfiniteList({
   onToggleUnread,
 }: BookmarksInfiniteListProps) {
   return (
-    <div className="pt-2">
+    <div>
       {filteredBookmarks.length > 0 ? (
         <>
           {filteredBookmarks.map(bookmark => (

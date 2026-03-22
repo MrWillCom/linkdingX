@@ -3,22 +3,7 @@ import { Link, Badge, Surface } from '@cloudflare/kumo'
 import { BookmarkFavicon } from './BookmarkFavicon'
 import { BookmarkPreview } from './BookmarkPreview'
 
-interface Bookmark {
-  id: number
-  url: string
-  title: string
-  description: string
-  notes: string
-  web_archive_snapshot_url: string
-  favicon_url: string | null
-  preview_image_url: string | null
-  is_archived: boolean
-  unread: boolean
-  shared: boolean
-  tag_names: string[]
-  date_added: string
-  date_modified: string
-}
+import { Bookmark } from './BookmarksList'
 
 interface BookmarkItemProps {
   bookmark: Bookmark
@@ -33,11 +18,11 @@ export function BookmarkItem({
 }: BookmarkItemProps) {
   return (
     <Surface
-      className={`flex items-start gap-1 py-2 px-2 hover:bg-kumo-elevated transition-colors border-b border-kumo-line last:border-b-0 border-x-0 ${isDimmed ? 'opacity-50' : ''}`}
+      className={`flex items-start gap-1 py-2 px-2 hover:bg-kumo-elevated transition-colors border-b border-kumo-line last:border-b-0 ${isDimmed ? 'opacity-50' : ''}`}
     >
       <button
         onClick={() => onToggleUnread(bookmark.id, bookmark.unread)}
-        className="group flex-shrink-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-kumo-ring cursor-pointer p-2 -mt-0.5 -ml-1.5 -mr-0.5 rounded-full hover:bg-kumo-recessed active:bg-kumo-tint transition-colors"
+        className="group shrink-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-kumo-ring cursor-pointer p-2 -mt-0.5 -ml-1.5 -mr-0.5 rounded-full hover:bg-kumo-recessed active:bg-kumo-tint transition-colors"
         aria-label={bookmark.unread ? 'Mark as read' : 'Mark as unread'}
       >
         <div
@@ -80,7 +65,7 @@ export function BookmarkItem({
       <BookmarkPreview
         url={bookmark.preview_image_url}
         alt={bookmark.title || bookmark.url}
-        className="h-12 w-16 flex-shrink-0 mt-0.5"
+        className="h-12 w-16 shrink-0 mt-0.5"
       />
     </Surface>
   )
