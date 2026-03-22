@@ -4,6 +4,7 @@ import {
   Tooltip,
   TooltipProvider,
   Text,
+  Surface,
 } from '@cloudflare/kumo'
 import {
   CloudCheck,
@@ -74,13 +75,13 @@ export function BookmarksHeader({
         : CloudSlash
 
   return (
-    <div className="sticky top-0 z-30 bg-kumo-base px-2 py-2">
+    <Surface className="sticky top-0 z-30 bg-kumo-base px-2 py-2">
       <div className="flex items-center justify-between h-9">
         <FilterTabs
           selectedKey={unreadFilter}
           onSelectionChange={onUnreadFilterChange}
         />
-        <div className="flex items-center gap-2">
+        <div className="flex items-center">
           <span className="relative inline-flex">
             <Popover>
               <TooltipProvider>
@@ -137,7 +138,6 @@ export function BookmarksHeader({
           {variant === 'default' && (
             <Button
               variant="ghost"
-              size="sm"
               shape="square"
               aria-label="Open in new tab"
               onClick={async () => {
@@ -189,6 +189,6 @@ export function BookmarksHeader({
       <div
         className={`absolute top-full left-0 right-0 h-8 bg-linear-to-b from-background to-transparent pointer-events-none z-10 transition-opacity duration-200 ${isScrolled ? 'opacity-100' : 'opacity-0'}`}
       />
-    </div>
+    </Surface>
   )
 }
