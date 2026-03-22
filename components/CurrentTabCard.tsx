@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react'
 import { formatDistanceToNow } from 'date-fns'
 import { LayerCard, Link, Badge, Button, Tooltip, Text } from '@cloudflare/kumo'
-import { Trash, Plus } from '@phosphor-icons/react'
+import { TrashIcon, PlusIcon } from '@phosphor-icons/react'
 import { BookmarkFavicon } from './BookmarkFavicon'
 import { BookmarkPreview } from './BookmarkPreview'
 
@@ -85,27 +85,17 @@ export function CurrentTabCard({
 
   return (
     <LayerCard>
-      <div className="min-h-0">
+      <div className="min-h-0 overflow-hidden">
         {!isBookmarked ? (
           <div key="add">
-            <LayerCard.Secondary className="pb-1">
-              <div className="uppercase tracking-wide">
-                <Text variant="secondary" size="xs">
-                  Not in Linkding
-                </Text>
-              </div>
-            </LayerCard.Secondary>
-            <LayerCard.Primary className="pt-2 pb-2">
+            <LayerCard.Secondary>Current Tab</LayerCard.Secondary>
+            <LayerCard.Primary>
               <div className="flex min-w-0 items-center gap-1.5 mb-2">
                 <BookmarkFavicon url={favicon} />
-                <div className="line-clamp-1">
-                  <Text variant="body" size="sm" bold>
-                    {title}
-                  </Text>
-                </div>
+                <div className="line-clamp-1 text-sm font-bold">{title}</div>
               </div>
-              <div className="flex items-start gap-2">
-                <div className="min-w-0 flex-1">
+              <div className="flex flex-col gap-1">
+                <div className="min-w-0">
                   <Link
                     href={url}
                     target="_blank"
@@ -114,10 +104,8 @@ export function CurrentTabCard({
                     {url}
                   </Link>
                   {description && (
-                    <div className="mt-1.5 line-clamp-2">
-                      <Text variant="secondary" size="xs">
-                        {description}
-                      </Text>
+                    <div className="mt-1 line-clamp-2 text-xs text-kumo-subtle">
+                      {description}
                     </div>
                   )}
                 </div>
@@ -129,55 +117,39 @@ export function CurrentTabCard({
                   disabled={isLoading}
                   onClick={() => onAdd?.(url, title, description)}
                 >
-                  <Plus weight="bold" className="size-4" />
+                  <PlusIcon weight="bold" className="size-4" />
                 </Button>
               </div>
             </LayerCard.Primary>
           </div>
         ) : (
           <div key="manage">
-            <LayerCard.Secondary className="pb-1">
-              <div className="flex items-center justify-between gap-2">
-                <div className="uppercase tracking-wide">
-                  <Text variant="secondary" size="xs">
-                    Current page in Linkding
-                  </Text>
-                </div>
-                <Badge
-                  variant={bookmark.unread ? 'primary' : 'secondary'}
-                  className="h-5 px-1.5 uppercase tracking-wide font-medium text-[8px]"
-                >
-                  {bookmark.unread ? 'Unread' : 'Read'}
-                </Badge>
-              </div>
+            <LayerCard.Secondary>
+              {bookmark.unread ? 'Unread' : 'Read'}
             </LayerCard.Secondary>
-            <LayerCard.Primary className="pt-2 pb-2">
+            <LayerCard.Primary>
               <div className="flex min-w-0 items-center gap-1.5 mb-2">
                 <BookmarkFavicon url={favicon} />
-                <div className="line-clamp-1">
-                  <Text variant="body" size="sm" bold>
-                    {title}
-                  </Text>
+                <div className="line-clamp-1 text-sm text-kumo-default">
+                  {title}
                 </div>
               </div>
               <div className="flex items-start gap-2">
-                <div className="min-w-0 flex-1">
+                <div className="min-w-0 flex-1 flex flex-col gap-1">
                   <Link
                     href={bookmark.url}
                     target="_blank"
-                    className="text-xs text-kumo-subtle hover:text-kumo-brand transition-colors line-clamp-1"
+                    className="text-xs text-kumo-subtle hover:text-kumo-brand transition-colors line-clamp-1 underline decoration-kumo-line"
                   >
                     {bookmark.url}
                   </Link>
                   {description && (
-                    <div className="mt-1.5 line-clamp-2">
-                      <Text variant="secondary" size="xs">
-                        {description}
-                      </Text>
+                    <div className="line-clamp-2 text-xs text-kumo-subtle">
+                      {description}
                     </div>
                   )}
                   {bookmark.tag_names.length > 0 && (
-                    <div className="flex flex-wrap gap-1.5 mt-1.5">
+                    <div className="flex flex-wrap gap-1.5 mt-1">
                       {bookmark.tag_names.map(tag => (
                         <Badge
                           key={tag}
@@ -193,15 +165,15 @@ export function CurrentTabCard({
                 <BookmarkPreview
                   url={bookmark.preview_image_url}
                   alt={bookmark.title || bookmark.url}
-                  className="h-14 w-20 flex-shrink-0"
+                  className="h-14 w-20 shrink-0"
                 />
               </div>
               <div className="pt-4 flex items-center justify-between">
-                <Text variant="secondary" size="xs">
+                <div className="text-xs text-kumo-subtle">
                   {formatDistanceToNow(new Date(bookmark.date_added), {
                     addSuffix: true,
                   })}
-                </Text>
+                </div>
                 <div className="flex items-center gap-2">
                   <Tooltip
                     content="Click again to confirm delete"
@@ -223,12 +195,12 @@ export function CurrentTabCard({
                       disabled={isLoading}
                       onClick={handleDeletePress}
                     >
-                      <Trash weight="bold" className="w-4 h-4" />
+                      <TrashIcon weight="bold" className="w-4 h-4" />
                     </Button>
                   </Tooltip>
                   <Button
                     variant="primary"
-                    className="w-36"
+                    className="w-32 justify-center"
                     disabled={isLoading}
                     onClick={() => onToggleUnread(bookmark.id, bookmark.unread)}
                   >
