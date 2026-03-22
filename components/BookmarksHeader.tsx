@@ -156,7 +156,6 @@ export function BookmarksHeader({
           {variant === 'expanded' && (
             <Button
               variant="ghost"
-              size="sm"
               shape="square"
               aria-label="Open settings"
               onClick={() => browser.runtime.openOptionsPage()}
