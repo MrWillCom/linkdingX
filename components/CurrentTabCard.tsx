@@ -94,7 +94,9 @@ export function CurrentTabCard({
                   Not in Linkding
                 </Text>
               </div>
-              <div className="flex min-w-0 items-center gap-1.5 mt-1">
+            </LayerCard.Secondary>
+            <LayerCard.Primary className="pt-2 pb-2">
+              <div className="flex min-w-0 items-center gap-1.5 mb-2">
                 <BookmarkFavicon url={favicon} />
                 <div className="line-clamp-1">
                   <Text variant="body" size="sm" bold>
@@ -102,8 +104,6 @@ export function CurrentTabCard({
                   </Text>
                 </div>
               </div>
-            </LayerCard.Secondary>
-            <LayerCard.Primary className="pt-2 pb-2">
               <div className="flex items-start gap-2">
                 <div className="min-w-0 flex-1">
                   <Link
@@ -125,7 +125,6 @@ export function CurrentTabCard({
               <div className="pt-4 flex items-center justify-between">
                 <span className="text-xs text-kumo-subtle" />
                 <Button
-                  size="sm"
                   variant="primary"
                   disabled={isLoading}
                   onClick={() => onAdd?.(url, title, description)}
@@ -151,7 +150,9 @@ export function CurrentTabCard({
                   {bookmark.unread ? 'Unread' : 'Read'}
                 </Badge>
               </div>
-              <div className="flex min-w-0 items-center gap-1.5 mt-1">
+            </LayerCard.Secondary>
+            <LayerCard.Primary className="pt-2 pb-2">
+              <div className="flex min-w-0 items-center gap-1.5 mb-2">
                 <BookmarkFavicon url={favicon} />
                 <div className="line-clamp-1">
                   <Text variant="body" size="sm" bold>
@@ -159,8 +160,6 @@ export function CurrentTabCard({
                   </Text>
                 </div>
               </div>
-            </LayerCard.Secondary>
-            <LayerCard.Primary className="pt-2 pb-2">
               <div className="flex items-start gap-2">
                 <div className="min-w-0 flex-1">
                   <Link
@@ -209,7 +208,6 @@ export function CurrentTabCard({
                     disabled={!isConfirmingDelete}
                   >
                     <Button
-                      size="sm"
                       variant={isConfirmingDelete ? 'destructive' : 'ghost'}
                       shape="square"
                       className={
@@ -229,7 +227,6 @@ export function CurrentTabCard({
                     </Button>
                   </Tooltip>
                   <Button
-                    size="sm"
                     variant="primary"
                     className="w-36"
                     disabled={isLoading}
