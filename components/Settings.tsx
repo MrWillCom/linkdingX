@@ -48,7 +48,6 @@ export default function Settings() {
                 {...props}
                 variant="ghost"
                 shape="square"
-                size="sm"
                 aria-label="Close settings"
               >
                 <span className="sr-only">Close</span>

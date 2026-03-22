@@ -88,7 +88,6 @@ export function BookmarksHeader({
                   <Popover.Trigger asChild>
                     <Button
                       variant="ghost"
-                      size="sm"
                       shape="square"
                       aria-label="View sync queue"
                     >

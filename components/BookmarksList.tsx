@@ -173,7 +173,7 @@ export default function BookmarksList({
     return (
       <div className="p-4 flex flex-col items-center gap-4">
         <p className="text-danger">Error: {error.message}</p>
-        <Button variant="secondary" size="sm" onClick={() => mutateBookmarks()}>
+        <Button variant="secondary" onClick={() => mutateBookmarks()}>
           Retry
         </Button>
       </div>

@@ -42,7 +42,7 @@ export function BookmarksInfiniteList({
           >
             {isLoadingMore && <Loader size="sm" />}
             {!isLoadingMore && hasMore && !hasTriggeredLoadRef.current && (
-              <Button size="sm" variant="ghost" onClick={() => loadMore()}>
+              <Button variant="ghost" onClick={() => loadMore()}>
                 Load more
               </Button>
             )}
