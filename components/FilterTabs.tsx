@@ -19,7 +19,6 @@ export function FilterTabs({
 
   return (
     <Tabs
-      variant="underline"
       value={selectedKey}
       onValueChange={value => onSelectionChange(value as UnreadFilter)}
       tabs={tabs}
