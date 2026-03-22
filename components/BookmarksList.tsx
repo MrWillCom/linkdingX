@@ -1,7 +1,7 @@
 import { db } from '@/utils/db'
 import { bookmarkService } from '@/utils/bookmarkService'
 import { useEffect, useRef, useState } from 'react'
-import { Button, Spinner } from '@heroui/react'
+import { Button, Loader } from '@cloudflare/kumo'
 import { storage } from '#imports'
 import { useSetup } from '@/hooks/useSetup'
 import { UnreadFilter } from '@/components/FilterTabs'
@@ -173,7 +173,7 @@ export default function BookmarksList({
     return (
       <div className="p-4 flex flex-col items-center gap-4">
         <p className="text-danger">Error: {error.message}</p>
-        <Button variant="secondary" size="sm" onPress={() => mutateBookmarks()}>
+        <Button variant="secondary" size="sm" onClick={() => mutateBookmarks()}>
           Retry
         </Button>
       </div>
@@ -183,7 +183,7 @@ export default function BookmarksList({
   if (isLoading) {
     return (
       <div className="flex justify-center p-8">
-        <Spinner />
+        <Loader />
       </div>
     )
   }

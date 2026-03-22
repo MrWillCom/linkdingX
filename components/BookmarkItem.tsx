@@ -1,5 +1,5 @@
 import { formatDistanceToNow } from 'date-fns'
-import { Link, Chip } from '@heroui/react'
+import { Link, Badge, Surface } from '@cloudflare/kumo'
 import { BookmarkFavicon } from './BookmarkFavicon'
 import { BookmarkPreview } from './BookmarkPreview'
 
@@ -32,19 +32,17 @@ export function BookmarkItem({
   onToggleUnread,
 }: BookmarkItemProps) {
   return (
-    <div
-      className={`flex items-start gap-1 py-2 px-2 hover:bg-default-100 transition-colors border-b border-default-200 last:border-b-0 ${isDimmed ? 'opacity-50' : ''}`}
+    <Surface
+      className={`flex items-start gap-1 py-2 px-2 hover:bg-kumo-elevated transition-colors border-b border-kumo-line last:border-b-0 ${isDimmed ? 'opacity-50' : ''}`}
     >
       <button
         onClick={() => onToggleUnread(bookmark.id, bookmark.unread)}
-        className="group flex-shrink-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary cursor-pointer p-2 -mt-0.5 -ml-1.5 -mr-0.5 rounded-full hover:bg-default-200 active:bg-default-300 transition-colors"
+        className="group flex-shrink-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-kumo-ring cursor-pointer p-2 -mt-0.5 -ml-1.5 -mr-0.5 rounded-full hover:bg-kumo-recessed active:bg-kumo-tint transition-colors"
         aria-label={bookmark.unread ? 'Mark as read' : 'Mark as unread'}
       >
         <div
           className={`w-2.5 h-2.5 rounded-full transition-colors ${
-            bookmark.unread
-              ? 'bg-blue-500 group-hover:bg-blue-600 group-active:bg-blue-700'
-              : 'bg-gray-300 group-hover:bg-gray-400 group-active:bg-gray-500'
+            bookmark.unread ? 'bg-kumo-brand' : 'bg-kumo-line'
           }`}
         />
       </button>
@@ -52,13 +50,13 @@ export function BookmarkItem({
         <Link
           href={bookmark.url}
           target="_blank"
-          className="flex min-w-0 items-center gap-1.5 text-sm font-medium text-foreground hover:text-primary transition-colors"
+          className="flex min-w-0 items-center gap-1.5 text-sm font-medium text-kumo-default hover:text-kumo-brand transition-colors"
         >
           <BookmarkFavicon url={bookmark.favicon_url} />
           <span className="line-clamp-1">{bookmark.title || bookmark.url}</span>
         </Link>
         {bookmark.description && (
-          <p className="text-xs text-muted mt-0.5 line-clamp-2">
+          <p className="text-xs text-kumo-strong mt-0.5 line-clamp-2">
             {bookmark.description}
           </p>
         )}
@@ -66,13 +64,13 @@ export function BookmarkItem({
           {bookmark.tag_names.length > 0 && (
             <div className="flex flex-wrap gap-1.5">
               {bookmark.tag_names.map(tag => (
-                <Chip key={tag} size="sm" variant="soft" className="text-2xs">
+                <Badge key={tag} variant="secondary" className="text-2xs">
                   {tag}
-                </Chip>
+                </Badge>
               ))}
             </div>
           )}
-          <span className="text-2xs text-muted">
+          <span className="text-2xs text-kumo-strong">
             {formatDistanceToNow(new Date(bookmark.date_added), {
               addSuffix: true,
             })}
@@ -84,6 +82,6 @@ export function BookmarkItem({
         alt={bookmark.title || bookmark.url}
         className="h-12 w-16 flex-shrink-0 mt-0.5"
       />
-    </div>
+    </Surface>
   )
 }

@@ -1,4 +1,4 @@
-import { Tabs } from '@heroui/react'
+import { Tabs } from '@cloudflare/kumo'
 
 export type UnreadFilter = 'all' | 'unread' | 'read'
 
@@ -11,25 +11,18 @@ export function FilterTabs({
   selectedKey,
   onSelectionChange,
 }: FilterTabsProps) {
+  const tabs = [
+    { value: 'all', label: 'All' },
+    { value: 'unread', label: 'Unread' },
+    { value: 'read', label: 'Read' },
+  ]
+
   return (
     <Tabs
-      selectedKey={selectedKey}
-      onSelectionChange={key => onSelectionChange(key as UnreadFilter)}
-    >
-      <Tabs.List>
-        <Tabs.Tab id="all">
-          All
-          <Tabs.Indicator />
-        </Tabs.Tab>
-        <Tabs.Tab id="unread">
-          Unread
-          <Tabs.Indicator />
-        </Tabs.Tab>
-        <Tabs.Tab id="read">
-          Read
-          <Tabs.Indicator />
-        </Tabs.Tab>
-      </Tabs.List>
-    </Tabs>
+      variant="underline"
+      value={selectedKey}
+      onValueChange={value => onSelectionChange(value as UnreadFilter)}
+      tabs={tabs}
+    />
   )
 }

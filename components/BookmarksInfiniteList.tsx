@@ -1,4 +1,4 @@
-import { Spinner, Button } from '@heroui/react'
+import { Loader, Button } from '@cloudflare/kumo'
 import { BookmarkItem } from '@/components/BookmarkItem'
 import { Bookmark } from './BookmarksList'
 import { UnreadFilter } from '@/components/FilterTabs'
@@ -40,9 +40,9 @@ export function BookmarksInfiniteList({
             ref={loadMoreRef}
             className="py-4 flex flex-col items-center gap-4"
           >
-            {isLoadingMore && <Spinner size="sm" />}
+            {isLoadingMore && <Loader size="sm" />}
             {!isLoadingMore && hasMore && !hasTriggeredLoadRef.current && (
-              <Button size="sm" variant="ghost" onPress={() => loadMore()}>
+              <Button size="sm" variant="ghost" onClick={() => loadMore()}>
                 Load more
               </Button>
             )}

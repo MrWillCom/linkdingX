@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react'
 import { formatDistanceToNow } from 'date-fns'
-import { Card, Link, Chip, Button, Tooltip } from '@heroui/react'
-import { Trash2, PlusIcon } from 'lucide-react'
+import { LayerCard, Link, Badge, Button, Tooltip, Text } from '@cloudflare/kumo'
+import { Trash, Plus } from '@phosphor-icons/react'
 import { BookmarkFavicon } from './BookmarkFavicon'
 import { BookmarkPreview } from './BookmarkPreview'
 
@@ -84,106 +84,109 @@ export function CurrentTabCard({
   const favicon = bookmark?.favicon_url || realtimeMetadata?.favicon || null
 
   return (
-    <Card
-      variant={
-        !isBookmarked ? 'secondary' : bookmark.unread ? 'tertiary' : 'secondary'
-      }
-    >
+    <LayerCard>
       <div className="min-h-0">
         {!isBookmarked ? (
           <div key="add">
-            <Card.Header className="pb-1">
-              <Card.Description className="text-2xs uppercase tracking-wide">
-                Not in Linkding
-              </Card.Description>
-              <Card.Title className="text-sm line-clamp-1">
-                <span className="flex min-w-0 items-center gap-1.5">
-                  <BookmarkFavicon url={favicon} />
-                  <span className="line-clamp-1">{title}</span>
-                </span>
-              </Card.Title>
-            </Card.Header>
-            <Card.Content className="pt-0">
+            <LayerCard.Secondary className="pb-1">
+              <div className="uppercase tracking-wide">
+                <Text variant="secondary" size="xs">
+                  Not in Linkding
+                </Text>
+              </div>
+              <div className="flex min-w-0 items-center gap-1.5 mt-1">
+                <BookmarkFavicon url={favicon} />
+                <div className="line-clamp-1">
+                  <Text variant="body" size="sm" bold>
+                    {title}
+                  </Text>
+                </div>
+              </div>
+            </LayerCard.Secondary>
+            <LayerCard.Primary className="pt-2 pb-2">
               <div className="flex items-start gap-2">
                 <div className="min-w-0 flex-1">
                   <Link
                     href={url}
                     target="_blank"
-                    className="text-2xs text-muted hover:text-primary transition-colors line-clamp-1"
+                    className="text-xs text-kumo-subtle hover:text-kumo-brand transition-colors line-clamp-1"
                   >
                     {url}
                   </Link>
                   {description && (
-                    <p className="text-2xs text-muted mt-1.5 line-clamp-2">
-                      {description}
-                    </p>
+                    <div className="mt-1.5 line-clamp-2">
+                      <Text variant="secondary" size="xs">
+                        {description}
+                      </Text>
+                    </div>
                   )}
                 </div>
               </div>
-            </Card.Content>
-            <Card.Footer className="pt-1 flex items-center justify-between">
-              <span className="text-2xs text-muted" />
-              <Button
-                size="sm"
-                variant="primary"
-                isDisabled={isLoading}
-                onPress={() => onAdd?.(url, title, description)}
-              >
-                <PlusIcon className="size-4" />
-              </Button>
-            </Card.Footer>
+              <div className="pt-4 flex items-center justify-between">
+                <span className="text-xs text-kumo-subtle" />
+                <Button
+                  size="sm"
+                  variant="primary"
+                  disabled={isLoading}
+                  onClick={() => onAdd?.(url, title, description)}
+                >
+                  <Plus weight="bold" className="size-4" />
+                </Button>
+              </div>
+            </LayerCard.Primary>
           </div>
         ) : (
           <div key="manage">
-            <Card.Header className="pb-1">
+            <LayerCard.Secondary className="pb-1">
               <div className="flex items-center justify-between gap-2">
-                <Card.Description className="text-2xs uppercase tracking-wide">
-                  Current page in Linkding
-                </Card.Description>
-                <Chip
-                  size="sm"
-                  variant={bookmark.unread ? 'primary' : 'soft'}
-                  color={bookmark.unread ? 'accent' : 'default'}
-                  className="h-5 px-1.5"
+                <div className="uppercase tracking-wide">
+                  <Text variant="secondary" size="xs">
+                    Current page in Linkding
+                  </Text>
+                </div>
+                <Badge
+                  variant={bookmark.unread ? 'primary' : 'secondary'}
+                  className="h-5 px-1.5 uppercase tracking-wide font-medium text-[8px]"
                 >
-                  <Chip.Label className="text-3xs uppercase tracking-wide font-medium">
-                    {bookmark.unread ? 'Unread' : 'Read'}
-                  </Chip.Label>
-                </Chip>
+                  {bookmark.unread ? 'Unread' : 'Read'}
+                </Badge>
               </div>
-              <Card.Title className="text-sm line-clamp-1">
-                <span className="flex min-w-0 items-center gap-1.5">
-                  <BookmarkFavicon url={favicon} />
-                  <span className="line-clamp-1">{title}</span>
-                </span>
-              </Card.Title>
-            </Card.Header>
-            <Card.Content className="pt-0">
+              <div className="flex min-w-0 items-center gap-1.5 mt-1">
+                <BookmarkFavicon url={favicon} />
+                <div className="line-clamp-1">
+                  <Text variant="body" size="sm" bold>
+                    {title}
+                  </Text>
+                </div>
+              </div>
+            </LayerCard.Secondary>
+            <LayerCard.Primary className="pt-2 pb-2">
               <div className="flex items-start gap-2">
                 <div className="min-w-0 flex-1">
                   <Link
                     href={bookmark.url}
                     target="_blank"
-                    className="text-2xs text-muted hover:text-primary transition-colors line-clamp-1"
+                    className="text-xs text-kumo-subtle hover:text-kumo-brand transition-colors line-clamp-1"
                   >
                     {bookmark.url}
                   </Link>
                   {description && (
-                    <p className="text-2xs text-muted mt-1.5 line-clamp-2">
-                      {description}
-                    </p>
+                    <div className="mt-1.5 line-clamp-2">
+                      <Text variant="secondary" size="xs">
+                        {description}
+                      </Text>
+                    </div>
                   )}
                   {bookmark.tag_names.length > 0 && (
                     <div className="flex flex-wrap gap-1.5 mt-1.5">
                       {bookmark.tag_names.map(tag => (
-                        <Chip
+                        <Badge
                           key={tag}
-                          size="sm"
-                          variant="soft"
-                          className="text-2xs"
+                          variant="secondary"
+                          className="text-[10px]"
                         >
                           {tag}
-                        </Chip>
+                        </Badge>
                       ))}
                     </div>
                   )}
@@ -194,58 +197,52 @@ export function CurrentTabCard({
                   className="h-14 w-20 flex-shrink-0"
                 />
               </div>
-            </Card.Content>
-            <Card.Footer className="pt-2 flex items-center justify-between">
-              <span className="text-2xs text-muted">
-                {formatDistanceToNow(new Date(bookmark.date_added), {
-                  addSuffix: true,
-                })}
-              </span>
-              <div className="flex items-center gap-2">
-                <Tooltip
-                  delay={0}
-                  closeDelay={0}
-                  isDisabled={!isConfirmingDelete}
-                >
-                  <Tooltip.Trigger>
+              <div className="pt-4 flex items-center justify-between">
+                <Text variant="secondary" size="xs">
+                  {formatDistanceToNow(new Date(bookmark.date_added), {
+                    addSuffix: true,
+                  })}
+                </Text>
+                <div className="flex items-center gap-2">
+                  <Tooltip
+                    content="Click again to confirm delete"
+                    disabled={!isConfirmingDelete}
+                  >
                     <Button
                       size="sm"
-                      variant={isConfirmingDelete ? 'danger' : 'ghost'}
-                      isIconOnly
+                      variant={isConfirmingDelete ? 'destructive' : 'ghost'}
+                      shape="square"
                       className={
                         !isConfirmingDelete
-                          ? 'text-danger hover:bg-danger-50'
-                          : 'bg-danger text-white'
+                          ? 'text-kumo-danger hover:bg-kumo-tint'
+                          : ''
                       }
                       aria-label={
                         isConfirmingDelete
                           ? 'Confirm delete bookmark'
                           : 'Delete bookmark'
                       }
-                      isDisabled={isLoading}
-                      onPress={handleDeletePress}
+                      disabled={isLoading}
+                      onClick={handleDeletePress}
                     >
-                      <Trash2 className="w-4 h-4" />
+                      <Trash weight="bold" className="w-4 h-4" />
                     </Button>
-                  </Tooltip.Trigger>
-                  <Tooltip.Content placement="bottom" showArrow>
-                    Click again to confirm delete
-                  </Tooltip.Content>
-                </Tooltip>
-                <Button
-                  size="sm"
-                  variant="primary"
-                  className="w-36"
-                  isDisabled={isLoading}
-                  onPress={() => onToggleUnread(bookmark.id, bookmark.unread)}
-                >
-                  {bookmark.unread ? 'Mark as read' : 'Mark as unread'}
-                </Button>
+                  </Tooltip>
+                  <Button
+                    size="sm"
+                    variant="primary"
+                    className="w-36"
+                    disabled={isLoading}
+                    onClick={() => onToggleUnread(bookmark.id, bookmark.unread)}
+                  >
+                    {bookmark.unread ? 'Mark as read' : 'Mark as unread'}
+                  </Button>
+                </div>
               </div>
-            </Card.Footer>
+            </LayerCard.Primary>
           </div>
         )}
       </div>
-    </Card>
+    </LayerCard>
   )
 }
