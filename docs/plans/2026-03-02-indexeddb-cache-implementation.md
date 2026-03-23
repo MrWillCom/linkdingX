@@ -159,9 +159,7 @@ import { useLiveQuery } from 'dexie-react-hooks'
 import { db } from '@/utils/db'
 
 // ... inside component ...
-const bookmarks =
-  useLiveQuery(() => db.bookmarks.orderBy('date_added').reverse().toArray()) ||
-  []
+const bookmarks = useLiveQuery(() => db.bookmarks.orderBy('date_added').reverse().toArray()) || []
 ```
 
 **Step 2: Update pagination to save to IDB**

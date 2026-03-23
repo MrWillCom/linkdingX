@@ -2,19 +2,16 @@
 
 import {
   Button,
-  FieldError,
-  Form,
   Input,
-  Label,
-  TextField,
-  toast,
-  RadioGroup,
   Radio,
-  Description,
-  Modal,
+  Dialog,
   Checkbox,
-  NumberField,
-} from '@heroui/react'
+  Toasty,
+  useKumoToastManager,
+  Field,
+  Label,
+  Text,
+} from '@cloudflare/kumo'
 import { useEffect, useReducer, useState } from 'react'
 import { useSetup, type MetadataSource } from '@/hooks/useSetup'
 import { db } from '@/utils/db'
@@ -48,10 +45,7 @@ type SettingsAction =
       }
     }
 
-function settingsReducer(
-  state: SettingsState,
-  action: SettingsAction,
-): SettingsState {
+function settingsReducer(state: SettingsState, action: SettingsAction): SettingsState {
   switch (action.type) {
     case 'SET_LOADING':
       return { ...state, isLoading: action.payload }
@@ -99,11 +93,8 @@ interface SettingsFormProps {
   showCancel?: boolean
 }
 
-export default function SettingsForm({
-  onSaved,
-  onCancel,
-  showCancel = true,
-}: SettingsFormProps) {
+export default function SettingsForm({ onSaved, onCancel, showCancel = true }: SettingsFormProps) {
+  const toastManager = useKumoToastManager()
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [cleanBookmarks, setCleanBookmarks] = useState(true)
   const [cleanSyncQueue, setCleanSyncQueue] = useState(false)
@@ -118,19 +109,14 @@ export default function SettingsForm({
 
   useEffect(() => {
     async function loadValues() {
-      const [
-        serverValue,
-        apiTokenValue,
-        fetchMetadataValue,
-        defaultUnreadValue,
-        fetchLimitValue,
-      ] = await Promise.all([
-        serverStorage.getValue(),
-        apiTokenStorage.getValue(),
-        fetchMetadataFromStorage.getValue(),
-        defaultUnreadStorage.getValue(),
-        fetchLimitStorage.getValue(),
-      ])
+      const [serverValue, apiTokenValue, fetchMetadataValue, defaultUnreadValue, fetchLimitValue] =
+        await Promise.all([
+          serverStorage.getValue(),
+          apiTokenStorage.getValue(),
+          fetchMetadataFromStorage.getValue(),
+          defaultUnreadStorage.getValue(),
+          fetchLimitStorage.getValue(),
+        ])
       dispatch({
         type: 'RESET_FORM',
         payload: {
@@ -163,7 +149,7 @@ export default function SettingsForm({
         type: 'SET_ERROR',
         payload: errorMsg,
       })
-      toast.danger(errorMsg)
+      toastManager.add({ title: errorMsg, variant: 'error' })
       return
     }
 
@@ -193,16 +179,18 @@ export default function SettingsForm({
       ])
 
       dispatch({ type: 'SET_LOADING', payload: false })
-      toast.success('Settings saved successfully')
+      toastManager.add({
+        title: 'Settings saved successfully',
+        variant: 'default',
+      })
       onSaved?.()
     } catch (err) {
-      const errorMsg =
-        err instanceof Error ? err.message : 'Failed to validate credentials'
+      const errorMsg = err instanceof Error ? err.message : 'Failed to validate credentials'
       dispatch({
         type: 'SET_ERROR',
         payload: errorMsg,
       })
-      toast.danger(errorMsg)
+      toastManager.add({ title: errorMsg, variant: 'error' })
     }
   }
 
@@ -213,7 +201,7 @@ export default function SettingsForm({
       if (cleanSyncQueue) tables.push('sync_queue')
 
       if (tables.length === 0) {
-        toast('No data selected to clean')
+        toastManager.add({ title: 'No data selected to clean' })
         return
       }
 
@@ -223,34 +211,28 @@ export default function SettingsForm({
         browser.runtime.sendMessage({ type: 'sync-bookmarks' })
       }
 
-      toast.success('Local data cleaned successfully')
+      toastManager.add({
+        title: 'Local data cleaned successfully',
+        variant: 'default',
+      })
       setIsModalOpen(false)
     } catch (err) {
-      toast.danger('Failed to clean local data')
+      toastManager.add({
+        title: 'Failed to clean local data',
+        variant: 'error',
+      })
       console.error(err)
     }
   }
 
   return (
     <div className="flex flex-col gap-6">
-      <Form
-        className="flex flex-col gap-6"
-        onSubmit={e => {
-          e.preventDefault()
-          onSave()
-        }}
-      >
+      <div className="flex flex-col gap-6">
         <div className="flex flex-col gap-4">
-          <h2 className="text-sm font-semibold uppercase tracking-wider text-muted">
+          <div className="text-xs font-semibold uppercase tracking-wider text-kumo-strong">
             Connection
-          </h2>
-          <TextField
-            name="server"
-            type="text"
-            isInvalid={!!state.error}
-            isRequired
-          >
-            <Label>Server</Label>
+          </div>
+          <Field label="Server">
             <Input
               value={state.server}
               onChange={e =>
@@ -262,14 +244,8 @@ export default function SettingsForm({
               placeholder="https://linkding.example.com"
               autoComplete="url"
             />
-          </TextField>
-          <TextField
-            name="apiToken"
-            type="password"
-            isInvalid={!!state.error}
-            isRequired
-          >
-            <Label>API Token</Label>
+          </Field>
+          <Field label="API Token">
             <Input
               value={state.apiToken}
               onChange={e =>
@@ -278,209 +254,148 @@ export default function SettingsForm({
                   payload: e.target.value,
                 })
               }
+              type="password"
               placeholder="xxxxxxxx…"
               autoComplete="off"
             />
-          </TextField>
+          </Field>
         </div>
 
-        <div className="h-px bg-default-200" />
+        <div className="h-px bg-kumo-line" />
 
         <div className="flex flex-col gap-4">
-          <h2 className="text-sm font-semibold uppercase tracking-wider text-muted">
+          <div className="text-xs font-semibold uppercase tracking-wider text-kumo-strong">
             Preferences
-          </h2>
-          <RadioGroup
+          </div>
+          <Radio.Group
+            legend="Fetch Metadata From"
             value={state.fetchMetadataFrom}
-            onChange={value =>
+            onValueChange={value =>
               dispatch({
                 type: 'SET_METADATA_FROM',
                 payload: value as MetadataSource,
               })
             }
           >
-            <Label>Fetch Metadata From</Label>
-            <div className="flex flex-col gap-2">
-              <Radio value="browser">
-                <Radio.Control>
-                  <Radio.Indicator />
-                </Radio.Control>
-                <Radio.Content>
-                  <Label>Browser</Label>
-                  <Description>Fast, includes page context</Description>
-                </Radio.Content>
-              </Radio>
-              <Radio value="server">
-                <Radio.Control>
-                  <Radio.Indicator />
-                </Radio.Control>
-                <Radio.Content>
-                  <Label>Server</Label>
-                  <Description>Linkding crawls the URL</Description>
-                </Radio.Content>
-              </Radio>
-            </div>
-          </RadioGroup>
+            <Radio.Item value="browser" label="Browser" description="Fast, includes page context" />
+            <Radio.Item value="server" label="Server" description="Linkding crawls the URL" />
+          </Radio.Group>
 
-          <RadioGroup
+          <Radio.Group
+            legend="Default Bookmark State"
             value={state.defaultUnread ? 'unread' : 'read'}
-            onChange={value =>
+            onValueChange={value =>
               dispatch({
                 type: 'SET_DEFAULT_UNREAD',
                 payload: value === 'unread',
               })
             }
           >
-            <Label>Default Bookmark State</Label>
-            <div className="flex flex-col gap-2">
-              <Radio value="unread">
-                <Radio.Control>
-                  <Radio.Indicator />
-                </Radio.Control>
-                <Radio.Content>
-                  <Label>Unread</Label>
-                </Radio.Content>
-              </Radio>
-              <Radio value="read">
-                <Radio.Control>
-                  <Radio.Indicator />
-                </Radio.Control>
-                <Radio.Content>
-                  <Label>Read</Label>
-                </Radio.Content>
-              </Radio>
-            </div>
-          </RadioGroup>
+            <Radio.Item value="unread" label="Unread" />
+            <Radio.Item value="read" label="Read" />
+          </Radio.Group>
 
-          <NumberField
-            minValue={1}
-            maxValue={1000}
-            value={state.fetchLimit}
-            onChange={val =>
-              dispatch({ type: 'SET_FETCH_LIMIT', payload: val || 50 })
-            }
-          >
-            <Label>Fetch Limit</Label>
-            <NumberField.Group>
-              <NumberField.DecrementButton />
-              <NumberField.Input />
-              <NumberField.IncrementButton />
-            </NumberField.Group>
-            <Description>Number of bookmarks to fetch per page.</Description>
-          </NumberField>
+          <Field label="Fetch Limit" description="Number of bookmarks to fetch per page.">
+            <Input
+              type="number"
+              min={1}
+              max={1000}
+              value={state.fetchLimit}
+              onChange={e =>
+                dispatch({
+                  type: 'SET_FETCH_LIMIT',
+                  payload: parseInt(e.target.value) || 50,
+                })
+              }
+            />
+          </Field>
         </div>
 
-        <div className="h-px bg-default-200" />
+        <div className="h-px bg-kumo-line" />
 
         <div className="flex flex-col gap-4">
-          <h2 className="text-sm font-semibold uppercase tracking-wider text-muted">
+          <div className="text-xs font-semibold uppercase tracking-wider text-kumo-strong">
             Maintenance
-          </h2>
+          </div>
           <div className="flex flex-col gap-2">
-            <Description>
-              Clear local cache and sync queue. This will not delete your
-              bookmarks on the server.
-            </Description>
+            <Text variant="secondary" size="sm">
+              Clear local cache and sync queue. This will not delete your bookmarks on the server.
+            </Text>
             <div className="flex items-center gap-2">
-              <Button
-                variant="secondary"
-                onPress={() => setIsModalOpen(true)}
-                className="w-fit"
-              >
+              <Button variant="secondary" onClick={() => setIsModalOpen(true)} className="w-fit">
                 Clean Local Data...
               </Button>
             </div>
           </div>
         </div>
 
-        {state.error && <FieldError>{state.error}</FieldError>}
-        <button type="submit" className="hidden" aria-hidden="true" />
-      </Form>
+        {state.error && (
+          <Text variant="error" size="sm">
+            {state.error}
+          </Text>
+        )}
+      </div>
       <div className="flex justify-end gap-3">
         {showCancel && (
-          <Button
-            isDisabled={state.isLoading}
-            variant="secondary"
-            onPress={onCancel}
-          >
+          <Button disabled={state.isLoading} variant="secondary" onClick={onCancel}>
             Cancel
           </Button>
         )}
-        <Button isDisabled={state.isLoading} onPress={onSave}>
-          {state.isLoading ? 'Saving...' : 'Save'}
+        <Button
+          disabled={state.isLoading}
+          variant="primary"
+          onClick={onSave}
+          loading={state.isLoading}
+        >
+          Save
         </Button>
       </div>
 
-      <Modal>
-        <Modal.Backdrop
-          variant="blur"
-          isOpen={isModalOpen}
-          onOpenChange={setIsModalOpen}
-        >
-          <Modal.Container>
-            <Modal.Dialog className="sm:max-w-[400px]">
-              {({ close }) => (
-                <>
-                  <Modal.Header>
-                    <Modal.Heading>Clean Local Data</Modal.Heading>
-                    <Modal.CloseTrigger />
-                  </Modal.Header>
-                  <Modal.Body>
-                    <div className="flex flex-col gap-4">
-                      <Description>
-                        Select the local data you want to remove. This will not
-                        affect your data on the Linkding server.
-                      </Description>
-                      <div className="flex flex-col gap-3">
-                        <Checkbox
-                          isSelected={cleanBookmarks}
-                          onChange={setCleanBookmarks}
-                        >
-                          <Checkbox.Control>
-                            <Checkbox.Indicator />
-                          </Checkbox.Control>
-                          <Checkbox.Content>
-                            <Label>Bookmarks Cache</Label>
-                            <Description>
-                              Forces a full re-sync of all bookmarks.
-                            </Description>
-                          </Checkbox.Content>
-                        </Checkbox>
+      <Dialog.Root open={isModalOpen} onOpenChange={setIsModalOpen}>
+        <Dialog className="p-8">
+          <Dialog.Title className="text-xl font-semibold mb-4">Clean Local Data</Dialog.Title>
+          <div className="flex flex-col gap-4">
+            <Text variant="secondary" size="sm">
+              Select the local data you want to remove. This will not affect your data on the
+              Linkding server.
+            </Text>
+            <div className="flex flex-col gap-4">
+              <Checkbox
+                checked={cleanBookmarks}
+                onCheckedChange={setCleanBookmarks}
+                label="Bookmarks Cache"
+              />
+              <div className="text-xs text-kumo-strong -mt-3 ml-7">
+                Forces a full re-sync of all bookmarks.
+              </div>
 
-                        <Checkbox
-                          isSelected={cleanSyncQueue}
-                          onChange={setCleanSyncQueue}
-                        >
-                          <Checkbox.Control>
-                            <Checkbox.Indicator />
-                          </Checkbox.Control>
-                          <Checkbox.Content>
-                            <Label>Sync Queue</Label>
-                            {cleanSyncQueue && (
-                              <Description className="text-danger">
-                                Warning: This will discard any pending changes
-                                that haven't been sent to the server.
-                              </Description>
-                            )}
-                          </Checkbox.Content>
-                        </Checkbox>
-                      </div>
-                    </div>
-                  </Modal.Body>
-                  <Modal.Footer>
-                    <Button variant="tertiary" onPress={close}>
-                      Cancel
-                    </Button>
-                    <Button variant="danger" onPress={() => handleClean()}>
-                      Clean Selected Data
-                    </Button>
-                  </Modal.Footer>
-                </>
+              <Checkbox
+                checked={cleanSyncQueue}
+                onCheckedChange={setCleanSyncQueue}
+                label="Sync Queue"
+              />
+              {cleanSyncQueue && (
+                <div className="text-xs text-kumo-danger -mt-3 ml-7">
+                  Warning: This will discard any pending changes that haven't been sent to the
+                  server.
+                </div>
               )}
-            </Modal.Dialog>
-          </Modal.Container>
-        </Modal.Backdrop>
-      </Modal>
+            </div>
+          </div>
+          <div className="flex justify-end gap-3 mt-8">
+            <Dialog.Close
+              render={p => (
+                <Button {...p} variant="secondary">
+                  Cancel
+                </Button>
+              )}
+            />
+            <Button variant="destructive" onClick={() => handleClean()}>
+              Clean Selected Data
+            </Button>
+          </div>
+        </Dialog>
+      </Dialog.Root>
     </div>
   )
 }

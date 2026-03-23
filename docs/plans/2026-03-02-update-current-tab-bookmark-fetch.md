@@ -105,13 +105,8 @@ const {
 ```typescript
 useEffect(() => {
   if (!currentTabBookmarkData?.bookmark) return
-  const updatedBookmark = bookmarks.find(
-    b => b.id === currentTabBookmarkData.bookmark!.id,
-  )
-  if (
-    updatedBookmark &&
-    updatedBookmark.unread !== currentTabBookmarkData.bookmark.unread
-  ) {
+  const updatedBookmark = bookmarks.find(b => b.id === currentTabBookmarkData.bookmark!.id)
+  if (updatedBookmark && updatedBookmark.unread !== currentTabBookmarkData.bookmark.unread) {
     mutateCurrentTabBookmark(
       { ...currentTabBookmarkData, bookmark: updatedBookmark },
       {
@@ -143,10 +138,7 @@ useEffect(() => {
 
 ```typescript
 // Optimistic update for current tab card if it matches
-if (
-  currentTabBookmarkData?.bookmark &&
-  currentTabBookmarkData.bookmark.id === id
-) {
+if (currentTabBookmarkData?.bookmark && currentTabBookmarkData.bookmark.id === id) {
   await mutateCurrentTabBookmark(
     {
       ...currentTabBookmarkData,

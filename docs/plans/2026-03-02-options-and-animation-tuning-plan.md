@@ -26,19 +26,13 @@
 // hooks/useSetup.ts
 export type MetadataSource = 'browser' | 'server'
 
-const fetchMetadataFromStorage = storage.defineItem<MetadataSource>(
-  'local:fetchMetadataFrom',
-  {
-    fallback: 'browser',
-  },
-)
+const fetchMetadataFromStorage = storage.defineItem<MetadataSource>('local:fetchMetadataFrom', {
+  fallback: 'browser',
+})
 
-const defaultUnreadStorage = storage.defineItem<boolean>(
-  'local:defaultUnread',
-  {
-    fallback: true,
-  },
-)
+const defaultUnreadStorage = storage.defineItem<boolean>('local:defaultUnread', {
+  fallback: true,
+})
 ```
 
 **Step 2: Update `useSetup` hook to return them**

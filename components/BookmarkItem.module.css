@@ -1,0 +1,10 @@
+.bookmarkItem[data-dimmed='true'] {
+  & .dimText {
+    opacity: 0.6;
+  }
+
+  & .dimAsset {
+    opacity: 0.6;
+    filter: saturate(0.5);
+  }
+}

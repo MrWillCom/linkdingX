@@ -1,4 +1,4 @@
-import { Spinner, Button } from '@heroui/react'
+import { Loader, Button } from '@cloudflare/kumo'
 import { BookmarkItem } from '@/components/BookmarkItem'
 import { Bookmark } from './BookmarksList'
 import { UnreadFilter } from '@/components/FilterTabs'
@@ -25,7 +25,7 @@ export function BookmarksInfiniteList({
   onToggleUnread,
 }: BookmarksInfiniteListProps) {
   return (
-    <div className="pt-2">
+    <div className="flex flex-col divide-y divide-kumo-line border-b border-kumo-line">
       {filteredBookmarks.length > 0 ? (
         <>
           {filteredBookmarks.map(bookmark => (
@@ -36,13 +36,10 @@ export function BookmarksInfiniteList({
               onToggleUnread={onToggleUnread}
             />
           ))}
-          <div
-            ref={loadMoreRef}
-            className="py-4 flex flex-col items-center gap-4"
-          >
-            {isLoadingMore && <Spinner size="sm" />}
+          <div ref={loadMoreRef} className="py-4 flex flex-col items-center gap-4">
+            {isLoadingMore && <Loader size="sm" />}
             {!isLoadingMore && hasMore && !hasTriggeredLoadRef.current && (
-              <Button size="sm" variant="ghost" onPress={() => loadMore()}>
+              <Button variant="ghost" onClick={() => loadMore()}>
                 Load more
               </Button>
             )}

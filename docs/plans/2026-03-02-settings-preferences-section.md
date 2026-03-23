@@ -51,10 +51,7 @@ type SettingsAction =
 **Step 2: Update `settingsReducer` and `initialState`**
 
 ```typescript
-function settingsReducer(
-  state: SettingsState,
-  action: SettingsAction,
-): SettingsState {
+function settingsReducer(state: SettingsState, action: SettingsAction): SettingsState {
   switch (action.type) {
     // ... existing cases ...
     case 'SET_FETCH_METADATA_FROM':
@@ -105,17 +102,13 @@ git commit -m "refactor: update SettingsForm state and reducer for preferences"
 ```typescript
 useEffect(() => {
   async function loadValues() {
-    const [
-      serverValue,
-      apiTokenValue,
-      fetchMetadataFromValue,
-      defaultUnreadValue,
-    ] = await Promise.all([
-      serverStorage.getValue(),
-      apiTokenStorage.getValue(),
-      fetchMetadataFromStorage.getValue(),
-      defaultUnreadStorage.getValue(),
-    ])
+    const [serverValue, apiTokenValue, fetchMetadataFromValue, defaultUnreadValue] =
+      await Promise.all([
+        serverStorage.getValue(),
+        apiTokenStorage.getValue(),
+        fetchMetadataFromStorage.getValue(),
+        defaultUnreadStorage.getValue(),
+      ])
     dispatch({
       type: 'RESET_FORM',
       payload: {
@@ -127,12 +120,7 @@ useEffect(() => {
     })
   }
   loadValues()
-}, [
-  serverStorage,
-  apiTokenStorage,
-  fetchMetadataFromStorage,
-  defaultUnreadStorage,
-])
+}, [serverStorage, apiTokenStorage, fetchMetadataFromStorage, defaultUnreadStorage])
 ```
 
 **Step 2: Update `onSave` to save preference values**

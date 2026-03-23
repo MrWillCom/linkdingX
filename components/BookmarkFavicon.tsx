@@ -26,7 +26,7 @@ export function BookmarkFavicon({ url, className = '' }: BookmarkFaviconProps) {
       alt=""
       aria-hidden="true"
       loading="lazy"
-      className={`h-4 w-4 rounded-sm border border-default-200 object-cover flex-shrink-0 ${className}`}
+      className={`h-4 w-4 rounded-sm object-cover shrink-0 ${className}`}
       onError={() => setIsHidden(true)}
     />
   )

@@ -1,11 +1,11 @@
-import { Button, Popover, Tooltip } from '@heroui/react'
+import { Button, Popover, Tooltip, TooltipProvider, Text, Surface } from '@cloudflare/kumo'
 import {
-  CloudAlert,
-  CloudCheck,
-  CloudSync,
-  ExternalLink,
-  Settings as SettingsIcon,
-} from 'lucide-react'
+  CloudCheckIcon,
+  CloudSlashIcon,
+  CloudArrowUpIcon,
+  ArrowSquareOutIcon,
+  GearIcon,
+} from '@phosphor-icons/react'
 import { FilterTabs, UnreadFilter } from '@/components/FilterTabs'
 import { CurrentTabCard } from '@/components/CurrentTabCard'
 import { useSyncQueueStatus } from '@/hooks/useSyncQueueStatus'
@@ -56,99 +56,78 @@ export function BookmarksHeader({
   const { status, count, tooltip, items } = useSyncQueueStatus()
   const statusDotClass =
     status === 'synced'
-      ? 'bg-success'
+      ? 'bg-kumo-success'
       : status === 'pending'
-        ? 'bg-warning'
-        : 'bg-danger'
+        ? 'bg-kumo-warning'
+        : 'bg-kumo-danger'
   const StatusIcon =
-    status === 'synced'
-      ? CloudCheck
-      : status === 'pending'
-        ? CloudSync
-        : CloudAlert
+    status === 'synced' ? CloudCheckIcon : status === 'pending' ? CloudArrowUpIcon : CloudSlashIcon
 
   return (
-    <div className="sticky top-0 z-30 bg-background px-2 py-2">
+    <div className="sticky top-0 z-30 bg-kumo-base px-2 py-2 border-b border-kumo-line">
       <div className="flex items-center justify-between h-9">
-        <FilterTabs
-          selectedKey={unreadFilter}
-          onSelectionChange={onUnreadFilterChange}
-        />
-        <div className="flex items-center gap-2">
+        <FilterTabs selectedKey={unreadFilter} onSelectionChange={onUnreadFilterChange} />
+        <div className="flex items-center">
           <span className="relative inline-flex">
             <Popover>
-              <Popover.Trigger>
-                <Tooltip delay={0} closeDelay={0}>
-                  <Tooltip.Trigger>
-                    <Button
-                      variant="tertiary"
-                      size="sm"
-                      isIconOnly
-                      aria-label="View sync queue"
-                    >
-                      <StatusIcon className="w-4 h-4" aria-hidden="true" />
+              <TooltipProvider>
+                <Tooltip content={tooltip} asChild side="bottom">
+                  <Popover.Trigger asChild>
+                    <Button variant="ghost" shape="square" aria-label="View sync queue">
+                      <StatusIcon weight="bold" className="w-4 h-4" aria-hidden="true" />
                     </Button>
-                  </Tooltip.Trigger>
-                  <Tooltip.Content placement="bottom">
-                    {tooltip}
-                  </Tooltip.Content>
+                  </Popover.Trigger>
                 </Tooltip>
-              </Popover.Trigger>
-              <Popover.Content className="w-64">
-                <Popover.Dialog className="p-3">
-                  <Popover.Heading className="text-sm font-semibold">
-                    Sync Queue
-                  </Popover.Heading>
-                  <div className="mt-2">
-                    {items.length === 0 ? (
-                      <p className="text-sm text-muted">No pending tasks</p>
-                    ) : (
-                      <ul className="text-sm text-foreground space-y-1">
-                        {items.map(item => (
-                          <li key={item.id} className="flex gap-2">
-                            <span className="text-muted uppercase text-2xs">
-                              {item.action}
-                            </span>
-                            <span className="truncate" title={item.title}>
-                              {item.title}
-                            </span>
-                          </li>
-                        ))}
-                      </ul>
-                    )}
-                  </div>
-                </Popover.Dialog>
+              </TooltipProvider>
+              <Popover.Content className="w-64 p-3" side="bottom">
+                <Popover.Title className="text-sm font-semibold">Sync Queue</Popover.Title>
+                <div className="mt-2">
+                  {items.length === 0 ? (
+                    <Popover.Description>No pending tasks</Popover.Description>
+                  ) : (
+                    <ul className="text-sm space-y-1">
+                      {items.map(item => (
+                        <li key={item.id} className="flex gap-2">
+                          <div className="uppercase text-[10px] text-kumo-subtle shrink-0">
+                            {item.action}
+                          </div>
+                          <span className="truncate text-kumo-default" title={item.title}>
+                            {item.title}
+                          </span>
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                </div>
               </Popover.Content>
             </Popover>
             <span
-              className={`absolute -bottom-0.5 -right-0.5 size-2 rounded-full ring-2 ring-background ${statusDotClass}`}
+              className={`absolute -bottom-0.5 -right-0.5 size-2 rounded-full ring-2 ring-kumo-base ${statusDotClass}`}
               aria-hidden="true"
             />
           </span>
           {variant === 'default' && (
             <Button
-              variant="tertiary"
-              size="sm"
-              isIconOnly
+              variant="ghost"
+              shape="square"
               aria-label="Open in new tab"
-              onPress={async () => {
+              onClick={async () => {
                 const url = browser.runtime.getURL('/home.html')
                 await browser.tabs.create({ url })
                 window.close() // Close the side panel
               }}
             >
-              <ExternalLink className="w-4 h-4" aria-hidden="true" />
+              <ArrowSquareOutIcon weight="bold" className="w-4 h-4" aria-hidden="true" />
             </Button>
           )}
           {variant === 'expanded' && (
             <Button
-              variant="tertiary"
-              size="sm"
-              isIconOnly
+              variant="ghost"
+              shape="square"
               aria-label="Open settings"
-              onPress={() => browser.runtime.openOptionsPage()}
+              onClick={() => browser.runtime.openOptionsPage()}
             >
-              <SettingsIcon size={18} aria-hidden="true" />
+              <GearIcon weight="bold" size={18} aria-hidden="true" />
             </Button>
           )}
         </div>

@@ -1,7 +1,7 @@
 import { db } from '@/utils/db'
 import { bookmarkService } from '@/utils/bookmarkService'
 import { useEffect, useRef, useState } from 'react'
-import { Button, Spinner } from '@heroui/react'
+import { Button, Loader } from '@cloudflare/kumo'
 import { storage } from '#imports'
 import { useSetup } from '@/hooks/useSetup'
 import { UnreadFilter } from '@/components/FilterTabs'
@@ -41,9 +41,7 @@ interface BookmarksListProps {
   variant?: BookmarksListVariant
 }
 
-export default function BookmarksList({
-  variant = 'default',
-}: BookmarksListProps) {
+export default function BookmarksList({ variant = 'default' }: BookmarksListProps) {
   const { fetchMetadataFromStorage, defaultUnreadStorage } = useSetup()
   const [unreadFilter, setUnreadFilter] = useState<UnreadFilter>('all')
   const {
@@ -131,13 +129,12 @@ export default function BookmarksList({
   }
 
   const handleAdd = async (url: string, title: string, description: string) => {
-    const [server, apiToken, fetchMetadataFrom, defaultUnread] =
-      await Promise.all([
-        serverStorage.getValue(),
-        apiTokenStorage.getValue(),
-        fetchMetadataFromStorage.getValue(),
-        defaultUnreadStorage.getValue(),
-      ])
+    const [server, apiToken, fetchMetadataFrom, defaultUnread] = await Promise.all([
+      serverStorage.getValue(),
+      apiTokenStorage.getValue(),
+      fetchMetadataFromStorage.getValue(),
+      defaultUnreadStorage.getValue(),
+    ])
 
     if (!server || !apiToken) return
 
@@ -173,7 +170,7 @@ export default function BookmarksList({
     return (
       <div className="p-4 flex flex-col items-center gap-4">
         <p className="text-danger">Error: {error.message}</p>
-        <Button variant="secondary" size="sm" onPress={() => mutateBookmarks()}>
+        <Button variant="secondary" onClick={() => mutateBookmarks()}>
           Retry
         </Button>
       </div>
@@ -183,7 +180,7 @@ export default function BookmarksList({
   if (isLoading) {
     return (
       <div className="flex justify-center p-8">
-        <Spinner />
+        <Loader />
       </div>
     )
   }

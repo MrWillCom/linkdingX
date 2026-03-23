@@ -55,11 +55,7 @@ Replace the existing "Delete" button with:
     <div className="p-3">
       <p className="text-sm mb-3">Delete this bookmark?</p>
       <div className="flex gap-2 justify-end">
-        <Button
-          size="sm"
-          variant="ghost"
-          onPress={() => setIsDeletePopoverOpen(false)}
-        >
+        <Button size="sm" variant="ghost" onPress={() => setIsDeletePopoverOpen(false)}>
           Cancel
         </Button>
         <Button

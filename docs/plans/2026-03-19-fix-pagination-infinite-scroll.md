@@ -23,12 +23,7 @@ Update `useBookmarksManager` to watch for "stuck" pagination. If a fetch complet
 ```typescript
 // Inside useBookmarksManager
 useEffect(() => {
-  if (
-    !isLoading &&
-    !isValidating &&
-    hasMore &&
-    filteredBookmarks.length < (size * PAGE_SIZE) / 2
-  ) {
+  if (!isLoading && !isValidating && hasMore && filteredBookmarks.length < (size * PAGE_SIZE) / 2) {
     // If we have very few filtered bookmarks relative to the pages fetched,
     // and we're not currently loading, fetch the next page automatically.
     // Use a small delay to avoid hammering the API

@@ -72,10 +72,8 @@ async function processSyncQueue() {
           body,
         })
 
-        const isDeletedOnServer =
-          response.status === 404 || response.status === 410
-        const isSuccess =
-          response.ok || (op.action === 'delete' && isDeletedOnServer)
+        const isDeletedOnServer = response.status === 404 || response.status === 410
+        const isSuccess = response.ok || (op.action === 'delete' && isDeletedOnServer)
 
         if (isSuccess) {
           console.log(`Successfully synced ${op.action} for ${op.bookmark_id}`)
@@ -90,15 +88,12 @@ async function processSyncQueue() {
           await syncErrorStorage.setValue(true)
           const errorData = await response.json().catch(() => ({}))
           const errorMessage = errorData.detail || response.statusText
-          console.error(
-            `Sync failed for ${op.action} on bookmark ${op.bookmark_id}:`,
-            {
-              status: response.status,
-              statusText: response.statusText,
-              detail: errorMessage,
-              operation: op,
-            },
-          )
+          console.error(`Sync failed for ${op.action} on bookmark ${op.bookmark_id}:`, {
+            status: response.status,
+            statusText: response.statusText,
+            detail: errorMessage,
+            operation: op,
+          })
 
           await notifyUI(
             'danger',

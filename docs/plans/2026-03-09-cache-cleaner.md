@@ -94,13 +94,10 @@ Implement the HeroUI `Modal` at the bottom of the component.
             </Modal.Header>
             <Modal.Body className="flex flex-col gap-4">
               <p className="text-sm text-muted">
-                Select which local data you want to remove. This can help
-                resolve synchronization issues.
+                Select which local data you want to remove. This can help resolve synchronization
+                issues.
               </p>
-              <Checkbox
-                isSelected={cleanBookmarks}
-                onChange={setCleanBookmarks}
-              >
+              <Checkbox isSelected={cleanBookmarks} onChange={setCleanBookmarks}>
                 <Checkbox.Control>
                   <Checkbox.Indicator />
                 </Checkbox.Control>
@@ -108,10 +105,7 @@ Implement the HeroUI `Modal` at the bottom of the component.
                   <Label>Bookmark Cache</Label>
                 </Checkbox.Content>
               </Checkbox>
-              <Checkbox
-                isSelected={cleanSyncQueue}
-                onChange={setCleanSyncQueue}
-              >
+              <Checkbox isSelected={cleanSyncQueue} onChange={setCleanSyncQueue}>
                 <Checkbox.Control>
                   <Checkbox.Indicator />
                 </Checkbox.Control>

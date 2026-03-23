@@ -32,10 +32,7 @@ export function useCurrentTabBookmark() {
 
   // 1. Watch local DB (The Truth)
   const bookmark = useLiveQuery(
-    () =>
-      currentTabUrl
-        ? db.bookmarks.where('url').equals(currentTabUrl).first()
-        : undefined,
+    () => (currentTabUrl ? db.bookmarks.where('url').equals(currentTabUrl).first() : undefined),
     [currentTabUrl],
   )
 
@@ -57,9 +54,7 @@ export function useCurrentTabBookmark() {
           setServerData(res.data)
         }
       })
-      .catch(err =>
-        console.error('[useCurrentTabBookmark] Background sync failed:', err),
-      )
+      .catch(err => console.error('[useCurrentTabBookmark] Background sync failed:', err))
       .finally(() => setIsLoading(false))
   }, [currentTabUrl, !!bookmark])
 
@@ -112,12 +107,7 @@ Ensure `realtimeMetadata` is used if `bookmark` and `serverMetadata` are missing
 
 ```typescript
 // components/CurrentTabCard.tsx:76-85
-const title =
-  bookmark?.title ||
-  realtimeMetadata?.title ||
-  metadata?.title ||
-  currentTabUrl ||
-  ''
+const title = bookmark?.title || realtimeMetadata?.title || metadata?.title || currentTabUrl || ''
 const url = bookmark?.url || currentTabUrl || ''
 const description = bookmark?.description || metadata?.description || ''
 const favicon = bookmark?.favicon_url || realtimeMetadata?.favicon || null
