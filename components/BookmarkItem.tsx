@@ -1,5 +1,5 @@
 import { formatDistanceToNow } from 'date-fns'
-import { Link, Badge, Surface } from '@cloudflare/kumo'
+import { Link, Badge } from '@cloudflare/kumo'
 import { BookmarkFavicon } from './BookmarkFavicon'
 import { BookmarkPreview } from './BookmarkPreview'
 
@@ -17,7 +17,7 @@ export function BookmarkItem({
   onToggleUnread,
 }: BookmarkItemProps) {
   return (
-    <Surface
+    <div
       className={`flex items-start gap-1 py-2 px-2 hover:bg-kumo-elevated transition-colors ${isDimmed ? 'opacity-50' : ''}`}
     >
       <button
@@ -67,6 +67,6 @@ export function BookmarkItem({
         alt={bookmark.title || bookmark.url}
         className="h-12 w-16 shrink-0 mt-0.5"
       />
-    </Surface>
+    </div>
   )
 }

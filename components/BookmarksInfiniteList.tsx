@@ -25,7 +25,7 @@ export function BookmarksInfiniteList({
   onToggleUnread,
 }: BookmarksInfiniteListProps) {
   return (
-    <div>
+    <div className="flex flex-col divide-y divide-kumo-line border-b border-kumo-line">
       {filteredBookmarks.length > 0 ? (
         <>
           {filteredBookmarks.map(bookmark => (
