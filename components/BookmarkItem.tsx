@@ -1,5 +1,5 @@
+import { Link } from '@cloudflare/kumo'
 import { BookmarkContent } from './BookmarkContent'
-
 import { Bookmark } from './BookmarksList'
 import styles from './BookmarkItem.module.css'
 
@@ -29,6 +29,14 @@ export function BookmarkItem({ bookmark, isDimmed, onToggleUnread }: BookmarkIte
           }`}
         />
       </button>
+      <Link
+        href={bookmark.url}
+        target="_blank"
+        variant="plain"
+        className="absolute inset-0 z-5"
+        tabIndex={-1}
+        aria-hidden="true"
+      />
       <BookmarkContent
         bookmark={bookmark}
         titleClassName={styles.dimText}

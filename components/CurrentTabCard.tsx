@@ -98,7 +98,6 @@ export function CurrentTabCard({
                     date_added: new Date().toISOString(),
                   }}
                   showDate={false}
-                  isClickable={false}
                 />
               </div>
               <div className="pt-4 flex items-center justify-between">
@@ -119,7 +118,7 @@ export function CurrentTabCard({
             <LayerCard.Secondary>{bookmark.unread ? 'Unread' : 'Read'}</LayerCard.Secondary>
             <LayerCard.Primary>
               <div className="flex items-start gap-1">
-                <BookmarkContent bookmark={bookmark} isClickable={false} />
+                <BookmarkContent bookmark={bookmark} />
               </div>
               <div className="pt-4 flex items-center justify-between">
                 <div className="text-xs text-kumo-subtle" />
