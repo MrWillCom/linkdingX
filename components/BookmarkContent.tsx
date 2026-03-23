@@ -34,35 +34,33 @@ export function BookmarkContent({
   showDate = true,
   isClickable = true,
 }: BookmarkContentProps) {
-  const TitleWrapper = isClickable ? Link : 'div'
-  const titleProps = isClickable
-    ? {
-        href: bookmark.url,
-        target: '_blank',
-        variant: 'plain' as const,
-      }
-    : {}
-
   return (
     <>
-      <div className="flex-1 min-w-0">
-        <TitleWrapper
-          {...titleProps}
-          className={`flex min-w-0 items-start gap-1.5 no-underline! transition-colors mb-2 text-sm font-medium text-kumo-default! ${
-            isClickable ? 'after:absolute after:inset-0 after:z-[-1]' : ''
-          } ${titleClassName}`}
+      <div className="flex-1 min-w-0 relative">
+        {isClickable && (
+          <Link
+            href={bookmark.url}
+            target="_blank"
+            variant="plain"
+            className="absolute inset-0"
+            tabIndex={-1}
+            aria-hidden="true"
+          />
+        )}
+        <div
+          className={`flex min-w-0 items-start gap-1.5 mb-2 text-sm font-medium text-kumo-default! pointer-events-none ${titleClassName}`}
         >
           <BookmarkFavicon url={bookmark.favicon_url} />
           <span className="line-clamp-1">{bookmark.title || bookmark.url}</span>
-        </TitleWrapper>
+        </div>
         {bookmark.description && (
           <p
-            className={`pointer-events-none relative z-0 text-xs text-kumo-strong mt-0.5 line-clamp-4 ${descriptionClassName}`}
+            className={`pointer-events-none text-xs text-kumo-strong mt-0.5 line-clamp-4 ${descriptionClassName}`}
           >
             {bookmark.description}
           </p>
         )}
-        <div className="pointer-events-none relative z-0 flex flex-col gap-1.5 mt-1.5">
+        <div className={`pointer-events-none flex flex-col gap-1.5 mt-1.5`}>
           {bookmark.tag_names.length > 0 && (
             <div className="flex flex-wrap gap-1.5 pointer-events-auto">
               {bookmark.tag_names.map(tag => (
