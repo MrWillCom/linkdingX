@@ -36,7 +36,8 @@ export function BookmarkItem({ bookmark, isDimmed, onToggleUnread }: BookmarkIte
         <Link
           href={bookmark.url}
           target="_blank"
-          className="flex min-w-0 items-center gap-1.5 text-sm font-medium text-kumo-default group-hover:text-kumo-brand transition-colors after:absolute after:inset-0 after:z-0"
+          variant="plain"
+          className="flex min-w-0 items-center gap-1.5 text-sm font-medium text-kumo-default! no-underline! transition-colors after:absolute after:inset-0 after:z-0"
         >
           <BookmarkFavicon url={bookmark.favicon_url} className={styles.dimAsset} />
           <span className="line-clamp-1">{bookmark.title || bookmark.url}</span>
