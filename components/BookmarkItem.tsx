@@ -3,6 +3,8 @@ import { Link, Badge } from '@cloudflare/kumo'
 import { BookmarkFavicon } from './BookmarkFavicon'
 import { BookmarkPreview } from './BookmarkPreview'
 
+import { BookmarkContent } from './BookmarkContent'
+
 import { Bookmark } from './BookmarksList'
 import styles from './BookmarkItem.module.css'
 
@@ -23,7 +25,7 @@ export function BookmarkItem({ bookmark, isDimmed, onToggleUnread }: BookmarkIte
           e.stopPropagation()
           onToggleUnread(bookmark.id, bookmark.unread)
         }}
-        className={`relative z-10 group/button shrink-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-kumo-ring cursor-pointer p-2 -mt-0.5 -ml-1.5 -mr-0.5 rounded-full hover:bg-kumo-recessed active:bg-kumo-tint transition-colors ${styles.dimAsset}`}
+        className={`relative z-40 group/button shrink-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-kumo-ring cursor-pointer p-2 -mt-0.5 -ml-1.5 -mr-0.5 rounded-full hover:bg-kumo-recessed active:bg-kumo-tint transition-colors ${styles.dimAsset}`}
         aria-label={bookmark.unread ? 'Mark as read' : 'Mark as unread'}
       >
         <div
@@ -32,40 +34,13 @@ export function BookmarkItem({ bookmark, isDimmed, onToggleUnread }: BookmarkIte
           }`}
         />
       </button>
-      <div className={`flex-1 min-w-0 ${styles.dimText}`}>
-        <Link
-          href={bookmark.url}
-          target="_blank"
-          variant="plain"
-          className="flex min-w-0 items-center gap-1.5 text-sm font-medium text-kumo-default! no-underline! transition-colors after:absolute after:inset-0 after:z-0"
-        >
-          <BookmarkFavicon url={bookmark.favicon_url} className={styles.dimAsset} />
-          <span className="line-clamp-1">{bookmark.title || bookmark.url}</span>
-        </Link>
-        {bookmark.description && (
-          <p className="text-xs text-kumo-strong mt-0.5 line-clamp-2">{bookmark.description}</p>
-        )}
-        <div className="flex flex-col gap-1.5 mt-1.5">
-          {bookmark.tag_names.length > 0 && (
-            <div className="flex flex-wrap gap-1.5">
-              {bookmark.tag_names.map(tag => (
-                <Badge key={tag} variant="secondary" className={`text-2xs ${styles.dimAsset}`}>
-                  {tag}
-                </Badge>
-              ))}
-            </div>
-          )}
-          <span className="text-2xs text-kumo-strong">
-            {formatDistanceToNow(new Date(bookmark.date_added), {
-              addSuffix: true,
-            })}
-          </span>
-        </div>
-      </div>
-      <BookmarkPreview
-        url={bookmark.preview_image_url}
-        alt={bookmark.title || bookmark.url}
-        className={`h-12 w-16 shrink-0 mt-0.5 ${styles.dimAsset}`}
+      <BookmarkContent
+        bookmark={bookmark}
+        titleClassName={styles.dimText}
+        descriptionClassName={`line-clamp-2 ${styles.dimText}`}
+        dateClassName={styles.dimAsset}
+        tagClassName={styles.dimAsset}
+        previewClassName={styles.dimAsset}
       />
     </div>
   )

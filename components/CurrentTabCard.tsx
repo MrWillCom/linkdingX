@@ -4,6 +4,7 @@ import { LayerCard, Link, Badge, Button, Tooltip, Text } from '@cloudflare/kumo'
 import { TrashIcon, PlusIcon } from '@phosphor-icons/react'
 import { BookmarkFavicon } from './BookmarkFavicon'
 import { BookmarkPreview } from './BookmarkPreview'
+import { BookmarkContent } from './BookmarkContent'
 
 interface Bookmark {
   id: number
@@ -85,23 +86,20 @@ export function CurrentTabCard({
           <div key="add">
             <LayerCard.Secondary>Current Tab</LayerCard.Secondary>
             <LayerCard.Primary>
-              <div className="flex min-w-0 items-center gap-1.5 mb-2">
-                <BookmarkFavicon url={favicon} />
-                <div className="line-clamp-1 text-sm font-bold">{title}</div>
-              </div>
-              <div className="flex flex-col gap-1">
-                <div className="min-w-0">
-                  <Link
-                    href={url}
-                    target="_blank"
-                    className="text-xs text-kumo-subtle hover:text-kumo-brand transition-colors line-clamp-1"
-                  >
-                    {url}
-                  </Link>
-                  {description && (
-                    <div className="mt-1 line-clamp-2 text-xs text-kumo-subtle">{description}</div>
-                  )}
-                </div>
+              <div className="flex items-start gap-1">
+                <BookmarkContent
+                  bookmark={{
+                    url,
+                    title,
+                    description,
+                    favicon_url: favicon,
+                    preview_image_url: null,
+                    tag_names: [],
+                    date_added: new Date().toISOString(),
+                  }}
+                  showDate={false}
+                  isClickable={false}
+                />
               </div>
               <div className="pt-4 flex items-center justify-between">
                 <span className="text-xs text-kumo-subtle" />
@@ -120,44 +118,11 @@ export function CurrentTabCard({
           <div key="manage">
             <LayerCard.Secondary>{bookmark.unread ? 'Unread' : 'Read'}</LayerCard.Secondary>
             <LayerCard.Primary>
-              <div className="flex min-w-0 items-center gap-1.5 mb-2">
-                <BookmarkFavicon url={favicon} />
-                <div className="line-clamp-1 text-sm text-kumo-default">{title}</div>
-              </div>
-              <div className="flex items-start gap-2">
-                <div className="min-w-0 flex-1 flex flex-col gap-1">
-                  <Link
-                    href={bookmark.url}
-                    target="_blank"
-                    className="text-xs text-kumo-subtle hover:text-kumo-brand transition-colors line-clamp-1 underline decoration-kumo-line"
-                  >
-                    {bookmark.url}
-                  </Link>
-                  {description && (
-                    <div className="line-clamp-2 text-xs text-kumo-subtle">{description}</div>
-                  )}
-                  {bookmark.tag_names.length > 0 && (
-                    <div className="flex flex-wrap gap-1.5 mt-1">
-                      {bookmark.tag_names.map(tag => (
-                        <Badge key={tag} variant="secondary" className="text-[10px]">
-                          {tag}
-                        </Badge>
-                      ))}
-                    </div>
-                  )}
-                </div>
-                <BookmarkPreview
-                  url={bookmark.preview_image_url}
-                  alt={bookmark.title || bookmark.url}
-                  className="h-14 w-20 shrink-0"
-                />
+              <div className="flex items-start gap-1">
+                <BookmarkContent bookmark={bookmark} isClickable={false} />
               </div>
               <div className="pt-4 flex items-center justify-between">
-                <div className="text-xs text-kumo-subtle">
-                  {formatDistanceToNow(new Date(bookmark.date_added), {
-                    addSuffix: true,
-                  })}
-                </div>
+                <div className="text-xs text-kumo-subtle" />
                 <div className="flex items-center gap-1">
                   <Tooltip content="Click again to confirm delete" disabled={!isConfirmingDelete}>
                     <Button
