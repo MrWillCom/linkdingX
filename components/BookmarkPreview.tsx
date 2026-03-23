@@ -26,7 +26,7 @@ export function BookmarkPreview({ url, alt, className = '' }: BookmarkPreviewPro
       src={url}
       alt={alt}
       loading="lazy"
-      className={`rounded-md border border-default-200 object-cover ${className}`}
+      className={`rounded-md border border-kumo-fill object-cover ${className}`}
       onError={() => setIsHidden(true)}
     />
   )

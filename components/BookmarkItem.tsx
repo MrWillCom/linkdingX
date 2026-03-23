@@ -16,11 +16,14 @@ export function BookmarkItem({ bookmark, isDimmed, onToggleUnread }: BookmarkIte
   return (
     <div
       data-dimmed={isDimmed}
-      className={`flex items-start gap-1 py-2 px-2 hover:bg-kumo-elevated transition-colors ${styles.bookmarkItem}`}
+      className={`group relative flex items-start gap-1 py-2 px-2 hover:bg-kumo-elevated transition-colors ${styles.bookmarkItem}`}
     >
       <button
-        onClick={() => onToggleUnread(bookmark.id, bookmark.unread)}
-        className={`group shrink-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-kumo-ring cursor-pointer p-2 -mt-0.5 -ml-1.5 -mr-0.5 rounded-full hover:bg-kumo-recessed active:bg-kumo-tint transition-colors ${styles.dimAsset}`}
+        onClick={e => {
+          e.stopPropagation()
+          onToggleUnread(bookmark.id, bookmark.unread)
+        }}
+        className={`relative z-10 group/button shrink-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-kumo-ring cursor-pointer p-2 -mt-0.5 -ml-1.5 -mr-0.5 rounded-full hover:bg-kumo-recessed active:bg-kumo-tint transition-colors ${styles.dimAsset}`}
         aria-label={bookmark.unread ? 'Mark as read' : 'Mark as unread'}
       >
         <div
@@ -33,7 +36,7 @@ export function BookmarkItem({ bookmark, isDimmed, onToggleUnread }: BookmarkIte
         <Link
           href={bookmark.url}
           target="_blank"
-          className="flex min-w-0 items-center gap-1.5 text-sm font-medium text-kumo-default hover:text-kumo-brand transition-colors"
+          className="flex min-w-0 items-center gap-1.5 text-sm font-medium text-kumo-default group-hover:text-kumo-brand transition-colors after:absolute after:inset-0 after:z-0"
         >
           <BookmarkFavicon url={bookmark.favicon_url} className={styles.dimAsset} />
           <span className="line-clamp-1">{bookmark.title || bookmark.url}</span>
