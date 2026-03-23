@@ -53,7 +53,7 @@ Add, delete, or toggle unread status instantly. Your changes are queued locally 
 
 ### Modern Aesthetic
 
-A polished, native-feeling interface built with HeroUI, featuring full dark mode support and smooth animations.
+A polished, native-feeling interface built with [Kumo](https://kumo-ui.com/), featuring full dark mode support and smooth animations.
 
 ## Features in Depth
 
