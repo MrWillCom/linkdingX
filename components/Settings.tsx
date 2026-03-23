@@ -2,7 +2,7 @@
 
 import { Button, Dialog, Text } from '@cloudflare/kumo'
 import { useState } from 'react'
-import { Gear } from '@phosphor-icons/react'
+import { GearIcon } from '@phosphor-icons/react'
 import SettingsForm from './SettingsForm'
 
 export default function Settings() {
@@ -22,14 +22,14 @@ export default function Settings() {
             shape="square"
             aria-label="Open settings"
           >
-            <Gear size={18} weight="bold" />
+            <GearIcon size={18} weight="bold" />
           </Button>
         )}
       />
       <Dialog className="sm:max-w-md p-6">
         <div className="flex items-start gap-4 mb-6">
           <div className="flex size-10 items-center justify-center rounded-lg bg-kumo-tint text-kumo-brand">
-            <Gear weight="bold" className="size-5" />
+            <GearIcon weight="bold" className="size-5" />
           </div>
           <div className="flex-1">
             <Dialog.Title className="text-lg font-semibold leading-6">

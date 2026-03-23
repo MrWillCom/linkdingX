@@ -6,9 +6,9 @@
 >
 > 1.  **Read Before Coding**: ALWAYS look up documentation (Context7, official docs, web search) BEFORE writing any code.
 > 2.  **Line-by-Line Verification**: When copying from official documentation examples, you MUST check EVERY line one by one. Do NOT skip any parts (e.g., `<Modal.Icon>`, `<Surface>`, `className="p-6"`).
-> 3.  **Use Context7** to look up WXT and HeroUI documentation:
+> 3.  **Use Context7** to look up WXT and Kumo documentation:
 >     - WXT Docs: https://wxt.dev/
->     - HeroUI Docs: https://v3.heroui.com/
+>     - Kumo Docs: https://github.com/cloudflare/kumo
 
 > **⚠️ CRITICAL: COMMUNICATION MANDATE**
 >
@@ -20,7 +20,7 @@
 
 ## Project Overview
 
-This is a **browser extension** built with [WXT](https://wxt.dev/), React 19, TypeScript, Tailwind CSS v4, and HeroUI v3. It uses `pnpm` as the package manager, `dexie` for local storage, and `swr` for data fetching.
+This is a **browser extension** built with [WXT](https://wxt.dev/), React 19, TypeScript, Tailwind CSS v4, and Cloudflare Kumo. It uses `pnpm` as the package manager, `dexie` for local storage, and `swr` for data fetching.
 
 ### Project Structure
 
@@ -32,7 +32,7 @@ This is a **browser extension** built with [WXT](https://wxt.dev/), React 19, Ty
    📁 hooks/             # Auto-imported React hooks
    📁 assets/            # Global CSS (globals.css), images
    📁 public/           # Static assets (icons)
-   📁 .agents/skills/   # Project-specific AI skills (HeroUI, React Best Practices)
+   📁 .agents/skills/   # Project-specific AI skills (React Best Practices)
    📄 wxt.config.ts     # WXT configuration
    📄 package.json
 ```
@@ -64,11 +64,11 @@ This is a **browser extension** built with [WXT](https://wxt.dev/), React 19, Ty
 
 ### Imports
 
-**Order**: React → External (`@heroui/react`) → WXT (#imports) → Internal (@/) → Types → Styles
+**Order**: React → External (`@cloudflare/kumo`) → WXT (#imports) → Internal (@/) → Types → Styles
 
 ```typescript
 import { useState, useEffect } from 'react'
-import { Button, Input } from '@heroui/react'
+import { Button, Input } from '@cloudflare/kumo'
 import { storage } from 'wxt/storage'
 import { defineContentScript } from '#imports'
 import { db } from '@/utils/db'
@@ -90,13 +90,13 @@ Follow the rules in `.agents/skills/vercel-react-best-practices/AGENTS.md`:
 
 ---
 
-## UI & Styling (HeroUI v3 + Tailwind v4)
+## UI & Styling (Kumo + Tailwind v4)
 
-### HeroUI v3
+### Cloudflare Kumo
 
-- **Semantic Colors**: Use semantic names (`text-muted`, `bg-background`) instead of numbered defaults (`text-default-400`).
-- **Props**: Use `is` prefix (`isDisabled`, `isLoading`) and `on` prefix (`onPress`, `onValueChange`).
-- **Tabs**: Use `id` on `<Tabs.Tab>` (NOT `key`). Always include `<Tabs.Indicator />`.
+- **Semantic Colors**: Use Kumo's semantic variables (`text-kumo-default`, `bg-kumo-base`, `bg-kumo-brand`).
+- **Surface**: Use `<Surface>` as the primary layout container.
+- **Icons**: Use `@phosphor-icons/react` with the `Icon` suffix (e.g., `GearIcon`, `TrashIcon`).
 
 ### Tailwind v4
 

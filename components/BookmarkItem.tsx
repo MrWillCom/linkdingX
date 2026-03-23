@@ -18,7 +18,7 @@ export function BookmarkItem({
 }: BookmarkItemProps) {
   return (
     <Surface
-      className={`flex items-start gap-1 py-2 px-2 hover:bg-kumo-elevated transition-colors border-b border-kumo-line last:border-b-0 ${isDimmed ? 'opacity-50' : ''}`}
+      className={`flex items-start gap-1 py-2 px-2 hover:bg-kumo-elevated transition-colors ${isDimmed ? 'opacity-50' : ''}`}
     >
       <button
         onClick={() => onToggleUnread(bookmark.id, bookmark.unread)}

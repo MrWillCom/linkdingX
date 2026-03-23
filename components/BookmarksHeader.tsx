@@ -7,11 +7,11 @@ import {
   Surface,
 } from '@cloudflare/kumo'
 import {
-  CloudCheck,
-  CloudSlash,
-  CloudArrowUp,
-  ArrowSquareOut,
-  Gear,
+  CloudCheckIcon,
+  CloudSlashIcon,
+  CloudArrowUpIcon,
+  ArrowSquareOutIcon,
+  GearIcon,
 } from '@phosphor-icons/react'
 import { FilterTabs, UnreadFilter } from '@/components/FilterTabs'
 import { CurrentTabCard } from '@/components/CurrentTabCard'
@@ -69,10 +69,10 @@ export function BookmarksHeader({
         : 'bg-kumo-danger'
   const StatusIcon =
     status === 'synced'
-      ? CloudCheck
+      ? CloudCheckIcon
       : status === 'pending'
-        ? CloudArrowUp
-        : CloudSlash
+        ? CloudArrowUpIcon
+        : CloudSlashIcon
 
   return (
     <Surface className="sticky top-0 z-30 bg-kumo-base px-2 py-2">
@@ -146,7 +146,7 @@ export function BookmarksHeader({
                 window.close() // Close the side panel
               }}
             >
-              <ArrowSquareOut
+              <ArrowSquareOutIcon
                 weight="bold"
                 className="w-4 h-4"
                 aria-hidden="true"
@@ -160,7 +160,7 @@ export function BookmarksHeader({
               aria-label="Open settings"
               onClick={() => browser.runtime.openOptionsPage()}
             >
-              <Gear weight="bold" size={18} aria-hidden="true" />
+              <GearIcon weight="bold" size={18} aria-hidden="true" />
             </Button>
           )}
         </div>
