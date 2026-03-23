@@ -49,7 +49,7 @@ export function BookmarkContent({
         <TitleWrapper
           {...titleProps}
           className={`flex min-w-0 items-start gap-1.5 no-underline! transition-colors mb-2 text-sm font-medium text-kumo-default! ${
-            isClickable ? 'after:absolute after:inset-0 after:z-30' : ''
+            isClickable ? 'after:absolute after:inset-0 after:z-[-1]' : ''
           } ${titleClassName}`}
         >
           <BookmarkFavicon url={bookmark.favicon_url} />

@@ -25,7 +25,7 @@ export function BookmarkItem({ bookmark, isDimmed, onToggleUnread }: BookmarkIte
           e.stopPropagation()
           onToggleUnread(bookmark.id, bookmark.unread)
         }}
-        className={`relative z-40 group/button shrink-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-kumo-ring cursor-pointer p-2 -mt-0.5 -ml-1.5 -mr-0.5 rounded-full hover:bg-kumo-recessed active:bg-kumo-tint transition-colors ${styles.dimAsset}`}
+        className={`relative z-10 group/button shrink-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-kumo-ring cursor-pointer p-2 -mt-0.5 -ml-1.5 -mr-0.5 rounded-full hover:bg-kumo-recessed active:bg-kumo-tint transition-colors ${styles.dimAsset}`}
         aria-label={bookmark.unread ? 'Mark as read' : 'Mark as unread'}
       >
         <div
