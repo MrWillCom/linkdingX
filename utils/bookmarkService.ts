@@ -1,5 +1,5 @@
 import { db } from './db'
-import type { Bookmark } from '@/components/BookmarksList'
+import type { Bookmark } from '@/utils/types'
 
 export const bookmarkService = {
   async toggleUnread(id: number, currentUnread: boolean) {
@@ -15,23 +15,21 @@ export const bookmarkService = {
       payload: { unread: newUnread },
       timestamp: Date.now(),
     })
-    // Trigger background sync
     browser.runtime.sendMessage({ type: 'sync-request' })
   },
 
   async deleteBookmark(id: number) {
-    // Update the bookmark with a new _local_modified_at before deleting
-    // to lock it during the sync window.
     await db.bookmarks.update(id, {
+      _sync_status: 'pending',
       _local_modified_at: new Date().toISOString(),
     })
-    await db.bookmarks.delete(id)
     await db.sync_queue.add({
       action: 'delete',
       bookmark_id: id,
       payload: {},
       timestamp: Date.now(),
     })
+    await db.bookmarks.delete(id)
     browser.runtime.sendMessage({ type: 'sync-request' })
   },
 

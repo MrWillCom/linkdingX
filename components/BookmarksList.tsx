@@ -2,38 +2,18 @@ import { db } from '@/utils/db'
 import { bookmarkService } from '@/utils/bookmarkService'
 import { useEffect, useRef, useState } from 'react'
 import { Button, Loader } from '@cloudflare/kumo'
-import { storage } from '#imports'
-import { useSetup } from '@/hooks/useSetup'
-import { UnreadFilter } from '@/components/FilterTabs'
+import {
+  serverStorage,
+  apiTokenStorage,
+  fetchMetadataFromStorage,
+  defaultUnreadStorage,
+} from '@/utils/storage'
+import type { UnreadFilter } from '@/components/FilterTabs'
 import { useBookmarksManager } from '@/hooks/useBookmarksManager'
 import { useCurrentTabBookmark } from '@/hooks/useCurrentTabBookmark'
 import { BookmarksHeader } from './BookmarksHeader'
 import { BookmarksInfiniteList } from './BookmarksInfiniteList'
-
-export interface Bookmark {
-  id: number
-  url: string
-  title: string
-  description: string
-  notes: string
-  web_archive_snapshot_url: string
-  favicon_url: string | null
-  preview_image_url: string | null
-  is_archived: boolean
-  unread: boolean
-  shared: boolean
-  tag_names: string[]
-  date_added: string
-  date_modified: string
-}
-
-const serverStorage = storage.defineItem<string>('local:server', {
-  fallback: '',
-})
-
-const apiTokenStorage = storage.defineItem<string>('local:apiToken', {
-  fallback: '',
-})
+import type { Bookmark } from '@/utils/types'
 
 type BookmarksListVariant = 'default' | 'expanded'
 
@@ -42,7 +22,6 @@ interface BookmarksListProps {
 }
 
 export default function BookmarksList({ variant = 'default' }: BookmarksListProps) {
-  const { fetchMetadataFromStorage, defaultUnreadStorage } = useSetup()
   const [unreadFilter, setUnreadFilter] = useState<UnreadFilter>('all')
   const {
     filteredBookmarks,
@@ -74,14 +53,12 @@ export default function BookmarksList({ variant = 'default' }: BookmarksListProp
   const [isScrolled, setIsScrolled] = useState(false)
   const hasTriggeredLoadRef = useRef(false)
 
-  // Reset triggered flag when loading more finishes
   useEffect(() => {
     if (!isLoadingMore) {
       hasTriggeredLoadRef.current = false
     }
   }, [isLoadingMore])
 
-  // Use refs to provide stable access to changing state/functions in the observer
   const stateRef = useRef({ isLoadingMore, hasMore, loadMore })
   useEffect(() => {
     stateRef.current = { isLoadingMore, hasMore, loadMore }
@@ -90,7 +67,6 @@ export default function BookmarksList({ variant = 'default' }: BookmarksListProp
   const handleScroll = (e: React.UIEvent<HTMLDivElement>) => {
     setIsScrolled(e.currentTarget.scrollTop > 0)
 
-    // Fallback: Check if we're near the bottom manually during scroll
     const { isLoadingMore, hasMore, loadMore } = stateRef.current
     if (hasMore && !isLoadingMore) {
       const { scrollTop, scrollHeight, clientHeight } = e.currentTarget
@@ -102,7 +78,8 @@ export default function BookmarksList({ variant = 'default' }: BookmarksListProp
   }
 
   useEffect(() => {
-    if (!loadMoreRef.current) return
+    const el = loadMoreRef.current
+    if (!el) return
 
     const observer = new IntersectionObserver(
       entries => {
@@ -120,7 +97,7 @@ export default function BookmarksList({ variant = 'default' }: BookmarksListProp
       },
     )
 
-    observer.observe(loadMoreRef.current)
+    observer.observe(el)
     return () => observer.disconnect()
   }, [])
 
@@ -149,11 +126,6 @@ export default function BookmarksList({ variant = 'default' }: BookmarksListProp
       type: 'api-post',
       url: `${server}/api/bookmarks/`,
       data: payload,
-      options: {
-        headers: {
-          Authorization: `Token ${apiToken}`,
-        },
-      },
     })
 
     if (response.ok) {

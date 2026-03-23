@@ -2,10 +2,9 @@ import { useCallback, useMemo, useEffect } from 'react'
 import useSWRInfinite from 'swr/infinite'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { db } from '@/utils/db'
-import { storage } from '#imports'
-import { useSetup } from '@/hooks/useSetup'
-import { UnreadFilter } from '@/components/FilterTabs'
-import type { Bookmark } from '@/components/BookmarksList'
+import { serverStorage, fetchLimitStorage } from '@/utils/storage'
+import type { UnreadFilter } from '@/components/FilterTabs'
+import type { Bookmark } from '@/utils/types'
 
 interface BookmarksResponse {
   count: number
@@ -15,24 +14,14 @@ interface BookmarksResponse {
 }
 
 const DEFAULT_PAGE_SIZE = 15
-const serverStorage = storage.defineItem<string>('local:server', {
-  fallback: '',
-})
-const apiTokenStorage = storage.defineItem<string>('local:apiToken', {
-  fallback: '',
-})
 
 async function fetcher(key: string): Promise<BookmarksResponse> {
-  const [server, apiToken] = await Promise.all([
-    serverStorage.getValue(),
-    apiTokenStorage.getValue(),
-  ])
-  if (!server || !apiToken) throw new Error('Setup not complete')
+  const server = await serverStorage.getValue()
+  if (!server) throw new Error('Setup not complete')
 
   const response = await browser.runtime.sendMessage({
     type: 'api-request',
     url: `${server}${key}`,
-    options: { headers: { Authorization: `Token ${apiToken}` } },
   })
 
   if (!response.ok) throw new Error(response.data?.detail || 'Fetch failed')
@@ -40,7 +29,6 @@ async function fetcher(key: string): Promise<BookmarksResponse> {
 }
 
 export function useBookmarksManager(unreadFilter: UnreadFilter) {
-  const { fetchLimitStorage } = useSetup()
   const fetchLimit = useLiveQuery(() => fetchLimitStorage.getValue()) ?? DEFAULT_PAGE_SIZE
 
   const getKey = useCallback(
@@ -59,11 +47,9 @@ export function useBookmarksManager(unreadFilter: UnreadFilter) {
         const all = data.flatMap(p => p.results)
         if (all.length === 0) return
 
-        // 1. Get IDs of bookmarks that are currently pending deletion or have pending updates
         const pendingQueue = await db.sync_queue.toArray()
         const pendingIds = new Set(pendingQueue.map(op => op.bookmark_id))
 
-        // 2. Double-Locking: Get bookmarks with local modifications
         const localLocks = await db.bookmarks
           .where('_local_modified_at')
           .notEqual('')
@@ -73,28 +59,21 @@ export function useBookmarksManager(unreadFilter: UnreadFilter) {
         const lockMap = new Map(localLocks.map(b => [b.id, b._local_modified_at!]))
         const pendingStatusIds = new Set(localLocks.map(b => b.id))
 
-        // 3. Filter server results
         const filtered = all.filter(serverBookmark => {
-          // Skip if in sync queue (absolute lock)
           if (pendingIds.has(serverBookmark.id)) return false
-
-          // Skip if sync status is pending (absolute lock)
           if (pendingStatusIds.has(serverBookmark.id)) return false
 
-          // Check for stale data against local lock timestamp (time-based lock)
           const localLockTime = lockMap.get(serverBookmark.id)
           if (localLockTime) {
             const serverTime = new Date(serverBookmark.date_modified).getTime()
             const lockTime = new Date(localLockTime).getTime()
             if (serverTime < lockTime) {
-              // Server data is stale, keep local version
               return false
             }
           }
           return true
         })
 
-        // Basic optimization: compare lengths or some heuristic to avoid always writing
         const existing = await db.bookmarks.orderBy('date_added').reverse().limit(1).toArray()
 
         if (
@@ -107,7 +86,6 @@ export function useBookmarksManager(unreadFilter: UnreadFilter) {
           return
         }
 
-        // Put only the bookmarks that aren't pending deletion or stale
         if (filtered.length > 0) {
           await db.bookmarks.bulkPut(filtered)
         }
@@ -130,7 +108,6 @@ export function useBookmarksManager(unreadFilter: UnreadFilter) {
     })
   }, [bookmarks, unreadFilter])
 
-  // Recursive auto-pagination: if filtered results are too thin, fetch more
   useEffect(() => {
     const hasMoreData = !data || data[data.length - 1]?.next !== null
     if (!isLoading && !isValidating && hasMoreData) {

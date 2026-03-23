@@ -1,17 +1,6 @@
 import { db } from '@/utils/db'
-import { storage, defineBackground } from '#imports'
-
-const serverStorage = storage.defineItem<string>('local:server', {
-  fallback: '',
-})
-
-const apiTokenStorage = storage.defineItem<string>('local:apiToken', {
-  fallback: '',
-})
-
-const syncErrorStorage = storage.defineItem<boolean>('local:syncError', {
-  fallback: false,
-})
+import { serverStorage, apiTokenStorage, syncErrorStorage } from '@/utils/storage'
+import { defineBackground } from '#imports'
 
 async function notifyUI(
   type: 'success' | 'danger' | 'warning',
@@ -23,87 +12,73 @@ async function notifyUI(
       type: 'sync-notification',
       payload: { type, message, description },
     })
-  } catch (e) {
-    // UI might not be open, which is fine
-    console.debug('Could not send notification to UI (likely closed):', e)
+  } catch (error) {
+    if (error instanceof Error && !error.message.includes('Could not establish connection')) {
+      console.warn('[notifyUI] Unexpected error:', error.message)
+    }
   }
 }
 
 async function processSyncQueue() {
-  console.log('Syncing starting...')
   const server = await serverStorage.getValue()
   const apiToken = await apiTokenStorage.getValue()
 
-  if (!server || !apiToken) {
-    console.warn('Sync skipped: Missing server or API token', {
-      server: !!server,
-      apiToken: !!apiToken,
-    })
-    return
-  }
+  if (!server || !apiToken) return
 
   const operations = await db.sync_queue.toArray()
-  if (operations.length === 0) {
-    console.log('Sync skipped: Queue is empty')
-    return
-  }
+  if (operations.length === 0) return
 
   for (const op of operations) {
+    const url = `${server}/api/bookmarks/${op.bookmark_id}/`
+    let method = ''
+    let body: string | undefined
+
+    if (op.action === 'update') {
+      method = 'PATCH'
+      body = JSON.stringify(op.payload)
+    } else if (op.action === 'delete') {
+      method = 'DELETE'
+    }
+
+    if (!method) continue
+
     try {
-      let url = `${server}/api/bookmarks/${op.bookmark_id}/`
-      let method = ''
-      let body: string | undefined
+      const response = await fetch(url, {
+        method,
+        headers: {
+          Authorization: `Token ${apiToken}`,
+          'Content-Type': 'application/json',
+        },
+        body,
+      })
 
-      if (op.action === 'update') {
-        method = 'PATCH'
-        body = JSON.stringify(op.payload)
-      } else if (op.action === 'delete') {
-        method = 'DELETE'
-      }
+      const isDeletedOnServer = response.status === 404 || response.status === 410
+      const isSuccess = response.ok || (op.action === 'delete' && isDeletedOnServer)
 
-      if (method) {
-        console.log(`Executing ${op.action} for bookmark ${op.bookmark_id}...`)
-        const response = await fetch(url, {
-          method,
-          headers: {
-            Authorization: `Token ${apiToken}`,
-            'Content-Type': 'application/json',
-          },
-          body,
-        })
-
-        const isDeletedOnServer = response.status === 404 || response.status === 410
-        const isSuccess = response.ok || (op.action === 'delete' && isDeletedOnServer)
-
-        if (isSuccess) {
-          console.log(`Successfully synced ${op.action} for ${op.bookmark_id}`)
-          await db.sync_queue.delete(op.id!)
-          if (op.action === 'update' && response.ok) {
-            await db.bookmarks.update(op.bookmark_id, {
-              _sync_status: 'synced',
-              _local_modified_at: undefined,
-            })
-          }
-        } else {
-          await syncErrorStorage.setValue(true)
-          const errorData = await response.json().catch(() => ({}))
-          const errorMessage = errorData.detail || response.statusText
-          console.error(`Sync failed for ${op.action} on bookmark ${op.bookmark_id}:`, {
-            status: response.status,
-            statusText: response.statusText,
-            detail: errorMessage,
-            operation: op,
+      if (isSuccess) {
+        await db.sync_queue.delete(op.id!)
+        if (op.action === 'update' && response.ok) {
+          await db.bookmarks.update(op.bookmark_id, {
+            _sync_status: 'synced',
+            _local_modified_at: undefined,
           })
-
-          await notifyUI(
-            'danger',
-            `Failed to sync ${op.action}`,
-            `Server returned ${response.status}: ${errorMessage}`,
-          )
         }
+      } else {
+        await syncErrorStorage.setValue(true)
+        let errorDetail = response.statusText
+        try {
+          const errorData = await response.json()
+          if (errorData?.detail) errorDetail = errorData.detail
+        } catch {
+          // Response body may not be JSON
+        }
+        await notifyUI(
+          'danger',
+          `Failed to sync ${op.action}`,
+          `Server returned ${response.status}: ${errorDetail}`,
+        )
       }
     } catch (error) {
-      console.error('Failed to sync operation:', op, error)
       await syncErrorStorage.setValue(true)
       await notifyUI(
         'danger',
@@ -119,173 +94,93 @@ async function processSyncQueue() {
   }
 }
 
-export default defineBackground(() => {
-  console.log('Hello background!', { id: browser.runtime.id })
+type MessageType = 'sync-request' | 'api-request' | 'api-patch' | 'api-post' | 'api-delete'
 
+interface ApiMessage {
+  type: MessageType
+  url?: string
+  data?: unknown
+  options?: RequestInit & { headers?: Record<string, string> }
+}
+
+async function handleApiRequest(
+  method: string,
+  url: string,
+  data?: unknown,
+  options?: RequestInit & { headers?: Record<string, string> },
+) {
+  const [server, apiToken] = await Promise.all([
+    serverStorage.getValue(),
+    apiTokenStorage.getValue(),
+  ])
+
+  if (!server || !apiToken) {
+    return { ok: false, error: 'Missing server or API token' }
+  }
+
+  const fullUrl = url.startsWith('http') ? url : `${server}${url}`
+  const fetchOptions: RequestInit = {
+    method,
+    ...options,
+    headers: {
+      Authorization: `Token ${apiToken}`,
+      'Content-Type': 'application/json',
+      ...options?.headers,
+    },
+    body: data !== undefined ? JSON.stringify(data) : undefined,
+  }
+
+  try {
+    const response = await fetch(fullUrl, fetchOptions)
+    let responseData: unknown
+    try {
+      responseData = await response.json()
+    } catch {
+      responseData = {}
+    }
+    return { ok: response.ok, status: response.status, data: responseData }
+  } catch (error) {
+    return {
+      ok: false,
+      error: error instanceof Error ? error.message : String(error),
+    }
+  }
+}
+
+export default defineBackground(() => {
   browser.sidePanel.setPanelBehavior({ openPanelOnActionClick: true })
 
-  browser.runtime.onMessage.addListener((message, _sender, sendResponse) => {
-    if (message.type === 'sync-request') {
+  browser.runtime.onMessage.addListener((message: ApiMessage, _sender, sendResponse) => {
+    const { type, url, data, options } = message
+
+    if (type === 'sync-request') {
       processSyncQueue()
         .then(() => sendResponse({ ok: true }))
-        .catch(error => sendResponse({ ok: false, error: error.message }))
+        .catch(error =>
+          sendResponse({
+            ok: false,
+            error: error instanceof Error ? error.message : String(error),
+          }),
+        )
       return true
     }
-    if (message.type === 'api-request') {
-      const { url, options } = message
-      Promise.all([serverStorage.getValue(), apiTokenStorage.getValue()]).then(
-        ([server, apiToken]) => {
-          if (!server || !apiToken) {
-            sendResponse({ ok: false, error: 'Missing server or API token' })
-            return
-          }
 
-          const fullUrl = url.startsWith('http') ? url : `${server}${url}`
-          const fetchOptions: RequestInit = {
-            ...options,
-            headers: {
-              Authorization: `Token ${apiToken}`,
-              'Content-Type': 'application/json',
-              ...options?.headers,
-            },
-          }
-
-          fetch(fullUrl, fetchOptions)
-            .then(response => {
-              return response
-                .json()
-                .catch(() => ({}))
-                .then(data => ({
-                  ok: response.ok,
-                  status: response.status,
-                  data,
-                }))
-            })
-            .then(sendResponse)
-            .catch(error => {
-              sendResponse({ ok: false, error: error.message })
-            })
-        },
-      )
-      return true
+    const methodMap: Record<string, string> = {
+      'api-request': 'GET',
+      'api-patch': 'PATCH',
+      'api-post': 'POST',
+      'api-delete': 'DELETE',
     }
-    if (message.type === 'api-patch') {
-      const { url, data: patchData, options } = message
-      Promise.all([serverStorage.getValue(), apiTokenStorage.getValue()]).then(
-        ([server, apiToken]) => {
-          if (!server || !apiToken) {
-            sendResponse({ ok: false, error: 'Missing server or API token' })
-            return
-          }
 
-          const fullUrl = url.startsWith('http') ? url : `${server}${url}`
-          const fetchOptions: RequestInit = {
-            method: 'PATCH',
-            ...options,
-            headers: {
-              Authorization: `Token ${apiToken}`,
-              'Content-Type': 'application/json',
-              ...options?.headers,
-            },
-            body: JSON.stringify(patchData),
-          }
-
-          fetch(fullUrl, fetchOptions)
-            .then(response => {
-              return response
-                .json()
-                .catch(() => ({}))
-                .then(data => ({
-                  ok: response.ok,
-                  status: response.status,
-                  data,
-                }))
-            })
-            .then(sendResponse)
-            .catch(error => {
-              sendResponse({ ok: false, error: error.message })
-            })
-        },
-      )
-      return true
-    }
-    if (message.type === 'api-post') {
-      const { url, data: postData, options } = message
-      Promise.all([serverStorage.getValue(), apiTokenStorage.getValue()]).then(
-        ([server, apiToken]) => {
-          if (!server || !apiToken) {
-            sendResponse({ ok: false, error: 'Missing server or API token' })
-            return
-          }
-
-          const fullUrl = url.startsWith('http') ? url : `${server}${url}`
-          const fetchOptions: RequestInit = {
-            method: 'POST',
-            ...options,
-            headers: {
-              Authorization: `Token ${apiToken}`,
-              'Content-Type': 'application/json',
-              ...options?.headers,
-            },
-            body: JSON.stringify(postData),
-          }
-
-          fetch(fullUrl, fetchOptions)
-            .then(response => {
-              return response
-                .json()
-                .catch(() => ({}))
-                .then(data => ({
-                  ok: response.ok,
-                  status: response.status,
-                  data,
-                }))
-            })
-            .then(sendResponse)
-            .catch(error => {
-              sendResponse({ ok: false, error: error.message })
-            })
-        },
-      )
-      return true
-    }
-    if (message.type === 'api-delete') {
-      const { url, options } = message
-      Promise.all([serverStorage.getValue(), apiTokenStorage.getValue()]).then(
-        ([server, apiToken]) => {
-          if (!server || !apiToken) {
-            sendResponse({ ok: false, error: 'Missing server or API token' })
-            return
-          }
-
-          const fullUrl = url.startsWith('http') ? url : `${server}${url}`
-          const fetchOptions: RequestInit = {
-            method: 'DELETE',
-            ...options,
-            headers: {
-              Authorization: `Token ${apiToken}`,
-              'Content-Type': 'application/json',
-              ...options?.headers,
-            },
-          }
-
-          fetch(fullUrl, fetchOptions)
-            .then(response => {
-              return response
-                .json()
-                .catch(() => ({}))
-                .then(data => ({
-                  ok: response.ok,
-                  status: response.status,
-                  data,
-                }))
-            })
-            .then(sendResponse)
-            .catch(error => {
-              sendResponse({ ok: false, error: error.message })
-            })
-        },
-      )
+    if (methodMap[type] && url) {
+      handleApiRequest(methodMap[type], url, data, options)
+        .then(sendResponse)
+        .catch(error =>
+          sendResponse({
+            ok: false,
+            error: error instanceof Error ? error.message : String(error),
+          }),
+        )
       return true
     }
   })

@@ -1,8 +1,8 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useLiveQuery } from 'dexie-react-hooks'
-import { storage } from '#imports'
+import { syncErrorStorage } from '@/utils/storage'
 import { db, type SyncOperation } from '@/utils/db'
-import type { Bookmark } from '@/components/BookmarksList'
+import type { Bookmark } from '@/utils/types'
 
 type QueueStatus = 'synced' | 'pending' | 'error'
 
@@ -20,10 +20,6 @@ interface SyncQueueStatus {
   tooltip: string
   items: QueueItem[]
 }
-
-const syncErrorStorage = storage.defineItem<boolean>('local:syncError', {
-  fallback: false,
-})
 
 function getQueueTitle(
   bookmark: Bookmark | undefined,

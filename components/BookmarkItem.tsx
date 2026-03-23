@@ -1,12 +1,12 @@
 import { Link } from '@cloudflare/kumo'
 import { BookmarkContent } from './BookmarkContent'
-import { Bookmark } from './BookmarksList'
+import type { Bookmark } from '@/utils/types'
 import styles from './BookmarkItem.module.css'
 
 interface BookmarkItemProps {
   bookmark: Bookmark
   isDimmed: boolean
-  onToggleUnread: (id: number, currentUnread: boolean) => void
+  onToggleUnread: (id: number, currentUnread: boolean) => Promise<void>
 }
 
 export function BookmarkItem({ bookmark, isDimmed, onToggleUnread }: BookmarkItemProps) {
@@ -33,7 +33,7 @@ export function BookmarkItem({ bookmark, isDimmed, onToggleUnread }: BookmarkIte
         href={bookmark.url}
         target="_blank"
         variant="plain"
-        className="absolute inset-0 z-5"
+        className="absolute inset-0 z-[5]"
         tabIndex={-1}
         aria-hidden="true"
       />

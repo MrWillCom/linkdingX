@@ -1,19 +1,22 @@
-'use client'
-
 import {
   Button,
   Input,
   Radio,
   Dialog,
   Checkbox,
-  Toasty,
   useKumoToastManager,
   Field,
-  Label,
   Text,
 } from '@cloudflare/kumo'
 import { useEffect, useReducer, useState } from 'react'
-import { useSetup, type MetadataSource } from '@/hooks/useSetup'
+import type { MetadataSource } from '@/utils/storage'
+import {
+  serverStorage,
+  apiTokenStorage,
+  fetchMetadataFromStorage,
+  defaultUnreadStorage,
+  fetchLimitStorage,
+} from '@/utils/storage'
 import { db } from '@/utils/db'
 
 interface SettingsState {
@@ -99,13 +102,6 @@ export default function SettingsForm({ onSaved, onCancel, showCancel = true }: S
   const [cleanBookmarks, setCleanBookmarks] = useState(true)
   const [cleanSyncQueue, setCleanSyncQueue] = useState(false)
   const [state, dispatch] = useReducer(settingsReducer, initialState)
-  const {
-    serverStorage,
-    apiTokenStorage,
-    fetchMetadataFromStorage,
-    defaultUnreadStorage,
-    fetchLimitStorage,
-  } = useSetup()
 
   useEffect(() => {
     async function loadValues() {
@@ -129,13 +125,7 @@ export default function SettingsForm({ onSaved, onCancel, showCancel = true }: S
       })
     }
     loadValues()
-  }, [
-    serverStorage,
-    apiTokenStorage,
-    fetchMetadataFromStorage,
-    defaultUnreadStorage,
-    fetchLimitStorage,
-  ])
+  }, [])
 
   const onSave = async () => {
     dispatch({ type: 'SET_ERROR', payload: '' })
@@ -159,7 +149,6 @@ export default function SettingsForm({ onSaved, onCancel, showCancel = true }: S
         type: 'api-request',
         url: `${trimmedServer}/api/user/profile/`,
         options: {
-          method: 'GET',
           headers: {
             Authorization: `Token ${trimmedApiToken}`,
           },
@@ -207,21 +196,17 @@ export default function SettingsForm({ onSaved, onCancel, showCancel = true }: S
 
       await Promise.all(tables.map(table => (db.table(table) as any).clear()))
 
-      if (cleanBookmarks) {
-        browser.runtime.sendMessage({ type: 'sync-bookmarks' })
-      }
-
       toastManager.add({
         title: 'Local data cleaned successfully',
         variant: 'default',
       })
       setIsModalOpen(false)
     } catch (err) {
+      console.error('Failed to clean local data:', err)
       toastManager.add({
         title: 'Failed to clean local data',
         variant: 'error',
       })
-      console.error(err)
     }
   }
 

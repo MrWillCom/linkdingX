@@ -3,8 +3,6 @@ import { Badge } from '@cloudflare/kumo'
 import { BookmarkFavicon } from './BookmarkFavicon'
 import { BookmarkPreview } from './BookmarkPreview'
 
-import type { Bookmark } from './BookmarksList'
-
 interface BookmarkContentProps {
   bookmark: {
     url: string

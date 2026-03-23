@@ -1,27 +1,8 @@
 import { useState, useEffect, useRef } from 'react'
-import { formatDistanceToNow } from 'date-fns'
-import { LayerCard, Link, Badge, Button, Tooltip, Text } from '@cloudflare/kumo'
+import { LayerCard, Button, Tooltip } from '@cloudflare/kumo'
 import { TrashIcon, PlusIcon } from '@phosphor-icons/react'
-import { BookmarkFavicon } from './BookmarkFavicon'
-import { BookmarkPreview } from './BookmarkPreview'
 import { BookmarkContent } from './BookmarkContent'
-
-interface Bookmark {
-  id: number
-  url: string
-  title: string
-  description: string
-  notes: string
-  web_archive_snapshot_url: string
-  favicon_url: string | null
-  preview_image_url: string | null
-  is_archived: boolean
-  unread: boolean
-  shared: boolean
-  tag_names: string[]
-  date_added: string
-  date_modified: string
-}
+import type { Bookmark } from '@/utils/types'
 
 interface CurrentTabCardProps {
   url: string
@@ -36,9 +17,9 @@ interface CurrentTabCardProps {
     favicon: string | null
   }
   isLoading: boolean
-  onToggleUnread: (id: number, currentUnread: boolean) => void
-  onAdd?: (url: string, title: string, description: string) => void
-  onDelete?: (id: number) => void
+  onToggleUnread: (id: number, currentUnread: boolean) => Promise<void>
+  onAdd?: (url: string, title: string, description: string) => Promise<void>
+  onDelete?: (id: number) => Promise<void>
 }
 
 export function CurrentTabCard({

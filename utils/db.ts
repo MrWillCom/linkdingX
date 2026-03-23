@@ -1,5 +1,5 @@
 import Dexie, { type EntityTable } from 'dexie'
-import type { Bookmark } from '@/components/BookmarksList'
+import type { Bookmark } from '@/utils/types'
 
 export interface SyncOperation {
   id?: number

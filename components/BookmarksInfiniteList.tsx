@@ -1,7 +1,7 @@
 import { Loader, Button } from '@cloudflare/kumo'
 import { BookmarkItem } from '@/components/BookmarkItem'
-import { Bookmark } from './BookmarksList'
-import { UnreadFilter } from '@/components/FilterTabs'
+import type { Bookmark } from '@/utils/types'
+import type { UnreadFilter } from '@/components/FilterTabs'
 
 interface BookmarksInfiniteListProps {
   filteredBookmarks: Bookmark[]

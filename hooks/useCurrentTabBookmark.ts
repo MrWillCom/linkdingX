@@ -16,17 +16,14 @@ export function useCurrentTabBookmark() {
   const [serverData, setServerData] = useState<ServerCheckData | null>(null)
   const [isLoading, setIsLoading] = useState(false)
 
-  // 1. Watch local DB (The Truth)
   const bookmark = useLiveQuery(
     () => (currentTabUrl ? db.bookmarks.where('url').equals(currentTabUrl).first() : undefined),
     [currentTabUrl],
   )
 
-  // 2. Background Sync (Enhancement)
   useEffect(() => {
     let isCancelled = false
 
-    // Clear state on URL change or when bookmark is found locally
     if (!currentTabUrl || bookmark) {
       setServerData(null)
       setIsLoading(false)
@@ -44,14 +41,10 @@ export function useCurrentTabBookmark() {
         if (!isCancelled) {
           if (res.ok) {
             setServerData(res.data)
-          } else {
-            console.error('[useCurrentTabBookmark] Server check failed:', res.error)
           }
         }
-      } catch (err) {
-        if (!isCancelled) {
-          console.error('[useCurrentTabBookmark] API request error:', err)
-        }
+      } catch (error) {
+        console.warn('[useCurrentTabBookmark] Server check failed:', error)
       } finally {
         if (!isCancelled) {
           setIsLoading(false)

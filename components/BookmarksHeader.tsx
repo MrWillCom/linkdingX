@@ -6,10 +6,11 @@ import {
   ArrowSquareOutIcon,
   GearIcon,
 } from '@phosphor-icons/react'
-import { FilterTabs, UnreadFilter } from '@/components/FilterTabs'
+import { FilterTabs } from '@/components/FilterTabs'
+import type { UnreadFilter } from '@/components/FilterTabs'
 import { CurrentTabCard } from '@/components/CurrentTabCard'
 import { useSyncQueueStatus } from '@/hooks/useSyncQueueStatus'
-import { Bookmark } from './BookmarksList'
+import type { Bookmark } from '@/utils/types'
 
 export interface BookmarkCheckResponse {
   bookmark: Bookmark | null
@@ -114,7 +115,7 @@ export function BookmarksHeader({
               onClick={async () => {
                 const url = browser.runtime.getURL('/home.html')
                 await browser.tabs.create({ url })
-                window.close() // Close the side panel
+                window.close()
               }}
             >
               <ArrowSquareOutIcon weight="bold" className="w-4 h-4" aria-hidden="true" />

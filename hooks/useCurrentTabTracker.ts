@@ -50,19 +50,16 @@ export function useCurrentTabTracker() {
     realtimeMetadata: { title: '', favicon: null },
   })
 
-  // Use refs to keep track of the current state without triggering effect re-runs
   const currentTabIdRef = useRef<number | null>(null)
 
   useEffect(() => {
     const syncCurrentTab = async () => {
-      console.log('[useCurrentTabTracker] syncCurrentTab')
       try {
         const tabs = await browser.tabs.query({
           currentWindow: true,
           active: true,
         })
         const activeTab = tabs[0]
-        console.log('[useCurrentTabTracker] activeTab:', activeTab?.url)
 
         if (activeTab?.url?.startsWith('http')) {
           currentTabIdRef.current = activeTab.id ?? null
@@ -76,31 +73,24 @@ export function useCurrentTabTracker() {
           return
         }
 
-        // Reset if not an HTTP(S) tab
-        console.log('[useCurrentTabTracker] Not an HTTP tab, resetting')
         currentTabIdRef.current = null
         dispatch({ type: 'SET_TAB', id: null, url: null })
-      } catch (err) {
-        console.error('[useCurrentTabTracker] Error syncing tab:', err)
+      } catch {
         currentTabIdRef.current = null
         dispatch({ type: 'SET_TAB', id: null, url: null })
       }
     }
 
     const onActivated = () => {
-      console.log('[useCurrentTabTracker] onActivated')
       syncCurrentTab()
     }
     const onCreated = (tab: any) => {
-      console.log('[useCurrentTabTracker] onCreated', tab.id, tab.active)
       if (tab.active) syncCurrentTab()
     }
     const onRemoved = (tabId: number) => {
-      console.log('[useCurrentTabTracker] onRemoved', tabId)
       if (tabId === currentTabIdRef.current) syncCurrentTab()
     }
     const onWindowFocusChanged = (windowId: number) => {
-      console.log('[useCurrentTabTracker] onWindowFocusChanged', windowId)
       if (windowId !== browser.windows.WINDOW_ID_NONE) syncCurrentTab()
     }
 
@@ -109,19 +99,10 @@ export function useCurrentTabTracker() {
       change: { title?: string; favIconUrl?: string; url?: string },
       tab: { active?: boolean; title?: string; favIconUrl?: string },
     ) => {
-      console.log('[useCurrentTabTracker] onUpdated', {
-        id,
-        change,
-        active: tab.active,
-      })
-
-      // Only care about updates to the active tab we're tracking
       if (!tab.active) return
 
       if (id !== currentTabIdRef.current) {
-        // If an active tab we weren't tracking just updated its URL to something valid
         if (change.url?.startsWith('http')) {
-          console.log('[useCurrentTabTracker] New active tab detected via update')
           syncCurrentTab()
         }
         return
@@ -145,7 +126,6 @@ export function useCurrentTabTracker() {
             favicon: tab.favIconUrl,
           })
         } else {
-          console.log('[useCurrentTabTracker] URL changed to non-HTTP, resetting')
           currentTabIdRef.current = null
           dispatch({ type: 'SET_TAB', id: null, url: null })
         }
@@ -167,7 +147,7 @@ export function useCurrentTabTracker() {
       browser.tabs.onRemoved.removeListener(onRemoved)
       browser.windows.onFocusChanged.removeListener(onWindowFocusChanged)
     }
-  }, []) // Empty dependency array: run once and manage via refs/events
+  }, [])
 
   return state
 }

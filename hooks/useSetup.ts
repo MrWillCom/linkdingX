@@ -1,27 +1,5 @@
 import { useState, useEffect } from 'react'
-import { storage } from '#imports'
-
-export type MetadataSource = 'browser' | 'server'
-
-const serverStorage = storage.defineItem<string>('local:server', {
-  fallback: '',
-})
-
-const apiTokenStorage = storage.defineItem<string>('local:apiToken', {
-  fallback: '',
-})
-
-const fetchMetadataFromStorage = storage.defineItem<MetadataSource>('local:fetchMetadataFrom', {
-  fallback: 'browser',
-})
-
-const defaultUnreadStorage = storage.defineItem<boolean>('local:defaultUnread', {
-  fallback: true,
-})
-
-const fetchLimitStorage = storage.defineItem<number>('local:fetchLimit', {
-  fallback: 50,
-})
+import { serverStorage, apiTokenStorage } from '@/utils/storage'
 
 export function useSetup() {
   const [isSetupComplete, setIsSetupComplete] = useState(false)
@@ -48,10 +26,5 @@ export function useSetup() {
   return {
     isSetupComplete,
     isLoading,
-    serverStorage,
-    apiTokenStorage,
-    fetchMetadataFromStorage,
-    defaultUnreadStorage,
-    fetchLimitStorage,
   }
 }
