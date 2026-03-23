@@ -59,20 +59,29 @@ export function useBookmarksManager(unreadFilter: UnreadFilter) {
         const all = data.flatMap(p => p.results)
         if (all.length === 0) return
 
-        // 1. Get IDs of bookmarks that are currently pending deletion
-        const pendingDeletions = await db.sync_queue.where('action').equals('delete').toArray()
-        const deletionIds = new Set(pendingDeletions.map(op => op.bookmark_id))
+        // 1. Get IDs of bookmarks that are currently pending deletion or have pending updates
+        const pendingQueue = await db.sync_queue.toArray()
+        const pendingIds = new Set(pendingQueue.map(op => op.bookmark_id))
 
         // 2. Double-Locking: Get bookmarks with local modifications
-        const localLocks = await db.bookmarks.where('_local_modified_at').notEqual('').toArray()
+        const localLocks = await db.bookmarks
+          .where('_local_modified_at')
+          .notEqual('')
+          .or('_sync_status')
+          .equals('pending')
+          .toArray()
         const lockMap = new Map(localLocks.map(b => [b.id, b._local_modified_at!]))
+        const pendingStatusIds = new Set(localLocks.map(b => b.id))
 
         // 3. Filter server results
         const filtered = all.filter(serverBookmark => {
-          // Skip if pending deletion
-          if (deletionIds.has(serverBookmark.id)) return false
+          // Skip if in sync queue (absolute lock)
+          if (pendingIds.has(serverBookmark.id)) return false
 
-          // Check for stale data against local lock
+          // Skip if sync status is pending (absolute lock)
+          if (pendingStatusIds.has(serverBookmark.id)) return false
+
+          // Check for stale data against local lock timestamp (time-based lock)
           const localLockTime = lockMap.get(serverBookmark.id)
           if (localLockTime) {
             const serverTime = new Date(serverBookmark.date_modified).getTime()
