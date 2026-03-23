@@ -107,11 +107,12 @@ export function CurrentTabCard({
                 <span className="text-xs text-kumo-subtle" />
                 <Button
                   variant="primary"
+                  shape="square"
+                  icon={<PlusIcon weight="bold" className="size-4" />}
+                  aria-label="Add"
                   disabled={isLoading}
                   onClick={() => onAdd?.(url, title, description)}
-                >
-                  <PlusIcon weight="bold" className="size-4" />
-                </Button>
+                />
               </div>
             </LayerCard.Primary>
           </div>
@@ -157,7 +158,7 @@ export function CurrentTabCard({
                     addSuffix: true,
                   })}
                 </div>
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-1">
                   <Tooltip content="Click again to confirm delete" disabled={!isConfirmingDelete}>
                     <Button
                       variant={isConfirmingDelete ? 'destructive' : 'ghost'}
