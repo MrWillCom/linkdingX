@@ -83,9 +83,7 @@ export function BookmarksHeader({
                 <Popover.Title className="text-sm font-semibold">Sync Queue</Popover.Title>
                 <div className="mt-2">
                   {items.length === 0 ? (
-                    <Text variant="secondary" size="sm">
-                      No pending tasks
-                    </Text>
+                    <Popover.Description>No pending tasks</Popover.Description>
                   ) : (
                     <ul className="text-sm space-y-1">
                       {items.map(item => (
