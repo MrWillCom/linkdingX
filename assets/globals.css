@@ -12,6 +12,11 @@
   line-height: 0.75rem;
 }
 
+/* Force Kumo/Base UI portal content to top layer */
+[data-base-ui-portal] > div {
+  z-index: 1000 !important;
+}
+
 html,
 body {
   background-color: var(--kumo-base);

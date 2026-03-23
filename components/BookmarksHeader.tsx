@@ -64,7 +64,7 @@ export function BookmarksHeader({
     status === 'synced' ? CloudCheckIcon : status === 'pending' ? CloudArrowUpIcon : CloudSlashIcon
 
   return (
-    <div className="sticky top-0 z-30 bg-kumo-base px-2 py-2 border-b border-kumo-line">
+    <div className="sticky top-0 z-20 bg-kumo-base px-2 py-2 border-b border-kumo-line">
       <div className="flex items-center justify-between h-9">
         <FilterTabs selectedKey={unreadFilter} onSelectionChange={onUnreadFilterChange} />
         <div className="flex items-center">
@@ -153,9 +153,6 @@ export function BookmarksHeader({
           )}
         </div>
       </div>
-      <div
-        className={`absolute top-full left-0 right-0 h-8 bg-linear-to-b from-background to-transparent pointer-events-none z-10 transition-opacity duration-200 ${isScrolled ? 'opacity-100' : 'opacity-0'}`}
-      />
     </div>
   )
 }
