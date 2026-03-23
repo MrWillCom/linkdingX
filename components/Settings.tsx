@@ -16,12 +16,7 @@ export default function Settings() {
     <Dialog.Root open={isOpen} onOpenChange={setIsOpen}>
       <Dialog.Trigger
         render={props => (
-          <Button
-            {...props}
-            variant="ghost"
-            shape="square"
-            aria-label="Open settings"
-          >
+          <Button {...props} variant="ghost" shape="square" aria-label="Open settings">
             <GearIcon size={18} weight="bold" />
           </Button>
         )}
@@ -32,9 +27,7 @@ export default function Settings() {
             <GearIcon weight="bold" className="size-5" />
           </div>
           <div className="flex-1">
-            <Dialog.Title className="text-lg font-semibold leading-6">
-              Settings
-            </Dialog.Title>
+            <Dialog.Title className="text-lg font-semibold leading-6">Settings</Dialog.Title>
             <div className="mt-1">
               <Text variant="secondary" size="sm">
                 Configure your linkding server and API token.
@@ -44,12 +37,7 @@ export default function Settings() {
           <Dialog.Close
             aria-label="Close settings"
             render={props => (
-              <Button
-                {...props}
-                variant="ghost"
-                shape="square"
-                aria-label="Close settings"
-              >
+              <Button {...props} variant="ghost" shape="square" aria-label="Close settings">
                 <span className="sr-only">Close</span>
               </Button>
             )}

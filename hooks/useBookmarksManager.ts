@@ -41,8 +41,7 @@ async function fetcher(key: string): Promise<BookmarksResponse> {
 
 export function useBookmarksManager(unreadFilter: UnreadFilter) {
   const { fetchLimitStorage } = useSetup()
-  const fetchLimit =
-    useLiveQuery(() => fetchLimitStorage.getValue()) ?? DEFAULT_PAGE_SIZE
+  const fetchLimit = useLiveQuery(() => fetchLimitStorage.getValue()) ?? DEFAULT_PAGE_SIZE
 
   const getKey = useCallback(
     (idx: number, prev: BookmarksResponse | null) => {
@@ -61,20 +60,12 @@ export function useBookmarksManager(unreadFilter: UnreadFilter) {
         if (all.length === 0) return
 
         // 1. Get IDs of bookmarks that are currently pending deletion
-        const pendingDeletions = await db.sync_queue
-          .where('action')
-          .equals('delete')
-          .toArray()
+        const pendingDeletions = await db.sync_queue.where('action').equals('delete').toArray()
         const deletionIds = new Set(pendingDeletions.map(op => op.bookmark_id))
 
         // 2. Double-Locking: Get bookmarks with local modifications
-        const localLocks = await db.bookmarks
-          .where('_local_modified_at')
-          .notEqual('')
-          .toArray()
-        const lockMap = new Map(
-          localLocks.map(b => [b.id, b._local_modified_at!]),
-        )
+        const localLocks = await db.bookmarks.where('_local_modified_at').notEqual('').toArray()
+        const lockMap = new Map(localLocks.map(b => [b.id, b._local_modified_at!]))
 
         // 3. Filter server results
         const filtered = all.filter(serverBookmark => {
@@ -95,11 +86,7 @@ export function useBookmarksManager(unreadFilter: UnreadFilter) {
         })
 
         // Basic optimization: compare lengths or some heuristic to avoid always writing
-        const existing = await db.bookmarks
-          .orderBy('date_added')
-          .reverse()
-          .limit(1)
-          .toArray()
+        const existing = await db.bookmarks.orderBy('date_added').reverse().limit(1).toArray()
 
         if (
           existing.length > 0 &&
@@ -121,10 +108,7 @@ export function useBookmarksManager(unreadFilter: UnreadFilter) {
   const bookmarks =
     useLiveQuery(async () => {
       const all = await db.bookmarks.orderBy('date_added').reverse().toArray()
-      const pendingDeletions = await db.sync_queue
-        .where('action')
-        .equals('delete')
-        .toArray()
+      const pendingDeletions = await db.sync_queue.where('action').equals('delete').toArray()
       const deletionIds = new Set(pendingDeletions.map(op => op.bookmark_id))
       return all.filter(b => !deletionIds.has(b.id))
     }) || []
@@ -149,22 +133,13 @@ export function useBookmarksManager(unreadFilter: UnreadFilter) {
         return () => clearTimeout(timer)
       }
     }
-  }, [
-    filteredBookmarks.length,
-    size,
-    isLoading,
-    isValidating,
-    data,
-    setSize,
-    fetchLimit,
-  ])
+  }, [filteredBookmarks.length, size, isLoading, isValidating, data, setSize, fetchLimit])
 
   return {
     filteredBookmarks,
     isLoading,
     isValidating,
-    isLoadingMore:
-      isLoading || (size > 0 && data && typeof data[size - 1] === 'undefined'),
+    isLoadingMore: isLoading || (size > 0 && data && typeof data[size - 1] === 'undefined'),
     hasMore: !data || data[data.length - 1]?.next !== null,
     loadMore: () => setSize(s => s + 1),
     mutate,

@@ -73,12 +73,7 @@ export function CurrentTabCard({
     }
   }
 
-  const title =
-    bookmark?.title ||
-    realtimeMetadata?.title ||
-    metadata?.title ||
-    currentTabUrl ||
-    ''
+  const title = bookmark?.title || realtimeMetadata?.title || metadata?.title || currentTabUrl || ''
   const url = bookmark?.url || currentTabUrl || ''
   const description = bookmark?.description || metadata?.description || ''
   const favicon = bookmark?.favicon_url || realtimeMetadata?.favicon || null
@@ -104,9 +99,7 @@ export function CurrentTabCard({
                     {url}
                   </Link>
                   {description && (
-                    <div className="mt-1 line-clamp-2 text-xs text-kumo-subtle">
-                      {description}
-                    </div>
+                    <div className="mt-1 line-clamp-2 text-xs text-kumo-subtle">{description}</div>
                   )}
                 </div>
               </div>
@@ -124,15 +117,11 @@ export function CurrentTabCard({
           </div>
         ) : (
           <div key="manage">
-            <LayerCard.Secondary>
-              {bookmark.unread ? 'Unread' : 'Read'}
-            </LayerCard.Secondary>
+            <LayerCard.Secondary>{bookmark.unread ? 'Unread' : 'Read'}</LayerCard.Secondary>
             <LayerCard.Primary>
               <div className="flex min-w-0 items-center gap-1.5 mb-2">
                 <BookmarkFavicon url={favicon} />
-                <div className="line-clamp-1 text-sm text-kumo-default">
-                  {title}
-                </div>
+                <div className="line-clamp-1 text-sm text-kumo-default">{title}</div>
               </div>
               <div className="flex items-start gap-2">
                 <div className="min-w-0 flex-1 flex flex-col gap-1">
@@ -144,18 +133,12 @@ export function CurrentTabCard({
                     {bookmark.url}
                   </Link>
                   {description && (
-                    <div className="line-clamp-2 text-xs text-kumo-subtle">
-                      {description}
-                    </div>
+                    <div className="line-clamp-2 text-xs text-kumo-subtle">{description}</div>
                   )}
                   {bookmark.tag_names.length > 0 && (
                     <div className="flex flex-wrap gap-1.5 mt-1">
                       {bookmark.tag_names.map(tag => (
-                        <Badge
-                          key={tag}
-                          variant="secondary"
-                          className="text-[10px]"
-                        >
+                        <Badge key={tag} variant="secondary" className="text-[10px]">
                           {tag}
                         </Badge>
                       ))}
@@ -175,22 +158,13 @@ export function CurrentTabCard({
                   })}
                 </div>
                 <div className="flex items-center gap-2">
-                  <Tooltip
-                    content="Click again to confirm delete"
-                    disabled={!isConfirmingDelete}
-                  >
+                  <Tooltip content="Click again to confirm delete" disabled={!isConfirmingDelete}>
                     <Button
                       variant={isConfirmingDelete ? 'destructive' : 'ghost'}
                       shape="square"
-                      className={
-                        !isConfirmingDelete
-                          ? 'text-kumo-danger hover:bg-kumo-tint'
-                          : ''
-                      }
+                      className={!isConfirmingDelete ? 'text-kumo-danger hover:bg-kumo-tint' : ''}
                       aria-label={
-                        isConfirmingDelete
-                          ? 'Confirm delete bookmark'
-                          : 'Delete bookmark'
+                        isConfirmingDelete ? 'Confirm delete bookmark' : 'Delete bookmark'
                       }
                       disabled={isLoading}
                       onClick={handleDeletePress}

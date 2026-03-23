@@ -11,11 +11,7 @@ interface BookmarkItemProps {
   onToggleUnread: (id: number, currentUnread: boolean) => void
 }
 
-export function BookmarkItem({
-  bookmark,
-  isDimmed,
-  onToggleUnread,
-}: BookmarkItemProps) {
+export function BookmarkItem({ bookmark, isDimmed, onToggleUnread }: BookmarkItemProps) {
   return (
     <div
       className={`flex items-start gap-1 py-2 px-2 hover:bg-kumo-elevated transition-colors ${isDimmed ? 'opacity-50' : ''}`}
@@ -41,9 +37,7 @@ export function BookmarkItem({
           <span className="line-clamp-1">{bookmark.title || bookmark.url}</span>
         </Link>
         {bookmark.description && (
-          <p className="text-xs text-kumo-strong mt-0.5 line-clamp-2">
-            {bookmark.description}
-          </p>
+          <p className="text-xs text-kumo-strong mt-0.5 line-clamp-2">{bookmark.description}</p>
         )}
         <div className="flex flex-col gap-1.5 mt-1.5">
           {bookmark.tag_names.length > 0 && (

@@ -36,10 +36,7 @@ export function BookmarksInfiniteList({
               onToggleUnread={onToggleUnread}
             />
           ))}
-          <div
-            ref={loadMoreRef}
-            className="py-4 flex flex-col items-center gap-4"
-          >
+          <div ref={loadMoreRef} className="py-4 flex flex-col items-center gap-4">
             {isLoadingMore && <Loader size="sm" />}
             {!isLoadingMore && hasMore && !hasTriggeredLoadRef.current && (
               <Button variant="ghost" onClick={() => loadMore()}>

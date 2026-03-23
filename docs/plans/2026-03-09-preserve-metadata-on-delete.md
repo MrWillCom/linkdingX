@@ -24,10 +24,9 @@ Replace the existing `handleDelete` with the following:
 const handleDelete = async (id: number) => {
   await bookmarkService.deleteBookmark(id)
   // Update SWR cache while preserving metadata to keep the card visible
-  mutateCurrentTabBookmark(
-    prev => (prev ? { ...prev, bookmark: null } : null),
-    { revalidate: false },
-  )
+  mutateCurrentTabBookmark(prev => (prev ? { ...prev, bookmark: null } : null), {
+    revalidate: false,
+  })
 }
 ```
 

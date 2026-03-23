@@ -90,8 +90,7 @@ try {
   toast.success('Settings saved successfully') // Add success toast
   onSaved?.()
 } catch (err) {
-  const errorMsg =
-    err instanceof Error ? err.message : 'Failed to validate credentials'
+  const errorMsg = err instanceof Error ? err.message : 'Failed to validate credentials'
   dispatch({
     type: 'SET_ERROR',
     payload: errorMsg,

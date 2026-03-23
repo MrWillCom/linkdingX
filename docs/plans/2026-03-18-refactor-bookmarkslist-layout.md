@@ -39,10 +39,7 @@ To:
 
 ```tsx
 return (
-  <div
-    onScroll={handleScroll}
-    className="h-screen overflow-y-auto relative w-full"
-  >
+  <div onScroll={handleScroll} className="h-screen overflow-y-auto relative w-full">
     <div className={variant === 'expanded' ? 'max-w-3xl mx-auto' : ''}>
       <BookmarksHeader
         unreadFilter={unreadFilter}

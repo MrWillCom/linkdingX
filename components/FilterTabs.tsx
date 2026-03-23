@@ -7,10 +7,7 @@ interface FilterTabsProps {
   onSelectionChange: (key: UnreadFilter) => void
 }
 
-export function FilterTabs({
-  selectedKey,
-  onSelectionChange,
-}: FilterTabsProps) {
+export function FilterTabs({ selectedKey, onSelectionChange }: FilterTabsProps) {
   const tabs = [
     { value: 'all', label: 'All' },
     { value: 'unread', label: 'Unread' },

@@ -72,11 +72,7 @@ export function useSyncQueueStatus(): SyncQueueStatus {
       const enriched = await Promise.all(
         operations.map(async op => {
           const bookmark = await db.bookmarks.get(op.bookmark_id)
-          const { title, url } = getQueueTitle(
-            bookmark,
-            op.payload,
-            op.bookmark_id,
-          )
+          const { title, url } = getQueueTitle(bookmark, op.payload, op.bookmark_id)
           return {
             id: op.id ?? op.bookmark_id,
             action: op.action,
@@ -90,8 +86,7 @@ export function useSyncQueueStatus(): SyncQueueStatus {
     }) || []
 
   const count = queueItems.length
-  const status: QueueStatus =
-    count === 0 ? 'synced' : syncError ? 'error' : 'pending'
+  const status: QueueStatus = count === 0 ? 'synced' : syncError ? 'error' : 'pending'
 
   useEffect(() => {
     if (count === 0 && syncError) {

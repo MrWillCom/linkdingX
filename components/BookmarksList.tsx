@@ -41,9 +41,7 @@ interface BookmarksListProps {
   variant?: BookmarksListVariant
 }
 
-export default function BookmarksList({
-  variant = 'default',
-}: BookmarksListProps) {
+export default function BookmarksList({ variant = 'default' }: BookmarksListProps) {
   const { fetchMetadataFromStorage, defaultUnreadStorage } = useSetup()
   const [unreadFilter, setUnreadFilter] = useState<UnreadFilter>('all')
   const {
@@ -131,13 +129,12 @@ export default function BookmarksList({
   }
 
   const handleAdd = async (url: string, title: string, description: string) => {
-    const [server, apiToken, fetchMetadataFrom, defaultUnread] =
-      await Promise.all([
-        serverStorage.getValue(),
-        apiTokenStorage.getValue(),
-        fetchMetadataFromStorage.getValue(),
-        defaultUnreadStorage.getValue(),
-      ])
+    const [server, apiToken, fetchMetadataFrom, defaultUnread] = await Promise.all([
+      serverStorage.getValue(),
+      apiTokenStorage.getValue(),
+      fetchMetadataFromStorage.getValue(),
+      defaultUnreadStorage.getValue(),
+    ])
 
     if (!server || !apiToken) return
 

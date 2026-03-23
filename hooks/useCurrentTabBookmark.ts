@@ -18,10 +18,7 @@ export function useCurrentTabBookmark() {
 
   // 1. Watch local DB (The Truth)
   const bookmark = useLiveQuery(
-    () =>
-      currentTabUrl
-        ? db.bookmarks.where('url').equals(currentTabUrl).first()
-        : undefined,
+    () => (currentTabUrl ? db.bookmarks.where('url').equals(currentTabUrl).first() : undefined),
     [currentTabUrl],
   )
 
@@ -48,10 +45,7 @@ export function useCurrentTabBookmark() {
           if (res.ok) {
             setServerData(res.data)
           } else {
-            console.error(
-              '[useCurrentTabBookmark] Server check failed:',
-              res.error,
-            )
+            console.error('[useCurrentTabBookmark] Server check failed:', res.error)
           }
         }
       } catch (err) {

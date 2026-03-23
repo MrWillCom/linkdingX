@@ -100,10 +100,7 @@ export function useCurrentTabBookmark() {
 
   // 1. Watch local DB (The Truth)
   const bookmark = useLiveQuery(
-    () =>
-      currentTabUrl
-        ? db.bookmarks.where('url').equals(currentTabUrl).first()
-        : null,
+    () => (currentTabUrl ? db.bookmarks.where('url').equals(currentTabUrl).first() : null),
     [currentTabUrl],
   )
 

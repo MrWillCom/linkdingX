@@ -45,10 +45,7 @@ type SettingsAction =
       }
     }
 
-function settingsReducer(
-  state: SettingsState,
-  action: SettingsAction,
-): SettingsState {
+function settingsReducer(state: SettingsState, action: SettingsAction): SettingsState {
   switch (action.type) {
     case 'SET_LOADING':
       return { ...state, isLoading: action.payload }
@@ -96,11 +93,7 @@ interface SettingsFormProps {
   showCancel?: boolean
 }
 
-export default function SettingsForm({
-  onSaved,
-  onCancel,
-  showCancel = true,
-}: SettingsFormProps) {
+export default function SettingsForm({ onSaved, onCancel, showCancel = true }: SettingsFormProps) {
   const toastManager = useKumoToastManager()
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [cleanBookmarks, setCleanBookmarks] = useState(true)
@@ -116,19 +109,14 @@ export default function SettingsForm({
 
   useEffect(() => {
     async function loadValues() {
-      const [
-        serverValue,
-        apiTokenValue,
-        fetchMetadataValue,
-        defaultUnreadValue,
-        fetchLimitValue,
-      ] = await Promise.all([
-        serverStorage.getValue(),
-        apiTokenStorage.getValue(),
-        fetchMetadataFromStorage.getValue(),
-        defaultUnreadStorage.getValue(),
-        fetchLimitStorage.getValue(),
-      ])
+      const [serverValue, apiTokenValue, fetchMetadataValue, defaultUnreadValue, fetchLimitValue] =
+        await Promise.all([
+          serverStorage.getValue(),
+          apiTokenStorage.getValue(),
+          fetchMetadataFromStorage.getValue(),
+          defaultUnreadStorage.getValue(),
+          fetchLimitStorage.getValue(),
+        ])
       dispatch({
         type: 'RESET_FORM',
         payload: {
@@ -197,8 +185,7 @@ export default function SettingsForm({
       })
       onSaved?.()
     } catch (err) {
-      const errorMsg =
-        err instanceof Error ? err.message : 'Failed to validate credentials'
+      const errorMsg = err instanceof Error ? err.message : 'Failed to validate credentials'
       dispatch({
         type: 'SET_ERROR',
         payload: errorMsg,
@@ -290,16 +277,8 @@ export default function SettingsForm({
               })
             }
           >
-            <Radio.Item
-              value="browser"
-              label="Browser"
-              description="Fast, includes page context"
-            />
-            <Radio.Item
-              value="server"
-              label="Server"
-              description="Linkding crawls the URL"
-            />
+            <Radio.Item value="browser" label="Browser" description="Fast, includes page context" />
+            <Radio.Item value="server" label="Server" description="Linkding crawls the URL" />
           </Radio.Group>
 
           <Radio.Group
@@ -316,10 +295,7 @@ export default function SettingsForm({
             <Radio.Item value="read" label="Read" />
           </Radio.Group>
 
-          <Field
-            label="Fetch Limit"
-            description="Number of bookmarks to fetch per page."
-          >
+          <Field label="Fetch Limit" description="Number of bookmarks to fetch per page.">
             <Input
               type="number"
               min={1}
@@ -343,15 +319,10 @@ export default function SettingsForm({
           </div>
           <div className="flex flex-col gap-2">
             <Text variant="secondary" size="sm">
-              Clear local cache and sync queue. This will not delete your
-              bookmarks on the server.
+              Clear local cache and sync queue. This will not delete your bookmarks on the server.
             </Text>
             <div className="flex items-center gap-2">
-              <Button
-                variant="secondary"
-                onClick={() => setIsModalOpen(true)}
-                className="w-fit"
-              >
+              <Button variant="secondary" onClick={() => setIsModalOpen(true)} className="w-fit">
                 Clean Local Data...
               </Button>
             </div>
@@ -366,11 +337,7 @@ export default function SettingsForm({
       </div>
       <div className="flex justify-end gap-3">
         {showCancel && (
-          <Button
-            disabled={state.isLoading}
-            variant="secondary"
-            onClick={onCancel}
-          >
+          <Button disabled={state.isLoading} variant="secondary" onClick={onCancel}>
             Cancel
           </Button>
         )}
@@ -386,13 +353,11 @@ export default function SettingsForm({
 
       <Dialog.Root open={isModalOpen} onOpenChange={setIsModalOpen}>
         <Dialog className="p-8">
-          <Dialog.Title className="text-xl font-semibold mb-4">
-            Clean Local Data
-          </Dialog.Title>
+          <Dialog.Title className="text-xl font-semibold mb-4">Clean Local Data</Dialog.Title>
           <div className="flex flex-col gap-4">
             <Text variant="secondary" size="sm">
-              Select the local data you want to remove. This will not affect
-              your data on the Linkding server.
+              Select the local data you want to remove. This will not affect your data on the
+              Linkding server.
             </Text>
             <div className="flex flex-col gap-4">
               <Checkbox
@@ -411,8 +376,8 @@ export default function SettingsForm({
               />
               {cleanSyncQueue && (
                 <div className="text-xs text-kumo-danger -mt-3 ml-7">
-                  Warning: This will discard any pending changes that haven't
-                  been sent to the server.
+                  Warning: This will discard any pending changes that haven't been sent to the
+                  server.
                 </div>
               )}
             </div>

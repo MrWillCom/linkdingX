@@ -121,9 +121,7 @@ export function useCurrentTabTracker() {
       if (id !== currentTabIdRef.current) {
         // If an active tab we weren't tracking just updated its URL to something valid
         if (change.url?.startsWith('http')) {
-          console.log(
-            '[useCurrentTabTracker] New active tab detected via update',
-          )
+          console.log('[useCurrentTabTracker] New active tab detected via update')
           syncCurrentTab()
         }
         return
@@ -147,9 +145,7 @@ export function useCurrentTabTracker() {
             favicon: tab.favIconUrl,
           })
         } else {
-          console.log(
-            '[useCurrentTabTracker] URL changed to non-HTTP, resetting',
-          )
+          console.log('[useCurrentTabTracker] URL changed to non-HTTP, resetting')
           currentTabIdRef.current = null
           dispatch({ type: 'SET_TAB', id: null, url: null })
         }

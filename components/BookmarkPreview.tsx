@@ -10,11 +10,7 @@ function hasMediaUrl(value: string | null | undefined): value is string {
   return typeof value === 'string' && value.trim().length > 0
 }
 
-export function BookmarkPreview({
-  url,
-  alt,
-  className = '',
-}: BookmarkPreviewProps) {
+export function BookmarkPreview({ url, alt, className = '' }: BookmarkPreviewProps) {
   const [isHidden, setIsHidden] = useState(!hasMediaUrl(url))
 
   useEffect(() => {

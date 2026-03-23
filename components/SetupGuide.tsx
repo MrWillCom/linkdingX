@@ -15,8 +15,7 @@ export default function SetupGuide() {
         <LayerCard.Primary>
           <div className="flex flex-col gap-4">
             <Text variant="secondary" size="sm">
-              To get started, please configure your linkding server and API
-              token in the settings.
+              To get started, please configure your linkding server and API token in the settings.
             </Text>
             <div className="flex justify-center">
               <Button variant="primary" onClick={openSettings}>

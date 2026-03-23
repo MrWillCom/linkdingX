@@ -11,19 +11,13 @@ const apiTokenStorage = storage.defineItem<string>('local:apiToken', {
   fallback: '',
 })
 
-const fetchMetadataFromStorage = storage.defineItem<MetadataSource>(
-  'local:fetchMetadataFrom',
-  {
-    fallback: 'browser',
-  },
-)
+const fetchMetadataFromStorage = storage.defineItem<MetadataSource>('local:fetchMetadataFrom', {
+  fallback: 'browser',
+})
 
-const defaultUnreadStorage = storage.defineItem<boolean>(
-  'local:defaultUnread',
-  {
-    fallback: true,
-  },
-)
+const defaultUnreadStorage = storage.defineItem<boolean>('local:defaultUnread', {
+  fallback: true,
+})
 
 const fetchLimitStorage = storage.defineItem<number>('local:fetchLimit', {
   fallback: 50,

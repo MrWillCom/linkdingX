@@ -50,12 +50,7 @@ Add `realtimeMetadata?: { title: string; favicon: string | null }`.
 **Step 2: Update `CurrentTabCard` logic**
 
 ```typescript
-const title =
-  bookmark?.title ||
-  realtimeMetadata?.title ||
-  metadata?.title ||
-  currentTabUrl ||
-  ''
+const title = bookmark?.title || realtimeMetadata?.title || metadata?.title || currentTabUrl || ''
 const favicon = bookmark?.favicon_url || realtimeMetadata?.favicon || null
 ```
 
