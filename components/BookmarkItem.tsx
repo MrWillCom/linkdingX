@@ -4,6 +4,7 @@ import { BookmarkFavicon } from './BookmarkFavicon'
 import { BookmarkPreview } from './BookmarkPreview'
 
 import { Bookmark } from './BookmarksList'
+import styles from './BookmarkItem.module.css'
 
 interface BookmarkItemProps {
   bookmark: Bookmark
@@ -14,11 +15,12 @@ interface BookmarkItemProps {
 export function BookmarkItem({ bookmark, isDimmed, onToggleUnread }: BookmarkItemProps) {
   return (
     <div
-      className={`flex items-start gap-1 py-2 px-2 hover:bg-kumo-elevated transition-colors ${isDimmed ? 'opacity-50' : ''}`}
+      data-dimmed={isDimmed}
+      className={`flex items-start gap-1 py-2 px-2 hover:bg-kumo-elevated transition-colors ${styles.bookmarkItem}`}
     >
       <button
         onClick={() => onToggleUnread(bookmark.id, bookmark.unread)}
-        className="group shrink-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-kumo-ring cursor-pointer p-2 -mt-0.5 -ml-1.5 -mr-0.5 rounded-full hover:bg-kumo-recessed active:bg-kumo-tint transition-colors"
+        className={`group shrink-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-kumo-ring cursor-pointer p-2 -mt-0.5 -ml-1.5 -mr-0.5 rounded-full hover:bg-kumo-recessed active:bg-kumo-tint transition-colors ${styles.dimAsset}`}
         aria-label={bookmark.unread ? 'Mark as read' : 'Mark as unread'}
       >
         <div
@@ -27,13 +29,13 @@ export function BookmarkItem({ bookmark, isDimmed, onToggleUnread }: BookmarkIte
           }`}
         />
       </button>
-      <div className="flex-1 min-w-0">
+      <div className={`flex-1 min-w-0 ${styles.dimText}`}>
         <Link
           href={bookmark.url}
           target="_blank"
           className="flex min-w-0 items-center gap-1.5 text-sm font-medium text-kumo-default hover:text-kumo-brand transition-colors"
         >
-          <BookmarkFavicon url={bookmark.favicon_url} />
+          <BookmarkFavicon url={bookmark.favicon_url} className={styles.dimAsset} />
           <span className="line-clamp-1">{bookmark.title || bookmark.url}</span>
         </Link>
         {bookmark.description && (
@@ -43,7 +45,7 @@ export function BookmarkItem({ bookmark, isDimmed, onToggleUnread }: BookmarkIte
           {bookmark.tag_names.length > 0 && (
             <div className="flex flex-wrap gap-1.5">
               {bookmark.tag_names.map(tag => (
-                <Badge key={tag} variant="secondary" className="text-2xs">
+                <Badge key={tag} variant="secondary" className={`text-2xs ${styles.dimAsset}`}>
                   {tag}
                 </Badge>
               ))}
@@ -59,7 +61,7 @@ export function BookmarkItem({ bookmark, isDimmed, onToggleUnread }: BookmarkIte
       <BookmarkPreview
         url={bookmark.preview_image_url}
         alt={bookmark.title || bookmark.url}
-        className="h-12 w-16 shrink-0 mt-0.5"
+        className={`h-12 w-16 shrink-0 mt-0.5 ${styles.dimAsset}`}
       />
     </div>
   )
