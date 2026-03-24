@@ -30,6 +30,16 @@ The compiled extension will be in the `dist/` directory.
 4. Select the `dist/` folder from your build output
 5. linkdingX will appear in your extensions list and sidebar
 
+### Install in Firefox
+
+```sh
+pnpm build:firefox
+```
+
+1. Open Firefox and navigate to `about:debugging#/runtime/this-firefox`
+2. Click **Load Temporary Add-on**
+3. Select the `dist/` folder from your build output
+
 ### Coming to Extension Stores
 
 > [!NOTE]
@@ -65,8 +75,21 @@ Seamlessly toggle between All/Unread/Read bookmarks using the integrated filter 
 
 linkdingX automatically detects if the website you're visiting is already in your bookmarks.
 
+### Full-Viewport Bookmarks Page
+
+Open the home page for an expanded, distraction-free bookmarks view outside the sidepanel.
+
+### Standalone Options Page
+
+Configure your linkding server, API token, and preferences through a dedicated settings page.
+
 ## Quick Commands
 
-- `pnpm build`: Build production extension.
+- `pnpm dev`: Start development server (Chrome).
+- `pnpm dev:firefox`: Start development server (Firefox).
+- `pnpm build`: Build production extension (Chrome).
+- `pnpm build:firefox`: Build production extension (Firefox).
+- `pnpm zip`: Package extension for distribution (Chrome).
 - `pnpm compile`: Run TypeScript type checks.
-- `pnpm format`: Format code with Prettier.
+- `pnpm fmt`: Format code with oxfmt.
+- `pnpm fmt:check`: Check code formatting.

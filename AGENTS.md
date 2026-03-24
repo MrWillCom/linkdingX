@@ -8,7 +8,7 @@
 > 2.  **Line-by-Line Verification**: When copying from official documentation examples, you MUST check EVERY line one by one. Do NOT skip any parts (e.g., `<Modal.Icon>`, `<Surface>`, `className="p-6"`).
 > 3.  **Use Context7** to look up WXT and Kumo documentation:
 >     - WXT Docs: https://wxt.dev/
->     - Kumo Docs: https://github.com/cloudflare/kumo
+>     - Kumo Docs: https://kumo-ui.com/
 
 > **⚠️ CRITICAL: COMMUNICATION MANDATE**
 >
@@ -26,14 +26,22 @@ This is a **browser extension** built with [WXT](https://wxt.dev/), React 19, Ty
 
 ```
 📂 {rootDir}/
-   📁 entrypoints/       # Extension entry points (background, content scripts, sidepanel)
+   📁 entrypoints/       # Extension entry points
+      📁 sidepanel/      # Sidepanel UI (primary interface)
+      📁 home/           # Full-viewport bookmarks page
+      📁 options/        # Standalone settings page
+      📄 background.ts   # Background script (sync queue, API proxy)
+      📄 content.ts      # Content script (placeholder)
    📁 components/        # Auto-imported React components
-   📁 utils/             # Auto-imported utility functions (db.ts, bookmarkService.ts)
-   📁 hooks/             # Auto-imported React hooks
-   📁 assets/            # Global CSS (globals.css), images
-   📁 public/           # Static assets (icons)
-   📁 .agents/skills/   # Project-specific AI skills (React Best Practices)
-   📄 wxt.config.ts     # WXT configuration
+   📁 utils/             # Auto-imported utility functions (db.ts, bookmarkService.ts, storage.ts, types.ts, cn.ts)
+   📁 hooks/             # Auto-imported React hooks (useSetup, useBookmarksManager, etc.)
+   📁 assets/            # Global CSS (globals.css), icons
+   📁 public/            # Static assets (icons)
+   📁 docs/              # Design docs and implementation plans
+   📁 screenshots/       # Extension screenshots
+   📁 .agents/skills/    # Project-specific AI skills
+   📄 wxt.config.ts      # WXT configuration
+   📄 opencode.json      # OpenCode agent permissions
    📄 package.json
 ```
 
@@ -41,14 +49,15 @@ This is a **browser extension** built with [WXT](https://wxt.dev/), React 19, Ty
 
 ## Build & Verification
 
-| Command        | Description                             |
-| -------------- | --------------------------------------- |
-| `pnpm dev`     | Start development server (Chrome)       |
-| `pnpm build`   | Build production extension (Chrome)     |
-| `pnpm compile` | **CRITICAL**: Run TypeScript type check |
-| `pnpm format`  | **CRITICAL**: Format code with Prettier |
+| Command          | Description                             |
+| ---------------- | --------------------------------------- |
+| `pnpm dev`       | Start development server (Chrome)       |
+| `pnpm build`     | Build production extension (Chrome)     |
+| `pnpm compile`   | **CRITICAL**: Run TypeScript type check |
+| `pnpm fmt`       | **CRITICAL**: Format code with oxfmt    |
+| `pnpm fmt:check` | **CRITICAL**: Check code formatting     |
 
-> **Testing**: Vitest is currently **NOT** configured. Before attempting test commands, verify the existence of `vitest.config.ts` and a `tests/` directory.
+> **Testing**: No test framework is currently configured.
 
 ---
 
@@ -90,6 +99,19 @@ Follow the rules in `.agents/skills/vercel-react-best-practices/AGENTS.md`:
 
 ---
 
+### Hooks
+
+| Hook                    | Purpose                                                                |
+| ----------------------- | ---------------------------------------------------------------------- |
+| `useSetup`              | Checks if server/API token are configured; watches for changes         |
+| `useBookmarksManager`   | Manages bookmark list state, filtering, and infinite scroll pagination |
+| `useCurrentTabBookmark` | Checks if the current browser tab URL exists in bookmarks              |
+| `useCurrentTabTracker`  | Tracks the active browser tab's URL and title in real-time             |
+| `useSyncNotifications`  | Listens for sync notifications from the background script              |
+| `useSyncQueueStatus`    | Reports whether the sync queue has pending operations or errors        |
+
+---
+
 ## UI & Styling (Kumo + Tailwind v4)
 
 ### Cloudflare Kumo
@@ -115,7 +137,7 @@ Follow the rules in `.agents/skills/vercel-react-best-practices/AGENTS.md`:
 ## WXT Framework Specifics
 
 - **Storage**: Use `storage.defineItem<T>('local:key')`.
-- **Entrypoints**: Defined in `entrypoints/` (background, sidepanel, content).
+- **Entrypoints**: Defined in `entrypoints/` (background, sidepanel, home, options, content).
 - **Manifest**: Managed in `wxt.config.ts`.
 
 ### Offline-First & Instant UI
