@@ -119,7 +119,7 @@ export function CurrentTabCard({
                     </Button>
                   </Tooltip>
                   <Button
-                    variant="primary"
+                    variant={bookmark.unread ? 'primary' : 'secondary'}
                     className="w-32 justify-center"
                     disabled={isLoading}
                     onClick={() => onToggleUnread(bookmark.id, bookmark.unread)}
