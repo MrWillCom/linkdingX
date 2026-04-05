@@ -41,7 +41,7 @@ export const BookmarksInfiniteList = memo(function BookmarksInfiniteList({
             {isLoadingMore && <Loader size="sm" />}
             {!isLoadingMore && hasMore && !hasTriggeredLoadRef.current && (
               <Button variant="ghost" onClick={() => loadMore()}>
-                Load more
+                Load More
               </Button>
             )}
             {!isLoadingMore && !hasMore && filteredBookmarks.length > 0 && (

@@ -21,6 +21,8 @@ export function BookmarkFavicon({ url, className = '' }: BookmarkFaviconProps) {
       src={url}
       alt=""
       aria-hidden="true"
+      width={16}
+      height={16}
       loading="lazy"
       className={`h-4 w-4 rounded-sm object-cover shrink-0 ${className}`}
       onError={() => setHasError(true)}

@@ -81,7 +81,7 @@ export function CurrentTabCard({
                 />
               </div>
               <div className="pt-4 flex items-center justify-between">
-                <span className="text-xs text-kumo-subtle" />
+                <span className="text-xs text-kumo-subtle" aria-hidden="true" />
                 <Button
                   variant="primary"
                   shape="square"
@@ -103,7 +103,7 @@ export function CurrentTabCard({
                 <BookmarkContent bookmark={effectiveBookmark} />
               </div>
               <div className="pt-4 flex items-center justify-between">
-                <div className="text-xs text-kumo-subtle" />
+                <div className="text-xs text-kumo-subtle" aria-hidden="true" />
                 <div className="flex items-center gap-1">
                   <Tooltip content="Click again to confirm delete" disabled={!isConfirmingDelete}>
                     <Button
@@ -116,7 +116,7 @@ export function CurrentTabCard({
                       disabled={isLoading}
                       onClick={handleDeletePress}
                     >
-                      <TrashIcon weight="bold" className="w-4 h-4" />
+                      <TrashIcon weight="bold" className="w-4 h-4" aria-hidden="true" />
                     </Button>
                   </Tooltip>
                   <Button

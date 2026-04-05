@@ -219,6 +219,7 @@ export default function SettingsForm({ onSaved, onCancel, showCancel = true }: S
           </div>
           <Field label="Server">
             <Input
+              name="server"
               value={state.server}
               onChange={e =>
                 dispatch({
@@ -228,10 +229,12 @@ export default function SettingsForm({ onSaved, onCancel, showCancel = true }: S
               }
               placeholder="https://linkding.example.com"
               autoComplete="url"
+              spellCheck={false}
             />
           </Field>
           <Field label="API Token">
             <Input
+              name="apiToken"
               value={state.apiToken}
               onChange={e =>
                 dispatch({
@@ -242,6 +245,7 @@ export default function SettingsForm({ onSaved, onCancel, showCancel = true }: S
               type="password"
               placeholder="xxxxxxxx…"
               autoComplete="off"
+              spellCheck={false}
             />
           </Field>
         </div>
@@ -282,7 +286,9 @@ export default function SettingsForm({ onSaved, onCancel, showCancel = true }: S
 
           <Field label="Fetch Limit" description="Number of bookmarks to fetch per page.">
             <Input
+              name="fetchLimit"
               type="number"
+              inputMode="numeric"
               min={1}
               max={1000}
               value={state.fetchLimit}

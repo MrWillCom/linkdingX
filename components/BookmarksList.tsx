@@ -21,8 +21,28 @@ interface BookmarksListProps {
   variant?: BookmarksListVariant
 }
 
+function getInitialFilter(): UnreadFilter {
+  const params = new URLSearchParams(window.location.search)
+  const filter = params.get('filter')
+  if (filter === 'unread' || filter === 'read') return filter
+  return 'all'
+}
+
 export default function BookmarksList({ variant = 'default' }: BookmarksListProps) {
-  const [unreadFilter, setUnreadFilter] = useState<UnreadFilter>('all')
+  const [unreadFilter, setUnreadFilter] = useState<UnreadFilter>(getInitialFilter)
+
+  const handleFilterChange = useCallback((filter: UnreadFilter) => {
+    setUnreadFilter(filter)
+    const params = new URLSearchParams(window.location.search)
+    if (filter === 'all') {
+      params.delete('filter')
+    } else {
+      params.set('filter', filter)
+    }
+    const newUrl = `${window.location.pathname}${params.toString() ? `?${params.toString()}` : ''}`
+    window.history.replaceState(null, '', newUrl)
+  }, [])
+
   const {
     filteredBookmarks,
     isLoading,
@@ -137,7 +157,7 @@ export default function BookmarksList({ variant = 'default' }: BookmarksListProp
   if (error) {
     return (
       <div className="p-4 flex flex-col items-center gap-4">
-        <p className="text-danger">Error: {error.message}</p>
+        <p className="text-danger">Failed to load bookmarks: {error.message}</p>
         <Button variant="secondary" onClick={() => mutateBookmarks()}>
           Retry
         </Button>
@@ -158,7 +178,7 @@ export default function BookmarksList({ variant = 'default' }: BookmarksListProp
       <div className={variant === 'expanded' ? 'max-w-3xl mx-auto' : ''}>
         <BookmarksHeader
           unreadFilter={unreadFilter}
-          onUnreadFilterChange={setUnreadFilter}
+          onUnreadFilterChange={handleFilterChange}
           variant={variant}
           currentTabUrl={currentTabUrl}
           currentTabBookmark={currentTabBookmark}

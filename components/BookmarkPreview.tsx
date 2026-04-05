@@ -21,6 +21,8 @@ export function BookmarkPreview({ url, alt, className = '' }: BookmarkPreviewPro
     <img
       src={url}
       alt={alt}
+      width={64}
+      height={48}
       loading="lazy"
       className={`rounded-md border border-kumo-fill object-cover ${className}`}
       onError={() => setHasError(true)}
