@@ -33,6 +33,7 @@ interface BookmarksHeaderProps {
   variant: 'default' | 'expanded'
   currentTabUrl: string | null
   currentTabBookmark: Bookmark | null | undefined
+  currentTabServerBookmark: Bookmark | null | undefined
   currentTabMetadata:
     | {
         title: string
@@ -57,6 +58,7 @@ export function BookmarksHeader({
   variant,
   currentTabUrl,
   currentTabBookmark,
+  currentTabServerBookmark,
   currentTabMetadata,
   realtimeMetadata,
   isCurrentTabBookmarkLoading,
@@ -150,6 +152,7 @@ export function BookmarksHeader({
               <CurrentTabCard
                 url={currentTabUrl || ''}
                 bookmark={currentTabBookmark}
+                serverBookmark={currentTabServerBookmark}
                 metadata={currentTabMetadata}
                 realtimeMetadata={realtimeMetadata}
                 isLoading={isCurrentTabBookmarkLoading}

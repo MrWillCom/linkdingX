@@ -35,6 +35,7 @@ export default function BookmarksList({ variant = 'default' }: BookmarksListProp
 
   const {
     bookmark: currentTabBookmark,
+    serverBookmark: currentTabServerBookmark,
     serverMetadata: currentTabMetadata,
     realtimeMetadata,
     isLoading: isCurrentTabBookmarkLoading,
@@ -161,6 +162,7 @@ export default function BookmarksList({ variant = 'default' }: BookmarksListProp
           variant={variant}
           currentTabUrl={currentTabUrl}
           currentTabBookmark={currentTabBookmark}
+          currentTabServerBookmark={currentTabServerBookmark}
           currentTabMetadata={currentTabMetadata}
           realtimeMetadata={realtimeMetadata}
           isCurrentTabBookmarkLoading={isCurrentTabBookmarkLoading}

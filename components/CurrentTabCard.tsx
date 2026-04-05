@@ -7,6 +7,7 @@ import type { Bookmark } from '@/utils/types'
 interface CurrentTabCardProps {
   url: string
   bookmark: Bookmark | null | undefined
+  serverBookmark: Bookmark | null | undefined
   metadata?: {
     title: string
     description: string
@@ -25,6 +26,7 @@ interface CurrentTabCardProps {
 export function CurrentTabCard({
   url: currentTabUrl,
   bookmark,
+  serverBookmark,
   metadata,
   realtimeMetadata,
   isLoading,
@@ -35,12 +37,13 @@ export function CurrentTabCard({
   const [isConfirmingDelete, setIsConfirmingDelete] = useState(false)
   const timerRef = useRef<NodeJS.Timeout | null>(null)
 
-  const isBookmarked = !!bookmark
+  const effectiveBookmark = bookmark || serverBookmark
+  const isBookmarked = !!effectiveBookmark
 
   const handleDeletePress = () => {
     if (timerRef.current) clearTimeout(timerRef.current)
     if (isConfirmingDelete) {
-      onDelete?.(bookmark!.id)
+      onDelete?.(effectiveBookmark!.id)
       setIsConfirmingDelete(false)
     } else {
       setIsConfirmingDelete(true)
@@ -50,10 +53,11 @@ export function CurrentTabCard({
     }
   }
 
-  const title = bookmark?.title || realtimeMetadata?.title || metadata?.title || currentTabUrl || ''
-  const url = bookmark?.url || currentTabUrl || ''
-  const description = bookmark?.description || metadata?.description || ''
-  const favicon = bookmark?.favicon_url || realtimeMetadata?.favicon || null
+  const title =
+    effectiveBookmark?.title || realtimeMetadata?.title || metadata?.title || currentTabUrl || ''
+  const url = effectiveBookmark?.url || currentTabUrl || ''
+  const description = effectiveBookmark?.description || metadata?.description || ''
+  const favicon = effectiveBookmark?.favicon_url || realtimeMetadata?.favicon || null
 
   return (
     <LayerCard>
@@ -91,10 +95,12 @@ export function CurrentTabCard({
           </div>
         ) : (
           <div key="manage">
-            <LayerCard.Secondary>{bookmark.unread ? 'Unread' : 'Read'}</LayerCard.Secondary>
+            <LayerCard.Secondary>
+              {effectiveBookmark.unread ? 'Unread' : 'Read'}
+            </LayerCard.Secondary>
             <LayerCard.Primary>
               <div className="flex items-start gap-1">
-                <BookmarkContent bookmark={bookmark} />
+                <BookmarkContent bookmark={effectiveBookmark} />
               </div>
               <div className="pt-4 flex items-center justify-between">
                 <div className="text-xs text-kumo-subtle" />
@@ -114,12 +120,12 @@ export function CurrentTabCard({
                     </Button>
                   </Tooltip>
                   <Button
-                    variant={bookmark.unread ? 'primary' : 'secondary'}
+                    variant={effectiveBookmark.unread ? 'primary' : 'secondary'}
                     className="w-32 justify-center"
                     disabled={isLoading}
-                    onClick={() => onToggleUnread(bookmark.id, bookmark.unread)}
+                    onClick={() => onToggleUnread(effectiveBookmark.id, effectiveBookmark.unread)}
                   >
-                    {bookmark.unread ? 'Mark as read' : 'Mark as unread'}
+                    {effectiveBookmark.unread ? 'Mark as read' : 'Mark as unread'}
                   </Button>
                 </div>
               </div>
