@@ -61,8 +61,10 @@ async function processSyncQueue() {
           if (op.action === 'update' && response.ok) {
             await db.bookmarks.update(op.bookmark_id, {
               _sync_status: 'synced',
-              _local_modified_at: undefined,
             })
+          }
+          if (op.action === 'delete') {
+            await db.bookmarks.delete(op.bookmark_id)
           }
         } else {
           await syncErrorStorage.setValue(true)

@@ -20,7 +20,7 @@ export const bookmarkService = {
 
   async deleteBookmark(id: number) {
     await db.bookmarks.update(id, {
-      _sync_status: 'pending',
+      _sync_status: 'pending_delete',
       _local_modified_at: new Date().toISOString(),
     })
     await db.sync_queue.add({
@@ -29,7 +29,6 @@ export const bookmarkService = {
       payload: {},
       timestamp: Date.now(),
     })
-    await db.bookmarks.delete(id)
     browser.runtime.sendMessage({ type: 'sync-request' })
   },
 
