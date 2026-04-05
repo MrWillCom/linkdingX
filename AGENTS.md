@@ -101,12 +101,12 @@ This is a **browser extension** built with [WXT](https://wxt.dev/), React 19, Ty
 **Order**: React → External (`@cloudflare/kumo`) → WXT (#imports) → Internal (@/) → Types → Styles
 
 ```typescript
-import { useState, useEffect } from "react";
-import { Button, Input } from "@cloudflare/kumo";
-import { storage } from "wxt/storage";
-import { defineContentScript } from "#imports";
-import { db } from "@/utils/db";
-import type { User } from "@/types";
+import { useState, useEffect } from 'react'
+import { Button, Input } from '@cloudflare/kumo'
+import { storage } from 'wxt/storage'
+import { defineContentScript } from '#imports'
+import { db } from '@/utils/db'
+import type { User } from '@/types'
 ```
 
 - **Alias**: Use `@/` for all internal modules.
@@ -182,12 +182,12 @@ The `IntersectionObserver` API may not fire in Chrome's side panel until user in
 **Solution**: Use a fallback "Load More" button that hides only after the observer successfully triggers the first load.
 
 ```tsx
-const hasTriggeredLoadRef = useRef(false);
+const hasTriggeredLoadRef = useRef(false)
 // In render:
 {
   !isLoading && hasMore && !hasTriggeredLoadRef.current && (
-    <Button onPress={() => setSize((s) => s + 1)}>Load more</Button>
-  );
+    <Button onPress={() => setSize(s => s + 1)}>Load more</Button>
+  )
 }
 ```
 
