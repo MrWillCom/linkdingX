@@ -174,6 +174,69 @@ Follow the rules in `.agents/skills/vercel-react-best-practices/AGENTS.md`:
 
 ---
 
+## Conventional Commits
+
+All commits MUST follow the [Conventional Commits](https://www.conventionalcommits.org/en/v1.0.0/) specification. This enables automated versioning, changelog generation, and release management via release-please.
+
+### Commit Message Structure
+
+```
+<type>[optional scope]: <description>
+
+[optional body]
+
+[optional footer(s)]
+```
+
+### Types
+
+| Type              | SemVer | Description                                        |
+| ----------------- | ------ | -------------------------------------------------- |
+| `fix`             | PATCH  | Patches a bug                                      |
+| `feat`            | MINOR  | Introduces a new feature                           |
+| `BREAKING CHANGE` | MAJOR  | Breaking API change (any type, with `!` or footer) |
+| `docs`            | —      | Documentation only                                 |
+| `style`           | —      | Code style changes (formatting, whitespace)        |
+| `refactor`        | —      | Code refactoring (not a fix or feature)            |
+| `perf`            | —      | Performance improvements                           |
+| `test`            | —      | Adding or fixing tests                             |
+| `build`           | —      | Build system or external dependency changes        |
+| `ci`              | —      | CI/CD configuration changes                        |
+| `chore`           | —      | Other changes that don't modify source or tests    |
+| `revert`          | —      | Reverting a previous commit                        |
+
+### Breaking Changes
+
+Indicate breaking changes with `!` after the type/scope, or use a `BREAKING CHANGE:` footer:
+
+```
+feat(api)!: change authentication endpoint
+
+BREAKING CHANGE: API now requires Bearer token in Authorization header
+```
+
+### Examples
+
+```
+feat: add URL filter persistence
+fix(sidepanel): prevent bookmark operations from reverting after sync
+docs: update AGENTS.md and README.md
+ci: add release-please workflow for automated releases
+```
+
+### Release Workflow
+
+This project uses [release-please](https://github.com/googleapis/release-please) for automated releases:
+
+1. Push to `main` → release-please analyzes conventional commits
+2. If releasable commits found → creates a Release PR with version bump, CHANGELOG.md updates
+3. Merge the Release PR → creates git tag, GitHub Release with release notes
+4. Build artifacts (Chrome + Firefox ZIPs) are uploaded to the GitHub Release
+
+**Required repository settings**: Settings → Actions → General → "Allow GitHub Actions to create and approve pull requests"
+
+---
+
 ## Lessons Learned & Known Issues
 
 ### Chrome Sidepanel IntersectionObserver
