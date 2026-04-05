@@ -1,6 +1,6 @@
 # AGENTS.md - Development Guidelines for linkdingX
 
-# 🛡️ GOLDEN RULES
+# GOLDEN RULES
 
 > **CRITICAL: DOCUMENTATION FIRST**
 >
@@ -10,7 +10,7 @@
 >     - WXT Docs: https://wxt.dev/
 >     - Kumo Docs: https://kumo-ui.com/
 
-> **⚠️ CRITICAL: COMMUNICATION MANDATE**
+> **CRITICAL: COMMUNICATION MANDATE**
 >
 > 1.  **Always Use Question Tool**: When a task requires choices, confirmations, or decisions about implementation, you MUST use the `question` tool to ask the user directly.
 > 2.  **No Assumptions**: Don't proceed without confirmation and don't make assumptions about user preferences.
@@ -25,37 +25,62 @@ This is a **browser extension** built with [WXT](https://wxt.dev/), React 19, Ty
 ### Project Structure
 
 ```
-📂 {rootDir}/
-   📁 entrypoints/       # Extension entry points
-      📁 sidepanel/      # Sidepanel UI (primary interface)
-      📁 home/           # Full-viewport bookmarks page
-      📁 options/        # Standalone settings page
-      📄 background.ts   # Background script (sync queue, API proxy)
-      📄 content.ts      # Content script (placeholder)
-   📁 components/        # Auto-imported React components
-   📁 utils/             # Auto-imported utility functions (db.ts, bookmarkService.ts, storage.ts, types.ts, cn.ts)
-   📁 hooks/             # Auto-imported React hooks (useSetup, useBookmarksManager, etc.)
-   📁 assets/            # Global CSS (globals.css), icons
-   📁 public/            # Static assets (icons)
-   📁 docs/              # Design docs and implementation plans
-   📁 screenshots/       # Extension screenshots
-   📁 .agents/skills/    # Project-specific AI skills
-   📄 wxt.config.ts      # WXT configuration
-   📄 opencode.json      # OpenCode agent permissions
-   📄 package.json
+{rootDir}/
+   entrypoints/       # Extension entry points
+      sidepanel/      # Sidepanel UI (primary interface)
+      home/           # Full-viewport bookmarks page
+      options/        # Standalone settings page
+      background.ts   # Background script (sync queue, API proxy)
+   components/        # Auto-imported React components
+      BookmarkContent.tsx
+      BookmarkFavicon.tsx
+      BookmarkItem.tsx
+      BookmarkPreview.tsx
+      BookmarksHeader.tsx
+      BookmarksInfiniteList.tsx
+      BookmarksList.tsx
+      CurrentTabCard.tsx
+      FilterTabs.tsx
+      SettingsForm.tsx
+      SetupGuide.tsx
+   utils/             # Auto-imported utility functions
+      bookmarkService.ts
+      cn.ts
+      db.ts
+      storage.ts
+      types.ts
+   hooks/             # Auto-imported React hooks
+      useBookmarksManager.ts
+      useCurrentTabBookmark.ts
+      useCurrentTabTracker.ts
+      useSetup.ts
+      useSyncNotifications.ts
+      useSyncQueueStatus.ts
+   assets/            # Global CSS (globals.css), icons (icon.svg)
+   public/            # Static assets (empty)
+   docs/              # Design docs and implementation plans
+   screenshots/       # Extension screenshots
+   .agents/skills/    # Project-specific AI skills
+   wxt.config.ts      # WXT configuration
+   web-ext.config.ts  # Firefox web-ext configuration
+   opencode.json      # OpenCode agent permissions
+   package.json
 ```
 
 ---
 
 ## Build & Verification
 
-| Command          | Description                             |
-| ---------------- | --------------------------------------- |
-| `pnpm dev`       | Start development server (Chrome)       |
-| `pnpm build`     | Build production extension (Chrome)     |
-| `pnpm compile`   | **CRITICAL**: Run TypeScript type check |
-| `pnpm fmt`       | **CRITICAL**: Format code with oxfmt    |
-| `pnpm fmt:check` | **CRITICAL**: Check code formatting     |
+| Command              | Description                             |
+| -------------------- | --------------------------------------- |
+| `pnpm dev`           | Start development server (Chrome)       |
+| `pnpm dev:firefox`   | Start development server (Firefox)      |
+| `pnpm build`         | Build production extension (Chrome)     |
+| `pnpm build:firefox` | Build production extension (Firefox)    |
+| `pnpm zip`           | Package extension for distribution      |
+| `pnpm compile`       | **CRITICAL**: Run TypeScript type check |
+| `pnpm fmt`           | **CRITICAL**: Format code with oxfmt    |
+| `pnpm fmt:check`     | **CRITICAL**: Check code formatting     |
 
 > **Testing**: No test framework is currently configured.
 
@@ -76,12 +101,12 @@ This is a **browser extension** built with [WXT](https://wxt.dev/), React 19, Ty
 **Order**: React → External (`@cloudflare/kumo`) → WXT (#imports) → Internal (@/) → Types → Styles
 
 ```typescript
-import { useState, useEffect } from 'react'
-import { Button, Input } from '@cloudflare/kumo'
-import { storage } from 'wxt/storage'
-import { defineContentScript } from '#imports'
-import { db } from '@/utils/db'
-import type { User } from '@/types'
+import { useState, useEffect } from "react";
+import { Button, Input } from "@cloudflare/kumo";
+import { storage } from "wxt/storage";
+import { defineContentScript } from "#imports";
+import { db } from "@/utils/db";
+import type { User } from "@/types";
 ```
 
 - **Alias**: Use `@/` for all internal modules.
@@ -157,12 +182,12 @@ The `IntersectionObserver` API may not fire in Chrome's side panel until user in
 **Solution**: Use a fallback "Load More" button that hides only after the observer successfully triggers the first load.
 
 ```tsx
-const hasTriggeredLoadRef = useRef(false)
+const hasTriggeredLoadRef = useRef(false);
 // In render:
 {
   !isLoading && hasMore && !hasTriggeredLoadRef.current && (
-    <Button onPress={() => setSize(s => s + 1)}>Load more</Button>
-  )
+    <Button onPress={() => setSize((s) => s + 1)}>Load more</Button>
+  );
 }
 ```
 

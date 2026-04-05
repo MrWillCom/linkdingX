@@ -90,6 +90,7 @@ Configure your linkding server, API token, and preferences through a dedicated s
 - `pnpm build`: Build production extension (Chrome).
 - `pnpm build:firefox`: Build production extension (Firefox).
 - `pnpm zip`: Package extension for distribution (Chrome).
+- `pnpm zip:firefox`: Package extension for distribution (Firefox).
 - `pnpm compile`: Run TypeScript type checks.
 - `pnpm fmt`: Format code with oxfmt.
 - `pnpm fmt:check`: Check code formatting.
