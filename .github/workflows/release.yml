@@ -5,16 +5,16 @@ on:
     inputs:
       version:
         type: string
-        description: "Release version (e.g., 1.0.0)"
+        description: 'Release version (e.g., 1.0.0)'
         required: true
       prerelease:
         type: boolean
         default: false
-        description: "Mark as prerelease"
+        description: 'Mark as prerelease'
       dryRun:
         type: boolean
         default: false
-        description: "Build and zip only, skip release and git push"
+        description: 'Build and zip only, skip release and git push'
 
 permissions:
   contents: write
