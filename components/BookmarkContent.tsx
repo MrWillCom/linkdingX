@@ -1,3 +1,4 @@
+import { memo } from 'react'
 import { formatDistanceToNow } from 'date-fns'
 import { Badge } from '@cloudflare/kumo'
 import { BookmarkFavicon } from './BookmarkFavicon'
@@ -21,7 +22,7 @@ interface BookmarkContentProps {
   showDate?: boolean
 }
 
-export function BookmarkContent({
+export const BookmarkContent = memo(function BookmarkContent({
   bookmark,
   titleClassName = '',
   descriptionClassName = '',
@@ -70,4 +71,4 @@ export function BookmarkContent({
       />
     </>
   )
-}
+})

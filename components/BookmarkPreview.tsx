@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 
 interface BookmarkPreviewProps {
   url: string | null | undefined
@@ -11,13 +11,9 @@ function hasMediaUrl(value: string | null | undefined): value is string {
 }
 
 export function BookmarkPreview({ url, alt, className = '' }: BookmarkPreviewProps) {
-  const [isHidden, setIsHidden] = useState(!hasMediaUrl(url))
+  const [hasError, setHasError] = useState(false)
 
-  useEffect(() => {
-    setIsHidden(!hasMediaUrl(url))
-  }, [url])
-
-  if (isHidden || !hasMediaUrl(url)) {
+  if (!hasMediaUrl(url) || hasError) {
     return null
   }
 
@@ -27,7 +23,7 @@ export function BookmarkPreview({ url, alt, className = '' }: BookmarkPreviewPro
       alt={alt}
       loading="lazy"
       className={`rounded-md border border-kumo-fill object-cover ${className}`}
-      onError={() => setIsHidden(true)}
+      onError={() => setHasError(true)}
     />
   )
 }

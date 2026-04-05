@@ -1,3 +1,4 @@
+import { memo } from 'react'
 import { Link } from '@cloudflare/kumo'
 import { BookmarkContent } from './BookmarkContent'
 import type { Bookmark } from '@/utils/types'
@@ -9,7 +10,11 @@ interface BookmarkItemProps {
   onToggleUnread: (id: number, currentUnread: boolean) => Promise<void>
 }
 
-export function BookmarkItem({ bookmark, isDimmed, onToggleUnread }: BookmarkItemProps) {
+export const BookmarkItem = memo(function BookmarkItem({
+  bookmark,
+  isDimmed,
+  onToggleUnread,
+}: BookmarkItemProps) {
   return (
     <div
       data-dimmed={isDimmed}
@@ -47,4 +52,4 @@ export function BookmarkItem({ bookmark, isDimmed, onToggleUnread }: BookmarkIte
       />
     </div>
   )
-}
+})

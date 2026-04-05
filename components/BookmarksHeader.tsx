@@ -12,12 +12,18 @@ import { CurrentTabCard } from '@/components/CurrentTabCard'
 import { useSyncQueueStatus } from '@/hooks/useSyncQueueStatus'
 import type { Bookmark } from '@/utils/types'
 
+const STATUS_CONFIG: Record<string, { dotClass: string; Icon: typeof CloudCheckIcon }> = {
+  synced: { dotClass: 'bg-kumo-success', Icon: CloudCheckIcon },
+  pending: { dotClass: 'bg-kumo-warning', Icon: CloudArrowUpIcon },
+  error: { dotClass: 'bg-kumo-danger', Icon: CloudSlashIcon },
+}
+
 export interface BookmarkCheckResponse {
   bookmark: Bookmark | null
   metadata: {
     title: string
     description: string
-    [key: string]: any
+    [key: string]: unknown
   }
 }
 
@@ -27,7 +33,13 @@ interface BookmarksHeaderProps {
   variant: 'default' | 'expanded'
   currentTabUrl: string | null
   currentTabBookmark: Bookmark | null | undefined
-  currentTabMetadata: any
+  currentTabMetadata:
+    | {
+        title: string
+        description: string
+        [key: string]: unknown
+      }
+    | undefined
   realtimeMetadata: {
     title: string
     favicon: string | null
@@ -54,15 +66,10 @@ export function BookmarksHeader({
   isScrolled,
 }: BookmarksHeaderProps) {
   const isVisible = !!currentTabUrl
-  const { status, count, tooltip, items } = useSyncQueueStatus()
-  const statusDotClass =
-    status === 'synced'
-      ? 'bg-kumo-success'
-      : status === 'pending'
-        ? 'bg-kumo-warning'
-        : 'bg-kumo-danger'
-  const StatusIcon =
-    status === 'synced' ? CloudCheckIcon : status === 'pending' ? CloudArrowUpIcon : CloudSlashIcon
+  const { status, tooltip, items } = useSyncQueueStatus()
+  const config = STATUS_CONFIG[status] ?? STATUS_CONFIG.error
+  const statusDotClass = config.dotClass
+  const StatusIcon = config.Icon
 
   return (
     <div className="sticky top-0 z-20 bg-kumo-base px-2 py-2 border-x -mx-px border-b border-kumo-line rounded-b-xl">

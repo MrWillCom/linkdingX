@@ -7,7 +7,7 @@ interface ServerCheckData {
   metadata: {
     title: string
     description: string
-    [key: string]: any
+    [key: string]: unknown
   }
 }
 
@@ -57,7 +57,7 @@ export function useCurrentTabBookmark() {
     return () => {
       isCancelled = true
     }
-  }, [currentTabUrl, !!bookmark])
+  }, [currentTabUrl, bookmark])
 
   return {
     bookmark,

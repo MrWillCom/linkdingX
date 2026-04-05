@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 
 interface BookmarkFaviconProps {
   url: string | null | undefined
@@ -10,13 +10,9 @@ function hasMediaUrl(value: string | null | undefined): value is string {
 }
 
 export function BookmarkFavicon({ url, className = '' }: BookmarkFaviconProps) {
-  const [isHidden, setIsHidden] = useState(!hasMediaUrl(url))
+  const [hasError, setHasError] = useState(false)
 
-  useEffect(() => {
-    setIsHidden(!hasMediaUrl(url))
-  }, [url])
-
-  if (isHidden || !hasMediaUrl(url)) {
+  if (!hasMediaUrl(url) || hasError) {
     return null
   }
 
@@ -27,7 +23,7 @@ export function BookmarkFavicon({ url, className = '' }: BookmarkFaviconProps) {
       aria-hidden="true"
       loading="lazy"
       className={`h-4 w-4 rounded-sm object-cover shrink-0 ${className}`}
-      onError={() => setIsHidden(true)}
+      onError={() => setHasError(true)}
     />
   )
 }

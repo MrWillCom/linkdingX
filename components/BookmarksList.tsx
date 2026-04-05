@@ -1,6 +1,6 @@
 import { db } from '@/utils/db'
 import { bookmarkService } from '@/utils/bookmarkService'
-import { useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { Button, Loader } from '@cloudflare/kumo'
 import {
   serverStorage,
@@ -41,14 +41,6 @@ export default function BookmarksList({ variant = 'default' }: BookmarksListProp
     currentTabUrl,
   } = useCurrentTabBookmark()
 
-  useEffect(() => {
-    const interval = setInterval(() => {
-      mutateBookmarks()
-    }, 60000)
-
-    return () => clearInterval(interval)
-  }, [mutateBookmarks])
-
   const loadMoreRef = useRef<HTMLDivElement>(null)
   const [isScrolled, setIsScrolled] = useState(false)
   const hasTriggeredLoadRef = useRef(false)
@@ -64,7 +56,7 @@ export default function BookmarksList({ variant = 'default' }: BookmarksListProp
     stateRef.current = { isLoadingMore, hasMore, loadMore }
   }, [isLoadingMore, hasMore, loadMore])
 
-  const handleScroll = (e: React.UIEvent<HTMLDivElement>) => {
+  const handleScroll = useCallback((e: React.UIEvent<HTMLDivElement>) => {
     setIsScrolled(e.currentTarget.scrollTop > 0)
 
     const { isLoadingMore, hasMore, loadMore } = stateRef.current
@@ -75,7 +67,7 @@ export default function BookmarksList({ variant = 'default' }: BookmarksListProp
         loadMore()
       }
     }
-  }
+  }, [])
 
   useEffect(() => {
     const el = loadMoreRef.current
@@ -101,42 +93,45 @@ export default function BookmarksList({ variant = 'default' }: BookmarksListProp
     return () => observer.disconnect()
   }, [])
 
-  const handleToggleUnread = async (id: number, currentUnread: boolean) => {
+  const handleToggleUnread = useCallback(async (id: number, currentUnread: boolean) => {
     await bookmarkService.toggleUnread(id, currentUnread)
-  }
+  }, [])
 
-  const handleAdd = async (url: string, title: string, description: string) => {
-    const [server, apiToken, fetchMetadataFrom, defaultUnread] = await Promise.all([
-      serverStorage.getValue(),
-      apiTokenStorage.getValue(),
-      fetchMetadataFromStorage.getValue(),
-      defaultUnreadStorage.getValue(),
-    ])
+  const handleAdd = useCallback(
+    async (url: string, title: string, description: string) => {
+      const [server, apiToken, fetchMetadataFrom, defaultUnread] = await Promise.all([
+        serverStorage.getValue(),
+        apiTokenStorage.getValue(),
+        fetchMetadataFromStorage.getValue(),
+        defaultUnreadStorage.getValue(),
+      ])
 
-    if (!server || !apiToken) return
+      if (!server || !apiToken) return
 
-    const payload = {
-      url,
-      title: fetchMetadataFrom === 'server' ? '' : title,
-      description: fetchMetadataFrom === 'server' ? '' : description,
-      unread: defaultUnread,
-    }
+      const payload = {
+        url,
+        title: fetchMetadataFrom === 'server' ? '' : title,
+        description: fetchMetadataFrom === 'server' ? '' : description,
+        unread: defaultUnread,
+      }
 
-    const response = await browser.runtime.sendMessage({
-      type: 'api-post',
-      url: `${server}/api/bookmarks/`,
-      data: payload,
-    })
+      const response = await browser.runtime.sendMessage({
+        type: 'api-post',
+        url: `${server}/api/bookmarks/`,
+        data: payload,
+      })
 
-    if (response.ok) {
-      await bookmarkService.addBookmark(response.data as Bookmark)
-      mutateBookmarks()
-    }
-  }
+      if (response.ok) {
+        await bookmarkService.addBookmark(response.data as Bookmark)
+        mutateBookmarks()
+      }
+    },
+    [mutateBookmarks],
+  )
 
-  const handleDelete = async (id: number) => {
+  const handleDelete = useCallback(async (id: number) => {
     await bookmarkService.deleteBookmark(id)
-  }
+  }, [])
 
   if (error) {
     return (

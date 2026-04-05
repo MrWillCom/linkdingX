@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useEffect } from 'react'
+import { useCallback, useMemo, useEffect, useRef } from 'react'
 import useSWRInfinite from 'swr/infinite'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { db } from '@/utils/db'
@@ -43,6 +43,7 @@ export function useBookmarksManager(unreadFilter: UnreadFilter) {
     useSWRInfinite<BookmarksResponse>(getKey, fetcher, {
       revalidateFirstPage: true,
       revalidateOnFocus: true,
+      refreshInterval: 60000,
       onSuccess: async data => {
         const all = data.flatMap(p => p.results)
         if (all.length === 0) return
@@ -108,7 +109,27 @@ export function useBookmarksManager(unreadFilter: UnreadFilter) {
     })
   }, [bookmarks, unreadFilter])
 
+  const stateRef = useRef({
+    data,
+    isLoading,
+    isValidating,
+    size,
+    fetchLimit,
+    setSize,
+  })
   useEffect(() => {
+    stateRef.current = {
+      data,
+      isLoading,
+      isValidating,
+      size,
+      fetchLimit,
+      setSize,
+    }
+  }, [data, isLoading, isValidating, size, fetchLimit, setSize])
+
+  useEffect(() => {
+    const { data, isLoading, isValidating, size, fetchLimit, setSize } = stateRef.current
     const hasMoreData = !data || data[data.length - 1]?.next !== null
     if (!isLoading && !isValidating && hasMoreData) {
       const threshold = (size * fetchLimit) / 2
@@ -119,7 +140,7 @@ export function useBookmarksManager(unreadFilter: UnreadFilter) {
         return () => clearTimeout(timer)
       }
     }
-  }, [filteredBookmarks.length, size, isLoading, isValidating, data, setSize, fetchLimit])
+  }, [filteredBookmarks.length])
 
   return {
     filteredBookmarks,

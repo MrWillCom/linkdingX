@@ -28,65 +28,67 @@ async function processSyncQueue() {
   const operations = await db.sync_queue.toArray()
   if (operations.length === 0) return
 
-  for (const op of operations) {
-    const url = `${server}/api/bookmarks/${op.bookmark_id}/`
-    let method = ''
-    let body: string | undefined
+  await Promise.all(
+    operations.map(async op => {
+      const url = `${server}/api/bookmarks/${op.bookmark_id}/`
+      let method = ''
+      let body: string | undefined
 
-    if (op.action === 'update') {
-      method = 'PATCH'
-      body = JSON.stringify(op.payload)
-    } else if (op.action === 'delete') {
-      method = 'DELETE'
-    }
+      if (op.action === 'update') {
+        method = 'PATCH'
+        body = JSON.stringify(op.payload)
+      } else if (op.action === 'delete') {
+        method = 'DELETE'
+      }
 
-    if (!method) continue
+      if (!method) return null
 
-    try {
-      const response = await fetch(url, {
-        method,
-        headers: {
-          Authorization: `Token ${apiToken}`,
-          'Content-Type': 'application/json',
-        },
-        body,
-      })
+      try {
+        const response = await fetch(url, {
+          method,
+          headers: {
+            Authorization: `Token ${apiToken}`,
+            'Content-Type': 'application/json',
+          },
+          body,
+        })
 
-      const isDeletedOnServer = response.status === 404 || response.status === 410
-      const isSuccess = response.ok || (op.action === 'delete' && isDeletedOnServer)
+        const isDeletedOnServer = response.status === 404 || response.status === 410
+        const isSuccess = response.ok || (op.action === 'delete' && isDeletedOnServer)
 
-      if (isSuccess) {
-        await db.sync_queue.delete(op.id!)
-        if (op.action === 'update' && response.ok) {
-          await db.bookmarks.update(op.bookmark_id, {
-            _sync_status: 'synced',
-            _local_modified_at: undefined,
-          })
+        if (isSuccess) {
+          await db.sync_queue.delete(op.id!)
+          if (op.action === 'update' && response.ok) {
+            await db.bookmarks.update(op.bookmark_id, {
+              _sync_status: 'synced',
+              _local_modified_at: undefined,
+            })
+          }
+        } else {
+          await syncErrorStorage.setValue(true)
+          let errorDetail = response.statusText
+          try {
+            const errorData = await response.json()
+            if (errorData?.detail) errorDetail = errorData.detail
+          } catch {
+            // Response body may not be JSON
+          }
+          await notifyUI(
+            'danger',
+            `Failed to sync ${op.action}`,
+            `Server returned ${response.status}: ${errorDetail}`,
+          )
         }
-      } else {
+      } catch (error) {
         await syncErrorStorage.setValue(true)
-        let errorDetail = response.statusText
-        try {
-          const errorData = await response.json()
-          if (errorData?.detail) errorDetail = errorData.detail
-        } catch {
-          // Response body may not be JSON
-        }
         await notifyUI(
           'danger',
-          `Failed to sync ${op.action}`,
-          `Server returned ${response.status}: ${errorDetail}`,
+          `Network error during sync`,
+          error instanceof Error ? error.message : String(error),
         )
       }
-    } catch (error) {
-      await syncErrorStorage.setValue(true)
-      await notifyUI(
-        'danger',
-        `Network error during sync`,
-        error instanceof Error ? error.message : String(error),
-      )
-    }
-  }
+    }),
+  )
 
   const remaining = await db.sync_queue.count()
   if (remaining === 0) {

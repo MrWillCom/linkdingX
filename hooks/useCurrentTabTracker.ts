@@ -1,4 +1,5 @@
 import { useEffect, useReducer, useRef } from 'react'
+import type { Browser } from 'wxt/browser'
 
 interface State {
   currentTabId: number | null
@@ -84,7 +85,7 @@ export function useCurrentTabTracker() {
     const onActivated = () => {
       syncCurrentTab()
     }
-    const onCreated = (tab: any) => {
+    const onCreated = (tab: Browser.tabs.Tab) => {
       if (tab.active) syncCurrentTab()
     }
     const onRemoved = (tabId: number) => {

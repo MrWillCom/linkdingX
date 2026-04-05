@@ -1,5 +1,11 @@
 import { Tabs } from '@cloudflare/kumo'
 
+const TABS = [
+  { value: 'all' as const, label: 'All' },
+  { value: 'unread' as const, label: 'Unread' },
+  { value: 'read' as const, label: 'Read' },
+]
+
 export type UnreadFilter = 'all' | 'unread' | 'read'
 
 interface FilterTabsProps {
@@ -8,17 +14,11 @@ interface FilterTabsProps {
 }
 
 export function FilterTabs({ selectedKey, onSelectionChange }: FilterTabsProps) {
-  const tabs = [
-    { value: 'all', label: 'All' },
-    { value: 'unread', label: 'Unread' },
-    { value: 'read', label: 'Read' },
-  ]
-
   return (
     <Tabs
       value={selectedKey}
       onValueChange={value => onSelectionChange(value as UnreadFilter)}
-      tabs={tabs}
+      tabs={TABS}
     />
   )
 }

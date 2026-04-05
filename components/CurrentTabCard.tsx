@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react'
+import { useState, useRef } from 'react'
 import { LayerCard, Button, Tooltip } from '@cloudflare/kumo'
 import { TrashIcon, PlusIcon } from '@phosphor-icons/react'
 import { BookmarkContent } from './BookmarkContent'
@@ -10,7 +10,7 @@ interface CurrentTabCardProps {
   metadata?: {
     title: string
     description: string
-    [key: string]: any
+    [key: string]: unknown
   }
   realtimeMetadata?: {
     title: string
@@ -36,15 +36,10 @@ export function CurrentTabCard({
   const timerRef = useRef<NodeJS.Timeout | null>(null)
 
   const isBookmarked = !!bookmark
-  useEffect(() => {
-    return () => {
-      if (timerRef.current) clearTimeout(timerRef.current)
-    }
-  }, [])
 
   const handleDeletePress = () => {
+    if (timerRef.current) clearTimeout(timerRef.current)
     if (isConfirmingDelete) {
-      if (timerRef.current) clearTimeout(timerRef.current)
       onDelete?.(bookmark!.id)
       setIsConfirmingDelete(false)
     } else {

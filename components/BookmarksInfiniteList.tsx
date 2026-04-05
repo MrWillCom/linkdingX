@@ -1,3 +1,4 @@
+import { memo } from 'react'
 import { Loader, Button } from '@cloudflare/kumo'
 import { BookmarkItem } from '@/components/BookmarkItem'
 import type { Bookmark } from '@/utils/types'
@@ -14,7 +15,7 @@ interface BookmarksInfiniteListProps {
   onToggleUnread: (id: number, current: boolean) => Promise<void>
 }
 
-export function BookmarksInfiniteList({
+export const BookmarksInfiniteList = memo(function BookmarksInfiniteList({
   filteredBookmarks,
   unreadFilter,
   isLoadingMore,
@@ -55,4 +56,4 @@ export function BookmarksInfiniteList({
       )}
     </div>
   )
-}
+})

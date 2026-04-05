@@ -65,19 +65,20 @@ export function useSyncQueueStatus(): SyncQueueStatus {
     useLiveQuery(async () => {
       const operations = await db.sync_queue.toArray()
       if (operations.length === 0) return []
-      const enriched = await Promise.all(
-        operations.map(async op => {
-          const bookmark = await db.bookmarks.get(op.bookmark_id)
-          const { title, url } = getQueueTitle(bookmark, op.payload, op.bookmark_id)
-          return {
-            id: op.id ?? op.bookmark_id,
-            action: op.action,
-            title,
-            url,
-            timestamp: op.timestamp,
-          }
-        }),
-      )
+      const bookmarkIds = operations.map(op => op.bookmark_id)
+      const bookmarks = await db.bookmarks.where('id').anyOf(bookmarkIds).toArray()
+      const bookmarkMap = new Map(bookmarks.map(b => [b.id, b]))
+      const enriched = operations.map(op => {
+        const bookmark = bookmarkMap.get(op.bookmark_id)
+        const { title, url } = getQueueTitle(bookmark, op.payload, op.bookmark_id)
+        return {
+          id: op.id ?? op.bookmark_id,
+          action: op.action,
+          title,
+          url,
+          timestamp: op.timestamp,
+        }
+      })
       return enriched.sort((a, b) => b.timestamp - a.timestamp)
     }) || []
 
