@@ -4,6 +4,9 @@ on:
   push:
     branches:
       - main
+  pull_request:
+    branches:
+      - main
 
 permissions:
   contents: write
@@ -40,6 +43,7 @@ jobs:
         run: pnpm build:firefox
 
   release-please:
+    if: github.event_name == 'push'
     runs-on: ubuntu-24.04
     steps:
       - uses: googleapis/release-please-action@v4
