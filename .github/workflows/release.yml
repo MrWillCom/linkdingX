@@ -11,6 +11,34 @@ permissions:
   issues: write
 
 jobs:
+  checks:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+
+      - name: Enable Corepack
+        run: corepack enable
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Check formatting
+        run: pnpm fmt:check
+
+      - name: Type check
+        run: pnpm compile
+
+      - name: Build Chrome
+        run: pnpm build
+
+      - name: Build Firefox
+        run: pnpm build:firefox
+
   release-please:
     runs-on: ubuntu-24.04
     steps:
@@ -35,14 +63,6 @@ jobs:
       - name: Install dependencies
         if: ${{ steps.release.outputs.release_created }}
         run: pnpm install --frozen-lockfile
-
-      - name: Type check
-        if: ${{ steps.release.outputs.release_created }}
-        run: pnpm compile
-
-      - name: Check formatting
-        if: ${{ steps.release.outputs.release_created }}
-        run: pnpm fmt:check
 
       - name: Zip extensions
         if: ${{ steps.release.outputs.release_created }}
