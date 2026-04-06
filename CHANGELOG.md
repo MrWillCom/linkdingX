@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.1.0](https://github.com/MrWillCom/linkdingX/compare/v1.0.0...v1.1.0) (2026-04-06)
+
+
+### Features
+
+* add inline action buttons for bookmarks ([6b0aa7d](https://github.com/MrWillCom/linkdingX/commit/6b0aa7dc5baafa23af44152d66aed008aba46bef))
+
 ## 1.0.0 (2026-04-05)
 
 
