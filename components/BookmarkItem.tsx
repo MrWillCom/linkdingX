@@ -1,5 +1,11 @@
-import { memo } from 'react'
-import { Link } from '@cloudflare/kumo'
+import { memo, useState, useRef, useCallback } from 'react'
+import { Button, Link, Tooltip, TooltipProvider } from '@cloudflare/kumo'
+import {
+  TrayArrowDownIcon,
+  TrayArrowUpIcon,
+  ArrowSquareOutIcon,
+  TrashIcon,
+} from '@phosphor-icons/react'
 import { BookmarkContent } from './BookmarkContent'
 import type { Bookmark } from '@/utils/types'
 import styles from './BookmarkItem.module.css'
@@ -8,16 +14,39 @@ interface BookmarkItemProps {
   bookmark: Bookmark
   isDimmed: boolean
   onToggleUnread: (id: number, currentUnread: boolean) => Promise<void>
+  onDelete: (id: number) => Promise<void>
+  onToggleArchive: (id: number, currentArchived: boolean) => Promise<void>
+  onOpenInLinkding: (bookmark: Bookmark) => void
 }
 
 export const BookmarkItem = memo(function BookmarkItem({
   bookmark,
   isDimmed,
   onToggleUnread,
+  onDelete,
+  onToggleArchive,
+  onOpenInLinkding,
 }: BookmarkItemProps) {
+  const [isConfirmingDelete, setIsConfirmingDelete] = useState(false)
+  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+
+  const handleDeletePress = useCallback(() => {
+    if (timerRef.current) clearTimeout(timerRef.current)
+    if (isConfirmingDelete) {
+      onDelete(bookmark.id)
+      setIsConfirmingDelete(false)
+    } else {
+      setIsConfirmingDelete(true)
+      timerRef.current = setTimeout(() => {
+        setIsConfirmingDelete(false)
+      }, 5000)
+    }
+  }, [isConfirmingDelete, onDelete, bookmark.id])
+
   return (
     <div
       data-dimmed={isDimmed}
+      data-archived={bookmark.is_archived}
       className={`group relative flex items-start gap-1 py-2 px-2 hover:bg-kumo-elevated transition-colors ${styles.bookmarkItem}`}
       style={{ contentVisibility: 'auto' }}
     >
@@ -51,6 +80,57 @@ export const BookmarkItem = memo(function BookmarkItem({
         tagClassName={styles.dimAsset}
         previewClassName={styles.dimAsset}
       />
+      <div className="absolute bottom-1 right-2 z-10 flex items-center opacity-0 group-hover:opacity-100 transition-opacity">
+        <TooltipProvider>
+          <Tooltip content={bookmark.is_archived ? 'Unarchive' : 'Archive'} asChild side="top">
+            <Button
+              variant="ghost"
+              shape="square"
+              icon={
+                bookmark.is_archived ? (
+                  <TrayArrowUpIcon weight="bold" />
+                ) : (
+                  <TrayArrowDownIcon weight="bold" />
+                )
+              }
+              aria-label={bookmark.is_archived ? 'Unarchive' : 'Archive'}
+              onClick={e => {
+                e.stopPropagation()
+                onToggleArchive(bookmark.id, bookmark.is_archived)
+              }}
+            />
+          </Tooltip>
+          <Tooltip content="Show in Linkding" asChild side="top">
+            <Button
+              variant="ghost"
+              shape="square"
+              icon={<ArrowSquareOutIcon weight="bold" />}
+              aria-label="Show in Linkding"
+              onClick={e => {
+                e.stopPropagation()
+                onOpenInLinkding(bookmark)
+              }}
+            />
+          </Tooltip>
+          <Tooltip
+            content={isConfirmingDelete ? 'Click again to confirm' : 'Delete'}
+            disabled={!isConfirmingDelete}
+            asChild
+            side="top"
+          >
+            <Button
+              variant={isConfirmingDelete ? 'destructive' : 'ghost'}
+              shape="square"
+              icon={<TrashIcon weight="bold" />}
+              aria-label={isConfirmingDelete ? 'Confirm delete bookmark' : 'Delete bookmark'}
+              onClick={e => {
+                e.stopPropagation()
+                handleDeletePress()
+              }}
+            />
+          </Tooltip>
+        </TooltipProvider>
+      </div>
     </div>
   )
 })

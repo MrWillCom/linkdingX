@@ -35,4 +35,20 @@ export const bookmarkService = {
   async addBookmark(bookmark: Bookmark) {
     await db.bookmarks.add({ ...bookmark, _sync_status: 'synced' })
   },
+
+  async toggleArchive(id: number, currentArchived: boolean) {
+    const newArchived = !currentArchived
+    await db.bookmarks.update(id, {
+      is_archived: newArchived,
+      _sync_status: 'pending',
+      _local_modified_at: new Date().toISOString(),
+    })
+    await db.sync_queue.add({
+      action: 'update',
+      bookmark_id: id,
+      payload: { is_archived: newArchived },
+      timestamp: Date.now(),
+    })
+    browser.runtime.sendMessage({ type: 'sync-request' })
+  },
 }

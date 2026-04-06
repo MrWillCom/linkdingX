@@ -13,6 +13,9 @@ interface BookmarksInfiniteListProps {
   loadMoreRef: React.RefObject<HTMLDivElement | null>
   loadMore: () => void
   onToggleUnread: (id: number, current: boolean) => Promise<void>
+  onDelete: (id: number) => Promise<void>
+  onToggleArchive: (id: number, currentArchived: boolean) => Promise<void>
+  onOpenInLinkding: (bookmark: Bookmark) => void
 }
 
 export const BookmarksInfiniteList = memo(function BookmarksInfiniteList({
@@ -24,6 +27,9 @@ export const BookmarksInfiniteList = memo(function BookmarksInfiniteList({
   loadMoreRef,
   loadMore,
   onToggleUnread,
+  onDelete,
+  onToggleArchive,
+  onOpenInLinkding,
 }: BookmarksInfiniteListProps) {
   return (
     <div className="flex flex-col divide-y divide-kumo-line border-b border-kumo-line">
@@ -35,6 +41,9 @@ export const BookmarksInfiniteList = memo(function BookmarksInfiniteList({
               bookmark={bookmark}
               isDimmed={unreadFilter === 'all' && !bookmark.unread}
               onToggleUnread={onToggleUnread}
+              onDelete={onDelete}
+              onToggleArchive={onToggleArchive}
+              onOpenInLinkding={onOpenInLinkding}
             />
           ))}
           <div ref={loadMoreRef} className="py-4 flex flex-col items-center gap-4">

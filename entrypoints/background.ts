@@ -98,7 +98,13 @@ async function processSyncQueue() {
   }
 }
 
-type MessageType = 'sync-request' | 'api-request' | 'api-patch' | 'api-post' | 'api-delete'
+type MessageType =
+  | 'sync-request'
+  | 'api-request'
+  | 'api-patch'
+  | 'api-post'
+  | 'api-delete'
+  | 'get-server-url'
 
 interface ApiMessage {
   type: MessageType
@@ -156,6 +162,11 @@ export default defineBackground(() => {
 
   browser.runtime.onMessage.addListener((message: ApiMessage, _sender, sendResponse) => {
     const { type, url, data, options } = message
+
+    if (type === 'get-server-url') {
+      serverStorage.getValue().then(server => sendResponse({ ok: true, server }))
+      return true
+    }
 
     if (type === 'sync-request') {
       processSyncQueue()

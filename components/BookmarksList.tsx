@@ -154,6 +154,20 @@ export default function BookmarksList({ variant = 'default' }: BookmarksListProp
     await bookmarkService.deleteBookmark(id)
   }, [])
 
+  const handleToggleArchive = useCallback(async (id: number, currentArchived: boolean) => {
+    await bookmarkService.toggleArchive(id, currentArchived)
+  }, [])
+
+  const handleOpenInLinkding = useCallback(async (bookmark: Bookmark) => {
+    const response = await browser.runtime.sendMessage({
+      type: 'get-server-url',
+    })
+    if (!response.ok || !response.server) return
+    await browser.tabs.create({
+      url: `${response.server}/bookmarks?details=${bookmark.id}`,
+    })
+  }, [])
+
   if (error) {
     return (
       <div className="p-4 flex flex-col items-center gap-4">
@@ -201,6 +215,9 @@ export default function BookmarksList({ variant = 'default' }: BookmarksListProp
           loadMoreRef={loadMoreRef}
           loadMore={loadMore}
           onToggleUnread={handleToggleUnread}
+          onDelete={handleDelete}
+          onToggleArchive={handleToggleArchive}
+          onOpenInLinkding={handleOpenInLinkding}
         />
       </div>
     </div>
