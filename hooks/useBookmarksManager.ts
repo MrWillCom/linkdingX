@@ -28,15 +28,19 @@ async function fetcher(key: string): Promise<BookmarksResponse> {
   return response.data as BookmarksResponse
 }
 
-export function useBookmarksManager(unreadFilter: UnreadFilter) {
+export function useBookmarksManager(unreadFilter: UnreadFilter, searchQuery: string = '') {
   const fetchLimit = useLiveQuery(() => fetchLimitStorage.getValue()) ?? DEFAULT_PAGE_SIZE
 
   const getKey = useCallback(
     (idx: number, prev: BookmarksResponse | null) => {
       if (prev && !prev.next) return null
-      return `/api/bookmarks/?limit=${fetchLimit}&offset=${idx * fetchLimit}`
+      let url = `/api/bookmarks/?limit=${fetchLimit}&offset=${idx * fetchLimit}`
+      if (searchQuery) {
+        url += `&q=${encodeURIComponent(searchQuery)}`
+      }
+      return url
     },
-    [fetchLimit],
+    [fetchLimit, searchQuery],
   )
 
   const { data, size, setSize, isLoading, isValidating, mutate, error } =
@@ -103,11 +107,24 @@ export function useBookmarksManager(unreadFilter: UnreadFilter) {
 
   const filteredBookmarks = useMemo(() => {
     return bookmarks.filter(b => {
-      if (unreadFilter === 'unread') return b.unread
-      if (unreadFilter === 'read') return !b.unread
-      return true
+      let matchesUnread = true
+      if (unreadFilter === 'unread') matchesUnread = b.unread
+      if (unreadFilter === 'read') matchesUnread = !b.unread
+
+      let matchesSearch = true
+      if (searchQuery) {
+        const q = searchQuery.toLowerCase()
+        matchesSearch =
+          (b.title?.toLowerCase() || '').includes(q) ||
+          (b.url?.toLowerCase() || '').includes(q) ||
+          (b.description?.toLowerCase() || '').includes(q) ||
+          b.tag_names?.some(t => t.toLowerCase().includes(q)) ||
+          false
+      }
+
+      return matchesUnread && matchesSearch
     })
-  }, [bookmarks, unreadFilter])
+  }, [bookmarks, unreadFilter, searchQuery])
 
   const stateRef = useRef({
     data,
@@ -149,6 +166,7 @@ export function useBookmarksManager(unreadFilter: UnreadFilter) {
     isLoadingMore: isLoading || (size > 0 && data && typeof data[size - 1] === 'undefined'),
     hasMore: !data || data[data.length - 1]?.next !== null,
     loadMore: () => setSize(s => s + 1),
+    resetSize: useCallback(() => setSize(1), [setSize]),
     mutate,
     error,
   }
