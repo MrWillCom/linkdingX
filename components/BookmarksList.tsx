@@ -76,7 +76,7 @@ export default function BookmarksList({ variant = 'default' }: BookmarksListProp
     currentTabUrl,
   } = useCurrentTabBookmark()
 
-  const loadMoreRef = useRef<HTMLDivElement>(null)
+  const containerRef = useRef<HTMLDivElement>(null)
   const [isScrolled, setIsScrolled] = useState(false)
   const hasTriggeredLoadRef = useRef(false)
 
@@ -91,12 +91,14 @@ export default function BookmarksList({ variant = 'default' }: BookmarksListProp
     stateRef.current = { isLoadingMore, hasMore, loadMore }
   }, [isLoadingMore, hasMore, loadMore])
 
-  const handleScroll = useCallback((e: React.UIEvent<HTMLDivElement>) => {
-    setIsScrolled(e.currentTarget.scrollTop > 0)
+  const handleScroll = useCallback(() => {
+    const el = containerRef.current
+    if (!el) return
+    setIsScrolled(el.scrollTop > 0)
 
     const { isLoadingMore, hasMore, loadMore } = stateRef.current
     if (hasMore && !isLoadingMore) {
-      const { scrollTop, scrollHeight, clientHeight } = e.currentTarget
+      const { scrollTop, scrollHeight, clientHeight } = el
       if (scrollHeight - scrollTop - clientHeight < 400) {
         hasTriggeredLoadRef.current = true
         loadMore()
@@ -105,27 +107,39 @@ export default function BookmarksList({ variant = 'default' }: BookmarksListProp
   }, [])
 
   useEffect(() => {
-    const el = loadMoreRef.current
-    if (!el) return
+    const container = containerRef.current
+    if (!container) return
 
-    const observer = new IntersectionObserver(
-      entries => {
-        const { isLoadingMore, hasMore, loadMore } = stateRef.current
-        if (entries[0].isIntersecting && !isLoadingMore) {
-          if (hasMore) {
-            hasTriggeredLoadRef.current = true
-            loadMore()
+    container.addEventListener('scroll', handleScroll, { passive: true })
+    return () => container.removeEventListener('scroll', handleScroll)
+  }, [handleScroll])
+
+  const observerRef = useRef<IntersectionObserver | null>(null)
+  const loadMoreRef = useCallback((node: HTMLDivElement | null) => {
+    if (observerRef.current) {
+      observerRef.current.disconnect()
+      observerRef.current = null
+    }
+
+    if (node) {
+      const observer = new IntersectionObserver(
+        entries => {
+          const { isLoadingMore, hasMore, loadMore } = stateRef.current
+          if (entries[0].isIntersecting && !isLoadingMore) {
+            if (hasMore) {
+              hasTriggeredLoadRef.current = true
+              loadMore()
+            }
           }
-        }
-      },
-      {
-        rootMargin: '200px',
-        threshold: 0,
-      },
-    )
-
-    observer.observe(el)
-    return () => observer.disconnect()
+        },
+        {
+          rootMargin: '200px',
+          threshold: 0,
+        },
+      )
+      observer.observe(node)
+      observerRef.current = observer
+    }
   }, [])
 
   const handleToggleUnread = useCallback(async (id: number, currentUnread: boolean) => {
@@ -183,7 +197,7 @@ export default function BookmarksList({ variant = 'default' }: BookmarksListProp
   }, [])
 
   return (
-    <div onScroll={handleScroll} className="h-screen overflow-y-auto relative">
+    <div ref={containerRef} className="h-screen overflow-y-auto relative">
       <div className={variant === 'expanded' ? 'max-w-3xl mx-auto' : ''}>
         <BookmarksHeader
           unreadFilter={unreadFilter}

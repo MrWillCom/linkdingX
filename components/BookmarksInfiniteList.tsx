@@ -11,7 +11,7 @@ interface BookmarksInfiniteListProps {
   isLoadingMore: boolean | undefined
   hasMore: boolean
   hasTriggeredLoadRef: React.RefObject<boolean | null>
-  loadMoreRef: React.RefObject<HTMLDivElement | null>
+  loadMoreRef: (node: HTMLDivElement | null) => void
   loadMore: () => void
   onToggleUnread: (id: number, current: boolean) => Promise<void>
   onDelete: (id: number) => Promise<void>
