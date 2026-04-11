@@ -21,27 +21,10 @@ interface BookmarksListProps {
   variant?: BookmarksListVariant
 }
 
-function getInitialFilter(): UnreadFilter {
-  const params = new URLSearchParams(window.location.search)
-  const filter = params.get('filter')
-  if (filter === 'unread' || filter === 'read') return filter
-  return 'all'
-}
-
 export default function BookmarksList({ variant = 'default' }: BookmarksListProps) {
-  const [unreadFilter, setUnreadFilter] = useState<UnreadFilter>(getInitialFilter)
-
-  const handleFilterChange = useCallback((filter: UnreadFilter) => {
-    setUnreadFilter(filter)
-    const params = new URLSearchParams(window.location.search)
-    if (filter === 'all') {
-      params.delete('filter')
-    } else {
-      params.set('filter', filter)
-    }
-    const newUrl = `${window.location.pathname}${params.toString() ? `?${params.toString()}` : ''}`
-    window.history.replaceState(null, '', newUrl)
-  }, [])
+  const [unreadFilter, setUnreadFilter] = useState<UnreadFilter>('all')
+  const [searchQuery, setSearchQuery] = useState<string>('')
+  const [debouncedSearchQuery, setDebouncedSearchQuery] = useState<string>('')
 
   const {
     filteredBookmarks,
@@ -49,9 +32,40 @@ export default function BookmarksList({ variant = 'default' }: BookmarksListProp
     isLoadingMore,
     hasMore,
     loadMore,
+    resetSize,
     mutate: mutateBookmarks,
     error,
-  } = useBookmarksManager(unreadFilter)
+  } = useBookmarksManager(unreadFilter, debouncedSearchQuery)
+
+  const resetSizeRef = useRef(resetSize)
+  useEffect(() => {
+    resetSizeRef.current = resetSize
+  }, [resetSize])
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearchQuery(prev => {
+        if (prev !== searchQuery) {
+          resetSizeRef.current()
+          return searchQuery
+        }
+        return prev
+      })
+    }, 500)
+
+    return () => clearTimeout(timer)
+  }, [searchQuery])
+
+  const handleFilterChange = useCallback((filter: UnreadFilter) => {
+    setUnreadFilter(filter)
+    resetSizeRef.current()
+  }, [])
+
+  const handleClearSearch = useCallback(() => {
+    setSearchQuery('')
+    setDebouncedSearchQuery('')
+    resetSizeRef.current()
+  }, [])
 
   const {
     bookmark: currentTabBookmark,
@@ -168,25 +182,6 @@ export default function BookmarksList({ variant = 'default' }: BookmarksListProp
     })
   }, [])
 
-  if (error) {
-    return (
-      <div className="p-4 flex flex-col items-center gap-4">
-        <p className="text-danger">Failed to load bookmarks: {error.message}</p>
-        <Button variant="secondary" onClick={() => mutateBookmarks()}>
-          Retry
-        </Button>
-      </div>
-    )
-  }
-
-  if (isLoading) {
-    return (
-      <div className="flex justify-center p-8">
-        <Loader />
-      </div>
-    )
-  }
-
   return (
     <div onScroll={handleScroll} className="h-screen overflow-y-auto relative">
       <div className={variant === 'expanded' ? 'max-w-3xl mx-auto' : ''}>
@@ -204,21 +199,35 @@ export default function BookmarksList({ variant = 'default' }: BookmarksListProp
           onAdd={handleAdd}
           onDelete={handleDelete}
           isScrolled={isScrolled}
+          searchQuery={searchQuery}
+          onSearchChange={setSearchQuery}
+          onClearSearch={handleClearSearch}
+          isSearching={!!debouncedSearchQuery && isLoadingMore}
         />
 
-        <BookmarksInfiniteList
-          filteredBookmarks={filteredBookmarks}
-          unreadFilter={unreadFilter}
-          isLoadingMore={isLoadingMore}
-          hasMore={hasMore}
-          hasTriggeredLoadRef={hasTriggeredLoadRef}
-          loadMoreRef={loadMoreRef}
-          loadMore={loadMore}
-          onToggleUnread={handleToggleUnread}
-          onDelete={handleDelete}
-          onToggleArchive={handleToggleArchive}
-          onOpenInLinkding={handleOpenInLinkding}
-        />
+        {error ? (
+          <div className="p-4 flex flex-col items-center gap-4">
+            <p className="text-kumo-danger">Failed to load bookmarks: {error.message}</p>
+            <Button variant="secondary" onClick={() => mutateBookmarks()}>
+              Retry
+            </Button>
+          </div>
+        ) : (
+          <BookmarksInfiniteList
+            filteredBookmarks={filteredBookmarks}
+            unreadFilter={unreadFilter}
+            searchQuery={debouncedSearchQuery}
+            isLoadingMore={isLoadingMore}
+            hasMore={hasMore}
+            hasTriggeredLoadRef={hasTriggeredLoadRef}
+            loadMoreRef={loadMoreRef}
+            loadMore={loadMore}
+            onToggleUnread={handleToggleUnread}
+            onDelete={handleDelete}
+            onToggleArchive={handleToggleArchive}
+            onOpenInLinkding={handleOpenInLinkding}
+          />
+        )}
       </div>
     </div>
   )
