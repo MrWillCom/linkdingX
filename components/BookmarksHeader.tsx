@@ -1,10 +1,21 @@
-import { Button, Popover, Tooltip, TooltipProvider, Text, Surface } from '@cloudflare/kumo'
+import { useState, useRef } from 'react'
+import {
+  Button,
+  Popover,
+  Tooltip,
+  TooltipProvider,
+  Text,
+  Surface,
+  Input,
+  Loader,
+} from '@cloudflare/kumo'
 import {
   CloudCheckIcon,
   CloudSlashIcon,
   CloudArrowUpIcon,
   ArrowSquareOutIcon,
   GearIcon,
+  MagnifyingGlassIcon,
 } from '@phosphor-icons/react'
 import { FilterTabs } from '@/components/FilterTabs'
 import type { UnreadFilter } from '@/components/FilterTabs'
@@ -50,6 +61,10 @@ interface BookmarksHeaderProps {
   onAdd: (url: string, title: string, desc: string) => Promise<void>
   onDelete: (id: number) => Promise<void>
   isScrolled: boolean
+  searchQuery: string
+  onSearchChange: (query: string) => void
+  onClearSearch?: () => void
+  isSearching?: boolean
 }
 
 export function BookmarksHeader({
@@ -66,6 +81,10 @@ export function BookmarksHeader({
   onAdd,
   onDelete,
   isScrolled,
+  searchQuery,
+  onSearchChange,
+  onClearSearch,
+  isSearching,
 }: BookmarksHeaderProps) {
   const isVisible = !!currentTabUrl
   const { status, tooltip, items } = useSyncQueueStatus()
@@ -73,11 +92,79 @@ export function BookmarksHeader({
   const statusDotClass = config.dotClass
   const StatusIcon = config.Icon
 
+  const [isSearchFocused, setIsSearchFocused] = useState(false)
+  const inputRef = useRef<HTMLInputElement>(null)
+  const isSearchExpanded = isSearchFocused || !!searchQuery
+
   return (
     <div className="sticky top-0 z-20 bg-kumo-base px-2 py-2 border-x -mx-px border-b border-kumo-line rounded-b-xl">
-      <div className="flex items-center justify-between h-9">
+      <div className="flex items-center h-9 gap-2">
         <FilterTabs selectedKey={unreadFilter} onSelectionChange={onUnreadFilterChange} />
-        <div className="flex items-center gap-0.5">
+
+        {variant === 'expanded' && (
+          <div
+            className={`relative ml-auto h-9 transition-[width] duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] ${
+              isSearchExpanded ? 'w-64' : 'w-9'
+            }`}
+          >
+            <div
+              className={`absolute inset-0 z-20 transition-opacity duration-200 ${
+                isSearchExpanded ? 'opacity-0 pointer-events-none' : 'opacity-100'
+              }`}
+            >
+              <Button
+                variant="ghost"
+                shape="square"
+                aria-label="Search bookmarks"
+                onClick={() => {
+                  setIsSearchFocused(true)
+                  setTimeout(() => inputRef.current?.focus(), 50)
+                }}
+                className="w-full h-full"
+              >
+                <MagnifyingGlassIcon weight="bold" size={16} />
+              </Button>
+            </div>
+
+            <div
+              className={`absolute inset-0 transition-opacity duration-300 ${
+                isSearchExpanded
+                  ? 'opacity-100 pointer-events-auto'
+                  : 'opacity-0 pointer-events-none'
+              }`}
+            >
+              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-kumo-subtle z-10">
+                {isSearching ? (
+                  <Loader size="sm" />
+                ) : (
+                  <MagnifyingGlassIcon weight="bold" size={16} />
+                )}
+              </div>
+              <Input
+                ref={inputRef}
+                type="text"
+                placeholder="Search bookmarks..."
+                value={searchQuery}
+                onChange={e => onSearchChange(e.target.value)}
+                onFocus={() => setIsSearchFocused(true)}
+                onBlur={() => setIsSearchFocused(false)}
+                onKeyDown={e => {
+                  if (e.key === 'Escape') {
+                    if (onClearSearch) {
+                      onClearSearch()
+                    } else {
+                      onSearchChange('')
+                    }
+                    inputRef.current?.blur()
+                  }
+                }}
+                className="w-full pl-9 bg-kumo-surface h-9"
+              />
+            </div>
+          </div>
+        )}
+
+        <div className="flex items-center gap-0.5 shrink-0">
           <span className="relative inline-flex">
             <Popover>
               <TooltipProvider>
