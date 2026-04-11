@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react'
+import { useState, useRef, useEffect, useMemo } from 'react'
 import { LayerCard, Button, Tooltip } from '@cloudflare/kumo'
 import { TrashIcon, PlusIcon } from '@phosphor-icons/react'
 import { BookmarkContent } from './BookmarkContent'
@@ -37,6 +37,12 @@ export function CurrentTabCard({
   const [isConfirmingDelete, setIsConfirmingDelete] = useState(false)
   const timerRef = useRef<NodeJS.Timeout | null>(null)
 
+  useEffect(() => {
+    return () => {
+      if (timerRef.current) clearTimeout(timerRef.current)
+    }
+  }, [])
+
   const effectiveBookmark = bookmark || serverBookmark
   const isBookmarked = !!effectiveBookmark
 
@@ -59,6 +65,21 @@ export function CurrentTabCard({
   const description = effectiveBookmark?.description || metadata?.description || ''
   const favicon = effectiveBookmark?.favicon_url || realtimeMetadata?.favicon || null
 
+  const stableDateAdded = useMemo(() => new Date().toISOString(), [])
+
+  const fallbackBookmark = useMemo(
+    () => ({
+      url,
+      title,
+      description,
+      favicon_url: favicon,
+      preview_image_url: null,
+      tag_names: [],
+      date_added: stableDateAdded,
+    }),
+    [url, title, description, favicon, stableDateAdded],
+  )
+
   return (
     <LayerCard>
       <div className="min-h-0 overflow-hidden">
@@ -67,18 +88,7 @@ export function CurrentTabCard({
             <LayerCard.Secondary>Current Tab</LayerCard.Secondary>
             <LayerCard.Primary>
               <div className="flex items-start gap-1">
-                <BookmarkContent
-                  bookmark={{
-                    url,
-                    title,
-                    description,
-                    favicon_url: favicon,
-                    preview_image_url: null,
-                    tag_names: [],
-                    date_added: new Date().toISOString(),
-                  }}
-                  showDate={false}
-                />
+                <BookmarkContent bookmark={fallbackBookmark} showDate={false} />
               </div>
               <div className="pt-4 flex items-center justify-between">
                 <span className="text-xs text-kumo-subtle" aria-hidden="true" />

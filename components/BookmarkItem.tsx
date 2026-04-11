@@ -1,4 +1,4 @@
-import { memo, useState, useRef, useCallback } from 'react'
+import { memo, useState, useRef, useCallback, useEffect } from 'react'
 import { Button, Link, Tooltip, TooltipProvider } from '@cloudflare/kumo'
 import {
   TrayArrowDownIcon,
@@ -29,6 +29,12 @@ export const BookmarkItem = memo(function BookmarkItem({
 }: BookmarkItemProps) {
   const [isConfirmingDelete, setIsConfirmingDelete] = useState(false)
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+
+  useEffect(() => {
+    return () => {
+      if (timerRef.current) clearTimeout(timerRef.current)
+    }
+  }, [])
 
   const handleDeletePress = useCallback(() => {
     if (timerRef.current) clearTimeout(timerRef.current)
