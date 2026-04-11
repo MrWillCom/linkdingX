@@ -106,6 +106,7 @@ export function useBookmarksManager(unreadFilter: UnreadFilter, searchQuery: str
     }) || []
 
   const filteredBookmarks = useMemo(() => {
+    const q = searchQuery ? searchQuery.toLowerCase() : ''
     return bookmarks.filter(b => {
       let matchesUnread = true
       if (unreadFilter === 'unread') matchesUnread = b.unread
@@ -113,7 +114,6 @@ export function useBookmarksManager(unreadFilter: UnreadFilter, searchQuery: str
 
       let matchesSearch = true
       if (searchQuery) {
-        const q = searchQuery.toLowerCase()
         matchesSearch =
           (b.title?.toLowerCase() || '').includes(q) ||
           (b.url?.toLowerCase() || '').includes(q) ||
@@ -165,7 +165,7 @@ export function useBookmarksManager(unreadFilter: UnreadFilter, searchQuery: str
     isValidating,
     isLoadingMore: isLoading || (size > 0 && data && typeof data[size - 1] === 'undefined'),
     hasMore: !data || data[data.length - 1]?.next !== null,
-    loadMore: () => setSize(s => s + 1),
+    loadMore: useCallback(() => setSize(s => s + 1), [setSize]),
     resetSize: useCallback(() => setSize(1), [setSize]),
     mutate,
     error,

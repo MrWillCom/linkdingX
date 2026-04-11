@@ -91,7 +91,7 @@ export function useSyncQueueStatus(): SyncQueueStatus {
     }
   }, [count, syncError])
 
-  const tooltip = useMemo(() => getTooltipText(status, count), [status, count])
+  const tooltip = getTooltipText(status, count)
 
   return {
     status,

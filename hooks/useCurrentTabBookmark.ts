@@ -66,7 +66,7 @@ export function useCurrentTabBookmark() {
     return () => {
       isCancelled = true
     }
-  }, [currentTabUrl, bookmark])
+  }, [currentTabUrl, !!bookmark])
 
   return {
     bookmark,
