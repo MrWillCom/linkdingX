@@ -1,5 +1,10 @@
 import { db } from '@/utils/db'
-import { serverStorage, apiTokenStorage, syncErrorStorage } from '@/utils/storage'
+import {
+  serverStorage,
+  apiTokenStorage,
+  syncErrorStorage,
+  lastSyncTimestampStorage,
+} from '@/utils/storage'
 import { defineBackground } from '#imports'
 
 async function notifyUI(
@@ -105,6 +110,7 @@ type MessageType =
   | 'api-post'
   | 'api-delete'
   | 'get-server-url'
+  | 'check-updates'
 
 interface ApiMessage {
   type: MessageType
@@ -157,10 +163,63 @@ async function handleApiRequest(
   }
 }
 
+async function checkForDataUpdates() {
+  const server = await serverStorage.getValue()
+  const apiToken = await apiTokenStorage.getValue()
+
+  if (!server || !apiToken) return
+
+  try {
+    const url = `${server}/api/bookmarks/?limit=1`
+    const response = await fetch(url, {
+      headers: {
+        Authorization: `Token ${apiToken}`,
+        'Content-Type': 'application/json',
+      },
+    })
+
+    if (response.ok) {
+      await lastSyncTimestampStorage.setValue(Date.now())
+    }
+  } catch (error) {
+    console.warn('[checkForDataUpdates] Error checking server:', error)
+  }
+}
+
 export default defineBackground(() => {
   browser.sidePanel.setPanelBehavior({ openPanelOnActionClick: true })
 
-  browser.runtime.onMessage.addListener((message: ApiMessage, _sender, sendResponse) => {
+  let syncCheckInterval: number | null = null
+
+  async function startPeriodicSyncCheck() {
+    const server = await serverStorage.getValue()
+    if (!server) return
+
+    if (syncCheckInterval) clearInterval(syncCheckInterval)
+
+    syncCheckInterval = window.setInterval(
+      () => {
+        checkForDataUpdates()
+      },
+      5 * 60 * 1000,
+    ) as unknown as number
+
+    checkForDataUpdates()
+  }
+
+  const storageListener = () => {
+    startPeriodicSyncCheck()
+  }
+
+  browser.storage.onChanged.addListener(storageListener)
+
+  startPeriodicSyncCheck()
+
+  const messageListener = (
+    message: ApiMessage,
+    _sender: unknown,
+    sendResponse: (response?: unknown) => void,
+  ) => {
     const { type, url, data, options } = message
 
     if (type === 'get-server-url') {
@@ -177,6 +236,12 @@ export default defineBackground(() => {
             error: error instanceof Error ? error.message : String(error),
           }),
         )
+      return true
+    }
+
+    if (type === 'check-updates') {
+      void checkForDataUpdates()
+      sendResponse({ ok: true })
       return true
     }
 
@@ -198,5 +263,15 @@ export default defineBackground(() => {
         )
       return true
     }
-  })
+
+    return false
+  }
+
+  browser.runtime.onMessage.addListener(messageListener)
+
+  return () => {
+    browser.runtime.onMessage.removeListener(messageListener)
+    browser.storage.onChanged.removeListener(storageListener)
+    if (syncCheckInterval) clearInterval(syncCheckInterval)
+  }
 })

@@ -16,6 +16,7 @@ import {
   ArrowSquareOutIcon,
   GearIcon,
   MagnifyingGlassIcon,
+  TableIcon,
 } from '@phosphor-icons/react'
 import { FilterTabs } from '@/components/FilterTabs'
 import type { UnreadFilter } from '@/components/FilterTabs'
@@ -27,15 +28,6 @@ const STATUS_CONFIG: Record<string, { dotClass: string; Icon: typeof CloudCheckI
   synced: { dotClass: 'bg-kumo-success', Icon: CloudCheckIcon },
   pending: { dotClass: 'bg-kumo-warning', Icon: CloudArrowUpIcon },
   error: { dotClass: 'bg-kumo-danger', Icon: CloudSlashIcon },
-}
-
-export interface BookmarkCheckResponse {
-  bookmark: Bookmark | null
-  metadata: {
-    title: string
-    description: string
-    [key: string]: unknown
-  }
 }
 
 interface BookmarksHeaderProps {
@@ -203,6 +195,14 @@ export function BookmarksHeader({
               aria-hidden="true"
             />
           </span>
+          <Button
+            variant="ghost"
+            shape="square"
+            aria-label="Open bookmarks manager"
+            onClick={() => window.open(browser.runtime.getURL('/manager.html'), '_blank')}
+          >
+            <TableIcon weight="bold" className="w-4 h-4" aria-hidden="true" />
+          </Button>
           {variant === 'default' && (
             <Button
               variant="ghost"
