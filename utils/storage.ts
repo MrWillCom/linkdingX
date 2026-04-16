@@ -28,7 +28,3 @@ export const defaultUnreadStorage = storage.defineItem<boolean>('local:defaultUn
 export const fetchLimitStorage = storage.defineItem<number>('local:fetchLimit', {
   fallback: 50,
 })
-
-export const lastSyncTimestampStorage = storage.defineItem<number>('local:lastSyncTimestamp', {
-  fallback: 0,
-})
