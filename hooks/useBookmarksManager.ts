@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useEffect, useRef } from 'react'
+import { useCallback, useEffect, useMemo } from 'react'
 import useSWRInfinite from 'swr/infinite'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { db } from '@/utils/db'
@@ -35,12 +35,19 @@ export function useBookmarksManager(unreadFilter: UnreadFilter, searchQuery: str
     (idx: number, prev: BookmarksResponse | null) => {
       if (prev && !prev.next) return null
       let url = `/api/bookmarks/?limit=${fetchLimit}&offset=${idx * fetchLimit}`
+
+      if (unreadFilter === 'unread') {
+        url += `&unread=yes`
+      } else if (unreadFilter === 'read') {
+        url += `&unread=no`
+      }
+
       if (searchQuery) {
         url += `&q=${encodeURIComponent(searchQuery)}`
       }
       return url
     },
-    [fetchLimit, searchQuery],
+    [fetchLimit, unreadFilter, searchQuery],
   )
 
   const { data, size, setSize, isLoading, isValidating, mutate, error } =
@@ -112,59 +119,38 @@ export function useBookmarksManager(unreadFilter: UnreadFilter, searchQuery: str
       if (unreadFilter === 'unread') matchesUnread = b.unread
       if (unreadFilter === 'read') matchesUnread = !b.unread
 
-      let matchesSearch = true
       if (searchQuery) {
-        matchesSearch =
-          (b.title?.toLowerCase() || '').includes(q) ||
-          (b.url?.toLowerCase() || '').includes(q) ||
-          (b.description?.toLowerCase() || '').includes(q) ||
-          b.tag_names?.some(t => t.toLowerCase().includes(q)) ||
-          false
+        return (
+          matchesUnread &&
+          ((b.title?.toLowerCase() || '').includes(q) ||
+            (b.url?.toLowerCase() || '').includes(q) ||
+            (b.description?.toLowerCase() || '').includes(q) ||
+            b.tag_names?.some(t => t.toLowerCase().includes(q)) ||
+            false)
+        )
       }
-
-      return matchesUnread && matchesSearch
+      return matchesUnread
     })
   }, [bookmarks, unreadFilter, searchQuery])
 
-  const stateRef = useRef({
-    data,
-    isLoading,
-    isValidating,
-    size,
-    fetchLimit,
-    setSize,
-  })
-  useEffect(() => {
-    stateRef.current = {
-      data,
-      isLoading,
-      isValidating,
-      size,
-      fetchLimit,
-      setSize,
-    }
-  }, [data, isLoading, isValidating, size, fetchLimit, setSize])
+  const hasMore = !data || data[data.length - 1]?.next !== null
 
   useEffect(() => {
-    const { data, isLoading, isValidating, size, fetchLimit, setSize } = stateRef.current
-    const hasMoreData = !data || data[data.length - 1]?.next !== null
-    if (!isLoading && !isValidating && hasMoreData) {
+    if (!isLoading && !isValidating && hasMore) {
       const threshold = (size * fetchLimit) / 2
       if (filteredBookmarks.length < threshold) {
-        const timer = setTimeout(() => {
-          setSize(s => s + 1)
-        }, 100)
+        const timer = setTimeout(() => setSize(s => s + 1), 100)
         return () => clearTimeout(timer)
       }
     }
-  }, [filteredBookmarks.length])
+  }, [filteredBookmarks.length, size, isLoading, isValidating, hasMore, fetchLimit, setSize])
 
   return {
     filteredBookmarks,
     isLoading,
     isValidating,
     isLoadingMore: isLoading || (size > 0 && data && typeof data[size - 1] === 'undefined'),
-    hasMore: !data || data[data.length - 1]?.next !== null,
+    hasMore,
     loadMore: useCallback(() => setSize(s => s + 1), [setSize]),
     resetSize: useCallback(() => setSize(1), [setSize]),
     mutate,
