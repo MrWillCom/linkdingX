@@ -16,8 +16,6 @@
 > 2.  **No Assumptions**: Don't proceed without confirmation and don't make assumptions about user preferences.
 > 3.  **No Inline Questions**: NEVER ask questions inline in your response. ALWAYS use the tool.
 
----
-
 ## Project Overview
 
 This is a **browser extension** built with [WXT](https://wxt.dev/), React 19, TypeScript, Tailwind CSS v4, and Cloudflare Kumo. It uses `pnpm` as the package manager, `dexie` for local storage, and `swr` for data fetching.
@@ -26,12 +24,12 @@ This is a **browser extension** built with [WXT](https://wxt.dev/), React 19, Ty
 
 ```
 {rootDir}/
-   entrypoints/       # Extension entry points
-      sidepanel/      # Sidepanel UI (primary interface)
-      home/           # Full-viewport bookmarks page
-      options/        # Standalone settings page
-      background.ts   # Background script (sync queue, API proxy)
-   components/        # Auto-imported React components
+   entrypoints/              # Extension entry points
+      sidepanel/             # Sidepanel UI (primary interface)
+      home/                  # Full-viewport bookmarks page
+      options/               # Standalone settings page
+      background.ts          # Background script (sync queue, API proxy)
+   components/               # Auto-imported React components
       BookmarkContent.tsx
       BookmarkFavicon.tsx
       BookmarkItem.tsx
@@ -43,31 +41,39 @@ This is a **browser extension** built with [WXT](https://wxt.dev/), React 19, Ty
       FilterTabs.tsx
       SettingsForm.tsx
       SetupGuide.tsx
-   utils/             # Auto-imported utility functions
+      BookmarkItem.module.css    # CSS module for bookmark styling
+   utils/                    # Auto-imported utility functions
       bookmarkService.ts
       cn.ts
       db.ts
       storage.ts
       types.ts
-   hooks/             # Auto-imported React hooks
+   hooks/                    # Auto-imported React hooks
       useBookmarksManager.ts
       useCurrentTabBookmark.ts
       useCurrentTabTracker.ts
       useSetup.ts
       useSyncNotifications.ts
       useSyncQueueStatus.ts
-   assets/            # Global CSS (globals.css), icons (icon.svg)
-   public/            # Static assets (empty)
-   docs/              # Design docs and implementation plans
-   screenshots/       # Extension screenshots
-   .agents/skills/    # Project-specific AI skills
-   wxt.config.ts      # WXT configuration
-   web-ext.config.ts  # Firefox web-ext configuration
-   opencode.json      # OpenCode agent permissions
+   assets/                   # Global CSS (globals.css), icons (icon.svg)
+   public/                   # Static public assets
+   docs/                     # Design docs and implementation plans
+      plans/                 # Dated design/implementation documents
+   screenshots/              # Extension screenshots
+   .agents/skills/           # Project-specific AI skills
+   .github/workflows/        # CI/CD pipeline (release.yml)
+   .vscode/                  # VS Code workspace settings
+   wxt.config.ts             # WXT configuration
+   web-ext.config.ts         # Firefox web-ext configuration
+   tsconfig.json             # TypeScript configuration (extends WXT)
+   .oxfmtrc.json             # Oxide formatter configuration
+   release-please-config.json    # release-please configuration
+   .release-please-manifest.json # Current version manifest
+   pnpm-workspace.yaml       # pnpm workspace configuration
+   opencode.json             # OpenCode agent permissions
+   skills-lock.json          # Locked agent skill hashes
    package.json
 ```
-
----
 
 ## Build & Verification
 
@@ -83,8 +89,6 @@ This is a **browser extension** built with [WXT](https://wxt.dev/), React 19, Ty
 | `pnpm fmt:check`     | **CRITICAL**: Check code formatting     |
 
 > **Testing**: No test framework is currently configured.
-
----
 
 ## Code Style & Best Practices
 
@@ -122,7 +126,9 @@ Follow the rules in `.agents/skills/vercel-react-best-practices/AGENTS.md`:
 - **Derived State**: Derive state during render instead of using `useEffect`.
 - **Error Handling**: Wrap `localStorage` and async operations in `try-catch`.
 
----
+### CSS Modules
+
+Use `*.module.css` for component-scoped styles. Import as `import styles from './Component.module.css'` and reference classes via `styles.className`.
 
 ### Hooks
 
@@ -134,8 +140,6 @@ Follow the rules in `.agents/skills/vercel-react-best-practices/AGENTS.md`:
 | `useCurrentTabTracker`  | Tracks the active browser tab's URL and title in real-time             |
 | `useSyncNotifications`  | Listens for sync notifications from the background script              |
 | `useSyncQueueStatus`    | Reports whether the sync queue has pending operations or errors        |
-
----
 
 ## UI & Styling (Kumo + Tailwind v4)
 
@@ -157,12 +161,14 @@ Follow the rules in `.agents/skills/vercel-react-best-practices/AGENTS.md`:
 - **Group Modifier**: Add `group` ONLY to the interactive element (e.g., button), NOT the entire list row, to scope hover effects.
 - **Clickable Area**: Use `p-2` on buttons for larger clickable areas but keep visual elements (inner divs) smaller.
 
----
+### Toast Notifications
+
+Use the `Toasty` provider (from Kumo) in app root renderers to display sync notifications. `useSyncNotifications` listens for `sync-notification` messages from the background script and shows them as toast messages.
 
 ## WXT Framework Specifics
 
 - **Storage**: Use `storage.defineItem<T>('local:key')`.
-- **Entrypoints**: Defined in `entrypoints/` (background, sidepanel, home, options, content).
+- **Entrypoints**: Defined in `entrypoints/` (background, sidepanel, home, options).
 - **Manifest**: Managed in `wxt.config.ts`.
 
 ### Offline-First & Instant UI
@@ -172,7 +178,13 @@ Follow the rules in `.agents/skills/vercel-react-best-practices/AGENTS.md`:
 - **Immediate Feedback**: Never hide UI elements (like a "Current Tab" card) while waiting for server verification. Show the component immediately using browser fallbacks (e.g., `browser.tabs` title/favicon).
 - **Fallback Resilience**: Components must gracefully handle the absence of server metadata by falling back to local/realtime data without showing "loading" flickers or disappearing.
 
----
+### Conflict Resolution
+
+When syncing server data to IndexedDB, respect pending operations:
+
+- Skip bookmarks with entries in the `sync_queue` table.
+- Skip bookmarks where `_local_modified_at` is newer than the server's `date_modified`.
+- This prevents local-first mutations from being overwritten by stale server responses.
 
 ## Conventional Commits
 
@@ -235,7 +247,15 @@ This project uses [release-please](https://github.com/googleapis/release-please)
 
 **Required repository settings**: Settings → Actions → General → "Allow GitHub Actions to create and approve pull requests"
 
----
+## CI/CD
+
+The `.github/workflows/release.yml` pipeline runs on every push to `main`:
+
+1. Format check (`pnpm fmt:check`)
+2. Type check (`pnpm compile`)
+3. Build Chrome extension (`pnpm build`)
+4. Build Firefox extension (`pnpm build:firefox`)
+5. release-please creates Release PRs and GitHub Releases with ZIP artifacts
 
 ## Lessons Learned & Known Issues
 
