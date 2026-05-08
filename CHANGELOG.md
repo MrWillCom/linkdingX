@@ -1,5 +1,28 @@
 # Changelog
 
+## [1.2.0](https://github.com/MrWillCom/linkdingX/compare/v1.1.0...v1.2.0) (2026-05-08)
+
+
+### Features
+
+* **data:** add search query filtering to bookmarks manager ([489e84c](https://github.com/MrWillCom/linkdingX/commit/489e84c72e4c70ac1ac16390433e269a7c736ad9))
+* **manager:** add bookmarks manager entrypoint with bulk operations ([5829515](https://github.com/MrWillCom/linkdingX/commit/582951561f06fed2a4bab009364648597a544e66))
+* **ui:** add loading and empty states for search results ([d0cd1ed](https://github.com/MrWillCom/linkdingX/commit/d0cd1ed9121920a2f63c3f053311b492865a61e2))
+* **ui:** implement morphing search input in header ([fa13cae](https://github.com/MrWillCom/linkdingX/commit/fa13cae3206270733f78353164976a0c10f244fb))
+
+
+### Bug Fixes
+
+* **hooks:** restore recursive auto-pagination and fix concurrent request bug ([94d4d85](https://github.com/MrWillCom/linkdingX/commit/94d4d8596996c7ab71e3ea62bc98f6b7be5b4cc9))
+* resolve sync pipeline bugs and improve reliability ([7d7c4ad](https://github.com/MrWillCom/linkdingX/commit/7d7c4ad0aa586829f2ab3f37b13c01a61530c13a))
+
+
+### Performance Improvements
+
+* **components:** optimize scroll listeners and observer refs ([83227a5](https://github.com/MrWillCom/linkdingX/commit/83227a5962e78c2ed9974e27799a37668cf4e3de))
+* **components:** prevent timer memory leaks and stabilize props ([29f3a12](https://github.com/MrWillCom/linkdingX/commit/29f3a1268574732fa691a82ed5e4770d882e95d4))
+* **hooks:** optimize re-renders and computations ([7a97ab8](https://github.com/MrWillCom/linkdingX/commit/7a97ab80a682f48b0a955cfaa03ce86ada334767))
+
 ## [1.1.0](https://github.com/MrWillCom/linkdingX/compare/v1.0.0...v1.1.0) (2026-04-06)
 
 
