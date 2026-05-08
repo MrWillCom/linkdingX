@@ -86,30 +86,16 @@ export function useBookmarksManager(unreadFilter: UnreadFilter, searchQuery: str
           return true
         })
 
-        const existing = await db.bookmarks.orderBy('date_added').reverse().limit(1).toArray()
+        if (filtered.length === 0) return
 
-        if (
-          existing.length > 0 &&
-          existing[0].id === filtered[0]?.id &&
-          existing[0].date_modified === filtered[0]?.date_modified &&
-          filtered.length <= existing.length &&
-          localLocks.length === 0
-        ) {
-          return
-        }
-
-        if (filtered.length > 0) {
-          await db.bookmarks.bulkPut(filtered)
-        }
+        await db.bookmarks.bulkPut(filtered)
       },
     })
 
   const bookmarks =
     useLiveQuery(async () => {
       const all = await db.bookmarks.orderBy('date_added').reverse().toArray()
-      const pendingDeletions = await db.sync_queue.where('action').equals('delete').toArray()
-      const deletionIds = new Set(pendingDeletions.map(op => op.bookmark_id))
-      return all.filter(b => !deletionIds.has(b.id))
+      return all.filter(b => b._sync_status !== 'pending_delete')
     }) || []
 
   const filteredBookmarks = useMemo(() => {

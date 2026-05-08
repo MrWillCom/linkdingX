@@ -29,7 +29,7 @@ export function useCurrentTabBookmark() {
     setServerData(null)
     setIsLoading(true)
 
-    if (!currentTabUrl || bookmark) {
+    if (!currentTabUrl || bookmark !== undefined) {
       setIsLoading(false)
       return
     }
@@ -66,7 +66,7 @@ export function useCurrentTabBookmark() {
     return () => {
       isCancelled = true
     }
-  }, [currentTabUrl, !!bookmark])
+  }, [currentTabUrl, bookmark !== undefined])
 
   return {
     bookmark,

@@ -130,7 +130,7 @@ export default function SettingsForm({ onSaved, onCancel, showCancel = true }: S
   const onSave = async () => {
     dispatch({ type: 'SET_ERROR', payload: '' })
 
-    const trimmedServer = state.server.trim()
+    const trimmedServer = state.server.trim().replace(/\/+$/, '')
     const trimmedApiToken = state.apiToken.trim()
 
     if (!trimmedServer || !trimmedApiToken) {
@@ -167,7 +167,6 @@ export default function SettingsForm({ onSaved, onCancel, showCancel = true }: S
         fetchLimitStorage.setValue(state.fetchLimit),
       ])
 
-      dispatch({ type: 'SET_LOADING', payload: false })
       toastManager.add({
         title: 'Settings saved successfully',
         variant: 'default',
@@ -180,6 +179,8 @@ export default function SettingsForm({ onSaved, onCancel, showCancel = true }: S
         payload: errorMsg,
       })
       toastManager.add({ title: errorMsg, variant: 'error' })
+    } finally {
+      dispatch({ type: 'SET_LOADING', payload: false })
     }
   }
 
@@ -194,13 +195,24 @@ export default function SettingsForm({ onSaved, onCancel, showCancel = true }: S
         return
       }
 
-      await Promise.all(tables.map(table => (db.table(table) as any).clear()))
+      const tableMap: Record<string, () => Promise<void>> = {
+        bookmarks: () => db.bookmarks.clear(),
+        sync_queue: async () => {
+          await db.sync_queue.clear()
+          await db.bookmarks.where('_sync_status').equals('pending_delete').delete()
+        },
+      }
+      await Promise.all(tables.map(table => tableMap[table]()))
 
       toastManager.add({
         title: 'Local data cleaned successfully',
         variant: 'default',
       })
       setIsModalOpen(false)
+
+      if (cleanBookmarks) {
+        browser.runtime.sendMessage({ type: 'sync-request' }).catch(() => {})
+      }
     } catch (err) {
       console.error('Failed to clean local data:', err)
       toastManager.add({

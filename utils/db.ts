@@ -1,6 +1,8 @@
 import Dexie, { type EntityTable } from 'dexie'
 import type { Bookmark } from '@/utils/types'
 
+export type SyncStatus = 'synced' | 'pending' | 'pending_delete' | 'error'
+
 export interface SyncOperation {
   id?: number
   action: 'create' | 'update' | 'delete'
@@ -10,7 +12,10 @@ export interface SyncOperation {
 }
 
 const db = new Dexie('LinkdingDB') as Dexie & {
-  bookmarks: EntityTable<Bookmark & { _sync_status?: string; _local_modified_at?: string }, 'id'>
+  bookmarks: EntityTable<
+    Bookmark & { _sync_status?: SyncStatus; _local_modified_at?: string },
+    'id'
+  >
   sync_queue: EntityTable<SyncOperation, 'id'>
 }
 

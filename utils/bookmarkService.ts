@@ -15,7 +15,7 @@ export const bookmarkService = {
       payload: { unread: newUnread },
       timestamp: Date.now(),
     })
-    browser.runtime.sendMessage({ type: 'sync-request' })
+    browser.runtime.sendMessage({ type: 'sync-request' }).catch(() => {})
   },
 
   async deleteBookmark(id: number) {
@@ -29,7 +29,7 @@ export const bookmarkService = {
       payload: {},
       timestamp: Date.now(),
     })
-    browser.runtime.sendMessage({ type: 'sync-request' })
+    browser.runtime.sendMessage({ type: 'sync-request' }).catch(() => {})
   },
 
   async addBookmark(bookmark: Bookmark) {
@@ -49,6 +49,6 @@ export const bookmarkService = {
       payload: { is_archived: newArchived },
       timestamp: Date.now(),
     })
-    browser.runtime.sendMessage({ type: 'sync-request' })
+    browser.runtime.sendMessage({ type: 'sync-request' }).catch(() => {})
   },
 }

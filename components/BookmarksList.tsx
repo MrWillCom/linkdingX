@@ -95,15 +95,6 @@ export default function BookmarksList({ variant = 'default' }: BookmarksListProp
     const el = containerRef.current
     if (!el) return
     setIsScrolled(el.scrollTop > 0)
-
-    const { isLoadingMore, hasMore, loadMore } = stateRef.current
-    if (hasMore && !isLoadingMore) {
-      const { scrollTop, scrollHeight, clientHeight } = el
-      if (scrollHeight - scrollTop - clientHeight < 400) {
-        hasTriggeredLoadRef.current = true
-        loadMore()
-      }
-    }
   }, [])
 
   useEffect(() => {
