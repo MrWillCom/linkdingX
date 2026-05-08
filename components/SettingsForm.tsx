@@ -17,7 +17,7 @@ import {
   defaultUnreadStorage,
   fetchLimitStorage,
 } from '@/utils/storage'
-import { db } from '@/utils/db'
+import { clearBookmarks, clearSyncQueue, clearAll, triggerRefetch } from '@/utils/cache'
 
 interface SettingsState {
   isLoading: boolean
@@ -186,23 +186,18 @@ export default function SettingsForm({ onSaved, onCancel, showCancel = true }: S
 
   const handleClean = async () => {
     try {
-      const tables = []
-      if (cleanBookmarks) tables.push('bookmarks')
-      if (cleanSyncQueue) tables.push('sync_queue')
-
-      if (tables.length === 0) {
+      if (!cleanBookmarks && !cleanSyncQueue) {
         toastManager.add({ title: 'No data selected to clean' })
         return
       }
 
-      const tableMap: Record<string, () => Promise<void>> = {
-        bookmarks: () => db.bookmarks.clear(),
-        sync_queue: async () => {
-          await db.sync_queue.clear()
-          await db.bookmarks.where('_sync_status').equals('pending_delete').delete()
-        },
+      if (cleanBookmarks && cleanSyncQueue) {
+        await clearAll()
+      } else if (cleanBookmarks) {
+        await clearBookmarks()
+      } else if (cleanSyncQueue) {
+        await clearSyncQueue()
       }
-      await Promise.all(tables.map(table => tableMap[table]()))
 
       toastManager.add({
         title: 'Local data cleaned successfully',
@@ -211,7 +206,7 @@ export default function SettingsForm({ onSaved, onCancel, showCancel = true }: S
       setIsModalOpen(false)
 
       if (cleanBookmarks) {
-        browser.runtime.sendMessage({ type: 'sync-request' }).catch(() => {})
+        await triggerRefetch()
       }
     } catch (err) {
       console.error('Failed to clean local data:', err)
