@@ -3,6 +3,7 @@ import useSWRInfinite from 'swr/infinite'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { db } from '@/utils/db'
 import { serverStorage, fetchLimitStorage } from '@/utils/storage'
+import { hydrateBookmarks } from '@/utils/cache'
 import type { UnreadFilter } from '@/components/FilterTabs'
 import type { Bookmark } from '@/utils/types'
 
@@ -24,7 +25,7 @@ async function fetcher(key: string): Promise<BookmarksResponse> {
     url: `${server}${key}`,
   })
 
-  if (!response.ok) throw new Error(response.data?.detail || 'Fetch failed')
+  if (!response.ok) throw new Error(response.error || response.data?.detail || 'Fetch failed')
   return response.data as BookmarksResponse
 }
 
@@ -57,38 +58,7 @@ export function useBookmarksManager(unreadFilter: UnreadFilter, searchQuery: str
       refreshInterval: 60000,
       onSuccess: async data => {
         const all = data.flatMap(p => p.results)
-        if (all.length === 0) return
-
-        const pendingQueue = await db.sync_queue.toArray()
-        const pendingIds = new Set(pendingQueue.map(op => op.bookmark_id))
-
-        const localLocks = await db.bookmarks
-          .where('_local_modified_at')
-          .notEqual('')
-          .or('_sync_status')
-          .equals('pending')
-          .toArray()
-        const lockMap = new Map(localLocks.map(b => [b.id, b._local_modified_at!]))
-        const pendingStatusIds = new Set(localLocks.map(b => b.id))
-
-        const filtered = all.filter(serverBookmark => {
-          if (pendingIds.has(serverBookmark.id)) return false
-          if (pendingStatusIds.has(serverBookmark.id)) return false
-
-          const localLockTime = lockMap.get(serverBookmark.id)
-          if (localLockTime) {
-            const serverTime = new Date(serverBookmark.date_modified).getTime()
-            const lockTime = new Date(localLockTime).getTime()
-            if (serverTime < lockTime) {
-              return false
-            }
-          }
-          return true
-        })
-
-        if (filtered.length === 0) return
-
-        await db.bookmarks.bulkPut(filtered)
+        await hydrateBookmarks(all)
       },
     })
 
@@ -130,6 +100,16 @@ export function useBookmarksManager(unreadFilter: UnreadFilter, searchQuery: str
       }
     }
   }, [filteredBookmarks.length, size, isLoading, isValidating, hasMore, fetchLimit, setSize])
+
+  useEffect(() => {
+    const handleMessage = (message: { type?: string }) => {
+      if (message.type === 'refetch-request') {
+        mutate()
+      }
+    }
+    browser.runtime.onMessage.addListener(handleMessage)
+    return () => browser.runtime.onMessage.removeListener(handleMessage)
+  }, [mutate])
 
   return {
     filteredBookmarks,

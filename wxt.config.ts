@@ -7,7 +7,7 @@ export default defineConfig({
   vite: () => ({ plugins: [tailwindcss()] }),
   manifest: {
     name: 'linkdingX',
-    permissions: ['storage', 'tabs'],
+    permissions: ['storage', 'tabs', 'alarms'],
     host_permissions: ['https://*/*'],
   },
   autoIcons: {

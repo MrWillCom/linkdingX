@@ -5,7 +5,7 @@ export type SyncStatus = 'synced' | 'pending' | 'pending_delete' | 'error'
 
 export interface SyncOperation {
   id?: number
-  action: 'create' | 'update' | 'delete'
+  action: 'update' | 'delete'
   bookmark_id: number
   payload: Partial<Bookmark>
   timestamp: number
