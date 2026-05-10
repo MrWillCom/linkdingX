@@ -10,7 +10,9 @@ export default function SetupGuide() {
     <div className="flex h-screen items-center justify-center p-4">
       <LayerCard className="w-full max-w-96">
         <LayerCard.Secondary>
-          <Text variant="heading3">Welcome to linkdingX</Text>
+          <Text variant="heading3" as="h3">
+            Welcome to linkdingX
+          </Text>
         </LayerCard.Secondary>
         <LayerCard.Primary>
           <div className="flex flex-col gap-4">
