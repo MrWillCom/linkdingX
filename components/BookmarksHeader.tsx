@@ -101,9 +101,11 @@ export function BookmarksHeader({
       <div className="flex items-center h-9 gap-0.5">
         <FilterTabs selectedKey={unreadFilter} onSelectionChange={onUnreadFilterChange} />
 
+        <div className="flex-1" />
+
         {variant === 'expanded' && (
           <div
-            className={`relative ml-auto h-9 transition-[width] duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] ${
+            className={`relative h-9 transition-[width] duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] ${
               isSearchExpanded ? 'w-64' : 'w-9'
             }`}
           >
