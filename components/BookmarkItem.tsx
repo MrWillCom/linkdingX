@@ -61,7 +61,7 @@ export const BookmarkItem = memo(function BookmarkItem({
           e.stopPropagation()
           onToggleUnread(bookmark.id, bookmark.unread)
         }}
-        className={`relative z-10 group/button shrink-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-kumo-ring cursor-pointer p-2 -mt-0.5 -ml-1.5 -mr-0.5 rounded-full hover:bg-kumo-recessed active:bg-kumo-tint transition-colors ${styles.dimAsset}`}
+        className={`relative z-10 group/button shrink-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-kumo-ring p-2 -mt-0.5 -ml-1.5 -mr-0.5 rounded-full hover:bg-kumo-recessed active:bg-kumo-tint transition-colors ${styles.dimAsset}`}
         aria-label={bookmark.unread ? 'Mark as read' : 'Mark as unread'}
       >
         <div
@@ -86,7 +86,7 @@ export const BookmarkItem = memo(function BookmarkItem({
         tagClassName={styles.dimAsset}
         previewClassName={styles.dimAsset}
       />
-      <div className="absolute bottom-1 right-2 z-10 flex items-center opacity-0 group-hover:opacity-100 transition-opacity">
+      <div className="absolute bottom-1 right-2 z-10 flex items-center opacity-0 group-hover:opacity-100 transition-opacity select-none">
         <TooltipProvider>
           <Tooltip content={bookmark.is_archived ? 'Unarchive' : 'Archive'} asChild side="top">
             <Button

@@ -90,7 +90,7 @@ export function CurrentTabCard({
               <div className="flex items-start gap-1">
                 <BookmarkContent bookmark={fallbackBookmark} showDate={false} />
               </div>
-              <div className="pt-4 flex items-center justify-between">
+              <div className="pt-4 flex items-center justify-between select-none">
                 <span className="text-xs text-kumo-subtle" aria-hidden="true" />
                 <Button
                   variant="primary"
@@ -112,7 +112,7 @@ export function CurrentTabCard({
               <div className="flex items-start gap-1">
                 <BookmarkContent bookmark={effectiveBookmark} />
               </div>
-              <div className="pt-4 flex items-center justify-between">
+              <div className="pt-4 flex items-center justify-between select-none">
                 <div className="text-xs text-kumo-subtle" aria-hidden="true" />
                 <div className="flex items-center gap-1">
                   <Tooltip content="Click again to confirm delete" disabled={!isConfirmingDelete}>

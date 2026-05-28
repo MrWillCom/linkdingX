@@ -32,3 +32,39 @@ h5,
 h6 {
   scroll-margin-top: 1rem;
 }
+
+/* Native app feel: buttons and controls use default cursor, not pointer */
+button,
+[role='button'],
+[role='tab'],
+[role='switch'],
+[role='radio'],
+[role='checkbox'] {
+  cursor: default !important;
+}
+
+/* Disabled controls show not-allowed cursor */
+:disabled,
+[aria-disabled='true'] {
+  cursor: not-allowed !important;
+}
+
+/* Actual hyperlinks keep pointer cursor */
+a[href],
+[role='link'] {
+  cursor: pointer;
+}
+
+/* UI chrome should not be text-selectable */
+button,
+[role='button'],
+[role='tab'],
+[role='switch'],
+[role='radio'],
+[role='checkbox'],
+[role='menuitem'],
+[role='option'] {
+  user-select: none;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+}

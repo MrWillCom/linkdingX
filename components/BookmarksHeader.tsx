@@ -98,7 +98,7 @@ export function BookmarksHeader({
 
   return (
     <div className="sticky top-0 z-20 bg-kumo-base px-2 py-2 border-x -mx-px border-b border-kumo-line rounded-b-xl">
-      <div className="flex items-center h-9 gap-0.5">
+      <div className="flex items-center h-9 gap-0.5 select-none">
         <FilterTabs selectedKey={unreadFilter} onSelectionChange={onUnreadFilterChange} />
 
         <div className="flex-1" />
