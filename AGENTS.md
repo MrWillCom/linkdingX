@@ -77,16 +77,17 @@ This is a **browser extension** built with [WXT](https://wxt.dev/), React 19, Ty
 
 ## Build & Verification
 
-| Command              | Description                             |
-| -------------------- | --------------------------------------- |
-| `pnpm dev`           | Start development server (Chrome)       |
-| `pnpm dev:firefox`   | Start development server (Firefox)      |
-| `pnpm build`         | Build production extension (Chrome)     |
-| `pnpm build:firefox` | Build production extension (Firefox)    |
-| `pnpm zip`           | Package extension for distribution      |
-| `pnpm compile`       | **CRITICAL**: Run TypeScript type check |
-| `pnpm fmt`           | **CRITICAL**: Format code with oxfmt    |
-| `pnpm fmt:check`     | **CRITICAL**: Check code formatting     |
+| Command              | Description                                  |
+| -------------------- | -------------------------------------------- |
+| `pnpm dev`           | Start development server (Chrome)            |
+| `pnpm dev:firefox`   | Start development server (Firefox)           |
+| `pnpm build`         | Build production extension (Chrome)          |
+| `pnpm build:firefox` | Build production extension (Firefox)         |
+| `pnpm zip`           | Package extension for distribution (Chrome)  |
+| `pnpm zip:firefox`   | Package extension for distribution (Firefox) |
+| `pnpm compile`       | **CRITICAL**: Run TypeScript type check      |
+| `pnpm fmt`           | **CRITICAL**: Format code with oxfmt         |
+| `pnpm fmt:check`     | **CRITICAL**: Check code formatting          |
 
 > **Testing**: No test framework is currently configured.
 
@@ -227,6 +228,12 @@ feat(api)!: change authentication endpoint
 BREAKING CHANGE: API now requires Bearer token in Authorization header
 ```
 
+> **Breaking Change Criteria**
+>
+> Only mark a commit as breaking when it **directly breaks the experience of end users or external consumers** of the project. Internal changes — such as dependency upgrades, internal refactors, or adjustments to library APIs that do not surface to users — **MUST NOT** use the `!` marker or a `BREAKING CHANGE:` footer, even if they require significant internal rework.
+>
+> release-please uses these markers to bump the major version. Mislabeling an internal change as breaking will cause the CI pipeline to generate an incorrect major release. For example, upgrading `@cloudflare/kumo` to v2 and adapting internal component calls should be `feat(deps): upgrade @cloudflare/kumo to v2`, not `feat(deps)!:`.
+
 ### Examples
 
 ```
@@ -249,13 +256,24 @@ This project uses [release-please](https://github.com/googleapis/release-please)
 
 ## CI/CD
 
-The `.github/workflows/release.yml` pipeline runs on every push to `main`:
+The `.github/workflows/release.yml` pipeline has two jobs:
+
+### `checks`
+
+Runs on every push to `main` and on every pull request targeting `main`:
 
 1. Format check (`pnpm fmt:check`)
 2. Type check (`pnpm compile`)
 3. Build Chrome extension (`pnpm build`)
 4. Build Firefox extension (`pnpm build:firefox`)
-5. release-please creates Release PRs and GitHub Releases with ZIP artifacts
+
+### `release-please`
+
+Runs only on pushes to `main`:
+
+1. Analyzes conventional commits and opens/updates a Release PR.
+2. When the Release PR is merged, creates a git tag and GitHub Release.
+3. Builds distribution ZIPs (`pnpm zip` and `pnpm zip:firefox`) and uploads them to the GitHub Release.
 
 ## Lessons Learned & Known Issues
 
@@ -277,3 +295,7 @@ const hasTriggeredLoadRef = useRef(false)
 ### Dependency Side-effects
 
 Installing new packages with `pnpm` can occasionally remove indirect dependencies. Always verify `package.json` after installations.
+
+### Breaking Change Labeling
+
+Only label a commit as breaking when it directly affects end users or public APIs. Internal changes such as dependency upgrades that require internal code adjustments but do not change user-facing behavior should NOT use `!` or `BREAKING CHANGE:` markers, because release-please will incorrectly bump the major version. See the [Breaking Changes](#breaking-changes) section for the full criteria.
