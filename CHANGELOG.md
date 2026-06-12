@@ -1,5 +1,17 @@
 # Changelog
 
+## [1.3.0](https://github.com/MrWillCom/linkdingX/compare/v1.2.0...v1.3.0) (2026-06-12)
+
+
+### Features
+
+* **deps:** upgrade @cloudflare/kumo to v2 ([ea64671](https://github.com/MrWillCom/linkdingX/commit/ea6467137fcc6d52cfc78aab5dca619c85fe6745))
+
+
+### Bug Fixes
+
+* **sidepanel:** right-align icon buttons when search is hidden ([7746785](https://github.com/MrWillCom/linkdingX/commit/7746785f70c934632b044188ef319efa1a367a47))
+
 ## [1.2.0](https://github.com/MrWillCom/linkdingX/compare/v1.1.0...v1.2.0) (2026-05-08)
 
 
