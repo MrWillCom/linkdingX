@@ -53,7 +53,7 @@ export const BookmarkItem = memo(function BookmarkItem({
     <div
       data-dimmed={isDimmed}
       data-archived={bookmark.is_archived}
-      className={`group relative flex items-start gap-1 py-2 px-2 hover:bg-kumo-elevated transition-colors ${styles.bookmarkItem}`}
+      className={`group relative flex items-start gap-1 py-2 px-2 hover:bg-kumo-elevated rounded-xl transition-colors ${styles.bookmarkItem}`}
       style={{ contentVisibility: 'auto' }}
     >
       <button

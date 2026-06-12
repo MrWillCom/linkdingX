@@ -36,7 +36,7 @@ export const BookmarksInfiniteList = memo(function BookmarksInfiniteList({
   return (
     <div className="flex flex-col">
       <div
-        className={`flex flex-col divide-y divide-kumo-line ${
+        className={`flex flex-col divide-kumo-line ${
           filteredBookmarks.length > 0 ? 'border-b border-kumo-line' : ''
         }`}
       >
