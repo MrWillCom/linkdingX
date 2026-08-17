@@ -1,14 +1,5 @@
 import { useState, useRef } from 'react'
-import {
-  Button,
-  Popover,
-  Tooltip,
-  TooltipProvider,
-  Text,
-  Surface,
-  Input,
-  Loader,
-} from '@cloudflare/kumo'
+import { Button, Popover, Tooltip, TooltipProvider, Input, Loader } from '@cloudflare/kumo'
 import {
   CloudCheckIcon,
   CloudSlashIcon,
@@ -23,7 +14,7 @@ import { CurrentTabCard } from '@/components/CurrentTabCard'
 import { useSyncQueueStatus } from '@/hooks/useSyncQueueStatus'
 import type { Bookmark } from '@/utils/types'
 
-const STATUS_CONFIG: Record<string, { dotClass: string; Icon: typeof CloudCheckIcon }> = {
+const STATUS_CONFIG = {
   synced: { dotClass: 'bg-kumo-success', Icon: CloudCheckIcon },
   pending: { dotClass: 'bg-kumo-warning', Icon: CloudArrowUpIcon },
   error: { dotClass: 'bg-kumo-danger', Icon: CloudSlashIcon },
@@ -88,11 +79,7 @@ export function BookmarksHeader({
 }: BookmarksHeaderProps) {
   const isVisible = !!currentTabUrl
   const { status, tooltip, items } = useSyncQueueStatus()
-  const fallbackStatus = STATUS_CONFIG.error ?? {
-    dotClass: 'bg-kumo-danger',
-    Icon: CloudSlashIcon,
-  }
-  const config = STATUS_CONFIG[status] ?? fallbackStatus
+  const config = STATUS_CONFIG[status]
   const statusDotClass = config.dotClass
   const StatusIcon = config.Icon
 

@@ -50,17 +50,24 @@ export default function BookmarksList({ variant = 'default' }: BookmarksListProp
 
   useEffect(() => {
     const timer = setTimeout(() => {
-      setDebouncedSearchQuery(prev => {
-        if (prev !== searchQuery) {
-          resetPagination()
-          return searchQuery
-        }
-        return prev
-      })
+      setDebouncedSearchQuery(searchQuery)
     }, 500)
 
     return () => clearTimeout(timer)
-  }, [searchQuery, resetPagination])
+  }, [searchQuery])
+
+  const skipNextPaginationResetRef = useRef(true)
+  useEffect(() => {
+    if (skipNextPaginationResetRef.current) {
+      skipNextPaginationResetRef.current = false
+      return
+    }
+    resetPagination()
+  }, [debouncedSearchQuery, resetPagination])
+
+  useEffect(() => {
+    if (error) setShowLoadMoreFallback(true)
+  }, [error])
 
   const handleFilterChange = useCallback(
     (filter: UnreadFilter) => {
@@ -240,7 +247,13 @@ export default function BookmarksList({ variant = 'default' }: BookmarksListProp
         {error ? (
           <div className="p-4 flex flex-col items-center gap-4">
             <p className="text-kumo-danger">Failed to load bookmarks: {error.message}</p>
-            <Button variant="secondary" onClick={() => mutateBookmarks()}>
+            <Button
+              variant="secondary"
+              onClick={() => {
+                setShowLoadMoreFallback(true)
+                mutateBookmarks()
+              }}
+            >
               Retry
             </Button>
           </div>

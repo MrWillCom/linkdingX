@@ -18,6 +18,11 @@ async function processQueueWithMutex() {
       await processSyncQueue()
     } while (needsResync)
   } finally {
+    try {
+      await expireStale()
+    } catch (error) {
+      console.warn('[background] expireStale error:', error)
+    }
     syncInProgress = false
   }
 }
@@ -30,15 +35,16 @@ export default defineBackground(() => {
   }
 
   globalThis.addEventListener('online', () => {
-    processQueueWithMutex()
+    processQueueWithMutex().catch(error => {
+      console.warn('[background] sync error:', error)
+    })
   })
 
   browser.alarms.create('sync-retry', { periodInMinutes: 5 })
   browser.alarms.onAlarm.addListener(alarm => {
     if (alarm.name === 'sync-retry') {
-      processQueueWithMutex()
-      expireStale().catch(error => {
-        console.warn('[background] expireStale error:', error)
+      processQueueWithMutex().catch(error => {
+        console.warn('[background] sync error:', error)
       })
     }
   })
