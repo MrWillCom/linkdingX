@@ -1,0 +1,16 @@
+{
+  "changelog": ["@changesets/changelog-github", { "repo": "MrWillCom/linkdingX" }],
+  "commit": false,
+  "fixed": [],
+  "linked": [],
+  "access": "restricted",
+  "baseBranch": "main",
+  "updateInternalDependencies": "patch",
+  "ignore": [],
+  "privatePackages": {
+    "version": true,
+    "tag": true
+  },
+  "prettier": false,
+  "format": "oxfmt"
+}

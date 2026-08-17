@@ -61,14 +61,13 @@ This is a **browser extension** built with [WXT](https://wxt.dev/), React 19, Ty
       plans/                 # Dated design/implementation documents
    screenshots/              # Extension screenshots
    .agents/skills/           # Project-specific AI skills
+   .changeset/               # Changesets versioning and changelog files
    .github/workflows/        # CI/CD pipeline (release.yml)
    .vscode/                  # VS Code workspace settings
    wxt.config.ts             # WXT configuration
    web-ext.config.ts         # Firefox web-ext configuration
    tsconfig.json             # TypeScript configuration (extends WXT)
    .oxfmtrc.json             # Oxide formatter configuration
-   release-please-config.json    # release-please configuration
-   .release-please-manifest.json # Current version manifest
    pnpm-workspace.yaml       # pnpm workspace configuration
    opencode.json             # OpenCode agent permissions
    skills-lock.json          # Locked agent skill hashes
@@ -88,6 +87,7 @@ This is a **browser extension** built with [WXT](https://wxt.dev/), React 19, Ty
 | `pnpm compile`       | **CRITICAL**: Run TypeScript type check      |
 | `pnpm fmt`           | **CRITICAL**: Format code with oxfmt         |
 | `pnpm fmt:check`     | **CRITICAL**: Check code formatting          |
+| `pnpm changeset`     | Add a changeset for the next release         |
 
 > **Testing**: No test framework is currently configured.
 
@@ -189,7 +189,7 @@ When syncing server data to IndexedDB, respect pending operations:
 
 ## Conventional Commits
 
-All commits MUST follow the [Conventional Commits](https://www.conventionalcommits.org/en/v1.0.0/) specification. This enables automated versioning, changelog generation, and release management via release-please.
+Commits SHOULD follow the [Conventional Commits](https://www.conventionalcommits.org/en/v1.0.0/) specification as a message style. Version numbers and changelog entries are **not** inferred from commit messages; they come from Changesets.
 
 ### Commit Message Structure
 
@@ -203,36 +203,19 @@ All commits MUST follow the [Conventional Commits](https://www.conventionalcommi
 
 ### Types
 
-| Type              | SemVer | Description                                        |
-| ----------------- | ------ | -------------------------------------------------- |
-| `fix`             | PATCH  | Patches a bug                                      |
-| `feat`            | MINOR  | Introduces a new feature                           |
-| `BREAKING CHANGE` | MAJOR  | Breaking API change (any type, with `!` or footer) |
-| `docs`            | —      | Documentation only                                 |
-| `style`           | —      | Code style changes (formatting, whitespace)        |
-| `refactor`        | —      | Code refactoring (not a fix or feature)            |
-| `perf`            | —      | Performance improvements                           |
-| `test`            | —      | Adding or fixing tests                             |
-| `build`           | —      | Build system or external dependency changes        |
-| `ci`              | —      | CI/CD configuration changes                        |
-| `chore`           | —      | Other changes that don't modify source or tests    |
-| `revert`          | —      | Reverting a previous commit                        |
-
-### Breaking Changes
-
-Indicate breaking changes with `!` after the type/scope, or use a `BREAKING CHANGE:` footer:
-
-```
-feat(api)!: change authentication endpoint
-
-BREAKING CHANGE: API now requires Bearer token in Authorization header
-```
-
-> **Breaking Change Criteria**
->
-> Only mark a commit as breaking when it **directly breaks the experience of end users or external consumers** of the project. Internal changes — such as dependency upgrades, internal refactors, or adjustments to library APIs that do not surface to users — **MUST NOT** use the `!` marker or a `BREAKING CHANGE:` footer, even if they require significant internal rework.
->
-> release-please uses these markers to bump the major version. Mislabeling an internal change as breaking will cause the CI pipeline to generate an incorrect major release. For example, upgrading `@cloudflare/kumo` to v2 and adapting internal component calls should be `feat(deps): upgrade @cloudflare/kumo to v2`, not `feat(deps)!:`.
+| Type       | Description                                     |
+| ---------- | ----------------------------------------------- |
+| `fix`      | Patches a bug                                   |
+| `feat`     | Introduces a new feature                        |
+| `docs`     | Documentation only                              |
+| `style`    | Code style changes (formatting, whitespace)     |
+| `refactor` | Code refactoring (not a fix or feature)         |
+| `perf`     | Performance improvements                        |
+| `test`     | Adding or fixing tests                          |
+| `build`    | Build system or external dependency changes     |
+| `ci`       | CI/CD configuration changes                     |
+| `chore`    | Other changes that don't modify source or tests |
+| `revert`   | Reverting a previous commit                     |
 
 ### Examples
 
@@ -240,17 +223,35 @@ BREAKING CHANGE: API now requires Bearer token in Authorization header
 feat: add URL filter persistence
 fix(sidepanel): prevent bookmark operations from reverting after sync
 docs: update AGENTS.md and README.md
-ci: add release-please workflow for automated releases
+ci: add Changesets workflow for automated releases
 ```
+
+## Changesets
+
+This project uses [Changesets](https://github.com/changesets/changesets) for versioning, changelog generation, and GitHub Releases.
+
+### Adding a changeset
+
+For user-facing changes, run `pnpm changeset` in the PR and choose a bump:
+
+| Bump    | When to use                                                 |
+| ------- | ----------------------------------------------------------- |
+| `patch` | Bug fixes and other non-breaking corrections                |
+| `minor` | New features that do not break existing behavior            |
+| `major` | Changes that **directly break** the experience of end users |
+
+Docs, chore, CI, and internal refactors can omit a changeset. Nothing is released until a changeset is merged.
+
+> Only choose `major` when the change **directly breaks** the experience of end users. Internal changes — such as dependency upgrades, refactors, or library API adaptations that do not surface to users — MUST use `patch` or `minor`. For example, upgrading `@cloudflare/kumo` to v2 and adapting internal component calls should be a `minor` (or `patch`) changeset, not `major`.
+
+Install the [Changesets Bot](https://github.com/apps/changeset-bot) on the repository so pull requests are reminded when a changeset is missing.
 
 ### Release Workflow
 
-This project uses [release-please](https://github.com/googleapis/release-please) for automated releases:
-
-1. Push to `main` → release-please analyzes conventional commits
-2. If releasable commits found → creates a Release PR with version bump, CHANGELOG.md updates
-3. Merge the Release PR → creates git tag, GitHub Release with release notes
-4. Build artifacts (Chrome + Firefox ZIPs) are uploaded to the GitHub Release
+1. Merge a PR that includes a changeset into `main`.
+2. The release workflow opens or updates a Version PR (`chore: version packages`) that bumps `package.json` and updates `CHANGELOG.md`.
+3. Merge the Version PR → creates git tag `vX.Y.Z` and a GitHub Release with changelog notes.
+4. Chrome and Firefox distribution ZIPs (`pnpm zip` / `pnpm zip:firefox`) are uploaded as GitHub Release attachments.
 
 **Required repository settings**: Settings → Actions → General → "Allow GitHub Actions to create and approve pull requests"
 
@@ -267,13 +268,13 @@ Runs on every push to `main` and on every pull request targeting `main`:
 3. Build Chrome extension (`pnpm build`)
 4. Build Firefox extension (`pnpm build:firefox`)
 
-### `release-please`
+### `release`
 
-Runs only on pushes to `main`:
+Runs only on pushes to `main`, after `checks` succeeds:
 
-1. Analyzes conventional commits and opens/updates a Release PR.
-2. When the Release PR is merged, creates a git tag and GitHub Release.
-3. Builds distribution ZIPs (`pnpm zip` and `pnpm zip:firefox`) and uploads them to the GitHub Release.
+1. If there are pending changesets, opens or updates a Version PR.
+2. If the Version PR was just merged, creates git tag `vX.Y.Z` and a GitHub Release.
+3. Builds distribution ZIPs (`pnpm zip` and `pnpm zip:firefox`) and uploads them as GitHub Release attachments.
 
 ## Lessons Learned & Known Issues
 
@@ -296,6 +297,6 @@ const hasTriggeredLoadRef = useRef(false)
 
 Installing new packages with `pnpm` can occasionally remove indirect dependencies. Always verify `package.json` after installations.
 
-### Breaking Change Labeling
+### Changeset Bump Labeling
 
-Only label a commit as breaking when it directly affects end users or public APIs. Internal changes such as dependency upgrades that require internal code adjustments but do not change user-facing behavior should NOT use `!` or `BREAKING CHANGE:` markers, because release-please will incorrectly bump the major version. See the [Breaking Changes](#breaking-changes) section for the full criteria.
+Only choose `major` in a changeset when the change directly affects end users. Internal changes such as dependency upgrades that require internal code adjustments but do not change user-facing behavior should use `patch` or `minor`. See the [Changesets](#changesets) section for the full criteria.

@@ -14,7 +14,9 @@
     "compile": "tsc --noEmit",
     "postinstall": "wxt prepare",
     "fmt": "oxfmt",
-    "fmt:check": "oxfmt --check"
+    "fmt:check": "oxfmt --check",
+    "changeset": "changeset",
+    "release": "node scripts/changeset-publish.mjs"
   },
   "dependencies": {
     "@cloudflare/kumo": "^2.10.0",
@@ -32,6 +34,8 @@
     "tailwindcss": "^4.3.3"
   },
   "devDependencies": {
+    "@changesets/changelog-github": "^1.0.0",
+    "@changesets/cli": "^3.0.0",
     "@types/react": "^19.2.18",
     "@types/react-dom": "^19.2.4",
     "@wxt-dev/auto-icons": "^1.1.2",

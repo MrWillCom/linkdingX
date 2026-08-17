@@ -4,15 +4,16 @@ on:
   push:
     branches:
       - main
-      - 'release-please--**'
   pull_request:
     branches:
       - main
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+
 permissions:
   contents: write
   pull-requests: write
-  issues: write
 
 jobs:
   checks:
@@ -43,40 +44,49 @@ jobs:
       - name: Build Firefox
         run: pnpm build:firefox
 
-  release-please:
+  release:
     if: github.event_name == 'push' && github.ref_name == 'main'
+    needs: checks
     runs-on: ubuntu-24.04
     steps:
-      - uses: googleapis/release-please-action@v4
-        id: release
-        with:
-          release-type: node
-
       - uses: actions/checkout@v4
-        if: ${{ steps.release.outputs.release_created }}
+        with:
+          fetch-depth: 0
 
       - name: Setup Node.js
-        if: ${{ steps.release.outputs.release_created }}
         uses: actions/setup-node@v4
         with:
           node-version: 24
 
       - name: Enable Corepack
-        if: ${{ steps.release.outputs.release_created }}
         run: corepack enable
 
       - name: Install dependencies
-        if: ${{ steps.release.outputs.release_created }}
         run: pnpm install --frozen-lockfile
 
+      - name: Create Release Pull Request or Publish
+        id: changesets
+        uses: changesets/action@v2
+        with:
+          publish-script: pnpm release
+          create-github-releases: true
+          push-git-tags: true
+          commit-message: 'chore: version packages'
+          pr-title: 'chore: version packages'
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
       - name: Zip extensions
-        if: ${{ steps.release.outputs.release_created }}
+        if: steps.changesets.outputs.published == 'true'
         run: |
           pnpm zip
           pnpm zip:firefox
 
       - name: Upload ZIPs to GitHub Release
-        if: ${{ steps.release.outputs.release_created }}
-        run: gh release upload ${{ steps.release.outputs.tag_name }} .output/*-chrome.zip .output/*-firefox.zip
+        if: steps.changesets.outputs.published == 'true'
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          VERSION=$(node -p "require('./package.json').version")
+          gh release upload "v${VERSION}" .output/*-chrome.zip .output/*-firefox.zip
