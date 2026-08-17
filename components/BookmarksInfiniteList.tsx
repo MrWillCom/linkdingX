@@ -10,7 +10,7 @@ interface BookmarksInfiniteListProps {
   searchQuery?: string
   isLoadingMore: boolean | undefined
   hasMore: boolean
-  hasTriggeredLoadRef: React.RefObject<boolean | null>
+  showLoadMoreFallback: boolean
   loadMoreRef: (node: HTMLDivElement | null) => void
   loadMore: () => void
   onToggleUnread: (id: number, current: boolean) => Promise<void>
@@ -25,7 +25,7 @@ export const BookmarksInfiniteList = memo(function BookmarksInfiniteList({
   searchQuery,
   isLoadingMore,
   hasMore,
-  hasTriggeredLoadRef,
+  showLoadMoreFallback,
   loadMoreRef,
   loadMore,
   onToggleUnread,
@@ -76,7 +76,7 @@ export const BookmarksInfiniteList = memo(function BookmarksInfiniteList({
       {filteredBookmarks.length > 0 && (
         <div ref={loadMoreRef} className="py-4 flex flex-col items-center gap-4">
           {isLoadingMore && <Loader size="sm" />}
-          {!isLoadingMore && hasMore && !hasTriggeredLoadRef.current && (
+          {!isLoadingMore && hasMore && showLoadMoreFallback && (
             <Button variant="ghost" onClick={() => loadMore()}>
               Load More
             </Button>

@@ -88,7 +88,11 @@ export function BookmarksHeader({
 }: BookmarksHeaderProps) {
   const isVisible = !!currentTabUrl
   const { status, tooltip, items } = useSyncQueueStatus()
-  const config = STATUS_CONFIG[status] ?? STATUS_CONFIG.error
+  const fallbackStatus = STATUS_CONFIG.error ?? {
+    dotClass: 'bg-kumo-danger',
+    Icon: CloudSlashIcon,
+  }
+  const config = STATUS_CONFIG[status] ?? fallbackStatus
   const statusDotClass = config.dotClass
   const StatusIcon = config.Icon
 
@@ -170,15 +174,21 @@ export function BookmarksHeader({
           <span className="relative inline-flex">
             <Popover>
               <TooltipProvider>
-                <Tooltip content={tooltip} asChild side="bottom">
-                  <Popover.Trigger asChild>
-                    <Button variant="ghost" shape="square" aria-label="View sync queue">
-                      <StatusIcon weight="bold" className="w-4 h-4" aria-hidden="true" />
-                    </Button>
-                  </Popover.Trigger>
-                </Tooltip>
+                <Tooltip
+                  content={tooltip}
+                  side="bottom"
+                  render={
+                    <Popover.Trigger
+                      render={
+                        <Button variant="ghost" shape="square" aria-label="View sync queue">
+                          <StatusIcon weight="bold" className="w-4 h-4" aria-hidden="true" />
+                        </Button>
+                      }
+                    />
+                  }
+                />
               </TooltipProvider>
-              <Popover.Content className="w-64 p-3" side="bottom">
+              <Popover.Content className="w-64 p-3" side="bottom" positionMethod="fixed">
                 <Popover.Title className="text-sm font-semibold">Sync Queue</Popover.Title>
                 <div className="mt-2">
                   {items.length === 0 ? (

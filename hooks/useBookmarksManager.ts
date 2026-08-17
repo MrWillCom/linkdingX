@@ -92,14 +92,13 @@ export function useBookmarksManager(unreadFilter: UnreadFilter, searchQuery: str
   const hasMore = !data || data[data.length - 1]?.next !== null
 
   useEffect(() => {
-    if (!isLoading && !isValidating && hasMore) {
-      const threshold = (size * fetchLimit) / 2
-      if (filteredBookmarks.length < threshold) {
-        const timer = setTimeout(() => setSize(s => s + 1), 100)
-        return () => clearTimeout(timer)
-      }
+    if (error || isLoading || isValidating || !hasMore) return
+    const threshold = (size * fetchLimit) / 2
+    if (filteredBookmarks.length < threshold) {
+      const timer = setTimeout(() => setSize(s => s + 1), 100)
+      return () => clearTimeout(timer)
     }
-  }, [filteredBookmarks.length, size, isLoading, isValidating, hasMore, fetchLimit, setSize])
+  }, [error, filteredBookmarks.length, size, isLoading, isValidating, hasMore, fetchLimit, setSize])
 
   useEffect(() => {
     const handleMessage = (message: { type?: string }) => {

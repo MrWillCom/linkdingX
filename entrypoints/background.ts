@@ -37,7 +37,9 @@ export default defineBackground(() => {
   browser.alarms.onAlarm.addListener(alarm => {
     if (alarm.name === 'sync-retry') {
       processQueueWithMutex()
-      expireStale()
+      expireStale().catch(error => {
+        console.warn('[background] expireStale error:', error)
+      })
     }
   })
 

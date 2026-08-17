@@ -28,14 +28,28 @@ async function notifyUI(
   }
 }
 
-function dedupOps(operations: SyncOperation[]) {
+function dedupOps(operations: SyncOperation[]): Map<number, SyncOperation> {
   const latestOps = new Map<number, SyncOperation>()
-  for (const op of operations) {
+  const sorted = [...operations].sort((a, b) => a.timestamp - b.timestamp)
+
+  for (const op of sorted) {
     const existing = latestOps.get(op.bookmark_id)
-    if (!existing || op.timestamp > existing.timestamp) {
-      latestOps.set(op.bookmark_id, op)
+    if (!existing) {
+      latestOps.set(op.bookmark_id, { ...op, payload: { ...op.payload } })
+      continue
     }
+
+    if (op.action === 'delete' || existing.action === 'delete') {
+      latestOps.set(op.bookmark_id, { ...op, payload: { ...op.payload } })
+      continue
+    }
+
+    latestOps.set(op.bookmark_id, {
+      ...op,
+      payload: { ...existing.payload, ...op.payload },
+    })
   }
+
   return latestOps
 }
 
@@ -111,14 +125,6 @@ export async function process(): Promise<SyncResult> {
     if (processedIds.has(op.bookmark_id)) {
       await db.sync_queue.delete(op.id!)
     }
-  }
-
-  const staleOps = operations.filter(op => {
-    const latest = latestOps.get(op.bookmark_id)
-    return latest && op.id !== latest.id
-  })
-  for (const op of staleOps) {
-    await db.sync_queue.delete(op.id!)
   }
 
   if (result.failed > 0) {

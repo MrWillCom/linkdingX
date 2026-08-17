@@ -24,4 +24,8 @@ db.version(1).stores({
   sync_queue: '++id, bookmark_id, action',
 })
 
+db.version(2).stores({
+  sync_queue: '++id, bookmark_id, action, timestamp',
+})
+
 export { db }

@@ -1,7 +1,6 @@
-import { db } from '@/utils/db'
 import { bookmarkService } from '@/utils/bookmarkService'
 import { useCallback, useEffect, useRef, useState } from 'react'
-import { Button, Loader } from '@cloudflare/kumo'
+import { Button, useKumoToastManager } from '@cloudflare/kumo'
 import {
   serverStorage,
   apiTokenStorage,
@@ -28,7 +27,6 @@ export default function BookmarksList({ variant = 'default' }: BookmarksListProp
 
   const {
     filteredBookmarks,
-    isLoading,
     isLoadingMore,
     hasMore,
     loadMore,
@@ -37,16 +35,24 @@ export default function BookmarksList({ variant = 'default' }: BookmarksListProp
     error,
   } = useBookmarksManager(unreadFilter, debouncedSearchQuery)
 
+  const toastManager = useKumoToastManager()
   const resetSizeRef = useRef(resetSize)
+  const [showLoadMoreFallback, setShowLoadMoreFallback] = useState(true)
+
   useEffect(() => {
     resetSizeRef.current = resetSize
   }, [resetSize])
+
+  const resetPagination = useCallback(() => {
+    resetSizeRef.current()
+    setShowLoadMoreFallback(true)
+  }, [])
 
   useEffect(() => {
     const timer = setTimeout(() => {
       setDebouncedSearchQuery(prev => {
         if (prev !== searchQuery) {
-          resetSizeRef.current()
+          resetPagination()
           return searchQuery
         }
         return prev
@@ -54,18 +60,21 @@ export default function BookmarksList({ variant = 'default' }: BookmarksListProp
     }, 500)
 
     return () => clearTimeout(timer)
-  }, [searchQuery])
+  }, [searchQuery, resetPagination])
 
-  const handleFilterChange = useCallback((filter: UnreadFilter) => {
-    setUnreadFilter(filter)
-    resetSizeRef.current()
-  }, [])
+  const handleFilterChange = useCallback(
+    (filter: UnreadFilter) => {
+      setUnreadFilter(filter)
+      resetPagination()
+    },
+    [resetPagination],
+  )
 
   const handleClearSearch = useCallback(() => {
     setSearchQuery('')
     setDebouncedSearchQuery('')
-    resetSizeRef.current()
-  }, [])
+    resetPagination()
+  }, [resetPagination])
 
   const {
     bookmark: currentTabBookmark,
@@ -78,17 +87,10 @@ export default function BookmarksList({ variant = 'default' }: BookmarksListProp
 
   const containerRef = useRef<HTMLDivElement>(null)
   const [isScrolled, setIsScrolled] = useState(false)
-  const hasTriggeredLoadRef = useRef(false)
 
+  const stateRef = useRef({ isLoadingMore, hasMore, loadMore, setShowLoadMoreFallback })
   useEffect(() => {
-    if (!isLoadingMore) {
-      hasTriggeredLoadRef.current = false
-    }
-  }, [isLoadingMore])
-
-  const stateRef = useRef({ isLoadingMore, hasMore, loadMore })
-  useEffect(() => {
-    stateRef.current = { isLoadingMore, hasMore, loadMore }
+    stateRef.current = { isLoadingMore, hasMore, loadMore, setShowLoadMoreFallback }
   }, [isLoadingMore, hasMore, loadMore])
 
   const handleScroll = useCallback(() => {
@@ -115,12 +117,11 @@ export default function BookmarksList({ variant = 'default' }: BookmarksListProp
     if (node) {
       const observer = new IntersectionObserver(
         entries => {
-          const { isLoadingMore, hasMore, loadMore } = stateRef.current
-          if (entries[0].isIntersecting && !isLoadingMore) {
-            if (hasMore) {
-              hasTriggeredLoadRef.current = true
-              loadMore()
-            }
+          const { isLoadingMore, hasMore, loadMore, setShowLoadMoreFallback } = stateRef.current
+          const entry = entries[0]
+          if (entry?.isIntersecting && !isLoadingMore && hasMore) {
+            setShowLoadMoreFallback(false)
+            loadMore()
           }
         },
         {
@@ -139,34 +140,60 @@ export default function BookmarksList({ variant = 'default' }: BookmarksListProp
 
   const handleAdd = useCallback(
     async (url: string, title: string, description: string) => {
-      const [server, apiToken, fetchMetadataFrom, defaultUnread] = await Promise.all([
-        serverStorage.getValue(),
-        apiTokenStorage.getValue(),
-        fetchMetadataFromStorage.getValue(),
-        defaultUnreadStorage.getValue(),
-      ])
+      try {
+        const [server, apiToken, fetchMetadataFrom, defaultUnread] = await Promise.all([
+          serverStorage.getValue(),
+          apiTokenStorage.getValue(),
+          fetchMetadataFromStorage.getValue(),
+          defaultUnreadStorage.getValue(),
+        ])
 
-      if (!server || !apiToken) return
+        if (!server || !apiToken) {
+          toastManager.add({
+            title: 'Cannot add bookmark',
+            description: 'Server or API token is not configured.',
+            variant: 'error',
+          })
+          return
+        }
 
-      const payload = {
-        url,
-        title: fetchMetadataFrom === 'server' ? '' : title,
-        description: fetchMetadataFrom === 'server' ? '' : description,
-        unread: defaultUnread,
-      }
+        const payload = {
+          url,
+          title: fetchMetadataFrom === 'server' ? '' : title,
+          description: fetchMetadataFrom === 'server' ? '' : description,
+          unread: defaultUnread,
+        }
 
-      const response = await browser.runtime.sendMessage({
-        type: 'api-post',
-        url: `${server}/api/bookmarks/`,
-        data: payload,
-      })
+        const response = await browser.runtime.sendMessage({
+          type: 'api-post',
+          url: `${server}/api/bookmarks/`,
+          data: payload,
+        })
 
-      if (response.ok) {
+        if (!response.ok) {
+          const detail =
+            (response.data as Record<string, string> | undefined)?.detail ||
+            response.error ||
+            'Unknown error'
+          toastManager.add({
+            title: 'Failed to add bookmark',
+            description: detail,
+            variant: 'error',
+          })
+          return
+        }
+
         await bookmarkService.addBookmark(response.data as Bookmark)
         mutateBookmarks()
+      } catch (error) {
+        toastManager.add({
+          title: 'Failed to add bookmark',
+          description: error instanceof Error ? error.message : 'Unknown error',
+          variant: 'error',
+        })
       }
     },
-    [mutateBookmarks],
+    [mutateBookmarks, toastManager],
   )
 
   const handleDelete = useCallback(async (id: number) => {
@@ -224,7 +251,7 @@ export default function BookmarksList({ variant = 'default' }: BookmarksListProp
             searchQuery={debouncedSearchQuery}
             isLoadingMore={isLoadingMore}
             hasMore={hasMore}
-            hasTriggeredLoadRef={hasTriggeredLoadRef}
+            showLoadMoreFallback={showLoadMoreFallback}
             loadMoreRef={loadMoreRef}
             loadMore={loadMore}
             onToggleUnread={handleToggleUnread}
