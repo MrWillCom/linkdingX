@@ -80,61 +80,70 @@ export const BookmarkItem = memo(function BookmarkItem({
       />
       <BookmarkContent
         bookmark={bookmark}
+        titleHref={bookmark.url}
         titleClassName={styles.dimText}
         descriptionClassName={`line-clamp-2 ${styles.dimText}`}
         dateClassName={styles.dimAsset}
         tagClassName={styles.dimAsset}
         previewClassName={styles.dimAsset}
       />
-      <div className="absolute bottom-1 right-2 z-10 flex items-center opacity-0 group-hover:opacity-100 transition-opacity select-none">
+      <div className="absolute bottom-1 right-2 z-10 flex items-center opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 transition-opacity select-none">
         <TooltipProvider>
-          <Tooltip content={bookmark.is_archived ? 'Unarchive' : 'Archive'} asChild side="top">
-            <Button
-              variant="ghost"
-              shape="square"
-              icon={
-                bookmark.is_archived ? (
-                  <TrayArrowUpIcon weight="bold" />
-                ) : (
-                  <TrayArrowDownIcon weight="bold" />
-                )
-              }
-              aria-label={bookmark.is_archived ? 'Unarchive' : 'Archive'}
-              onClick={e => {
-                e.stopPropagation()
-                onToggleArchive(bookmark.id, bookmark.is_archived)
-              }}
-            />
-          </Tooltip>
-          <Tooltip content="Show in Linkding" asChild side="top">
-            <Button
-              variant="ghost"
-              shape="square"
-              icon={<ArrowSquareOutIcon weight="bold" />}
-              aria-label="Show in Linkding"
-              onClick={e => {
-                e.stopPropagation()
-                onOpenInLinkding(bookmark)
-              }}
-            />
-          </Tooltip>
+          <Tooltip
+            content={bookmark.is_archived ? 'Unarchive' : 'Archive'}
+            side="top"
+            render={
+              <Button
+                variant="ghost"
+                shape="square"
+                icon={
+                  bookmark.is_archived ? (
+                    <TrayArrowUpIcon weight="bold" />
+                  ) : (
+                    <TrayArrowDownIcon weight="bold" />
+                  )
+                }
+                aria-label={bookmark.is_archived ? 'Unarchive' : 'Archive'}
+                onClick={e => {
+                  e.stopPropagation()
+                  onToggleArchive(bookmark.id, bookmark.is_archived)
+                }}
+              />
+            }
+          />
+          <Tooltip
+            content="Show in Linkding"
+            side="top"
+            render={
+              <Button
+                variant="ghost"
+                shape="square"
+                icon={<ArrowSquareOutIcon weight="bold" />}
+                aria-label="Show in Linkding"
+                onClick={e => {
+                  e.stopPropagation()
+                  onOpenInLinkding(bookmark)
+                }}
+              />
+            }
+          />
           <Tooltip
             content={isConfirmingDelete ? 'Click again to confirm' : 'Delete'}
             disabled={!isConfirmingDelete}
-            asChild
             side="top"
-          >
-            <Button
-              variant={isConfirmingDelete ? 'destructive' : 'ghost'}
-              shape="square"
-              icon={<TrashIcon weight="bold" />}
-              aria-label={isConfirmingDelete ? 'Confirm delete bookmark' : 'Delete bookmark'}
-              onClick={e => {
-                e.stopPropagation()
-                handleDeletePress()
-              }}
-            />
-          </Tooltip>
+            render={
+              <Button
+                variant={isConfirmingDelete ? 'destructive' : 'ghost'}
+                shape="square"
+                icon={<TrashIcon weight="bold" />}
+                aria-label={isConfirmingDelete ? 'Confirm delete bookmark' : 'Delete bookmark'}
+                onClick={e => {
+                  e.stopPropagation()
+                  handleDeletePress()
+                }}
+              />
+            }
+          />
         </TooltipProvider>
       </div>
     </div>

@@ -1,6 +1,6 @@
 import { memo } from 'react'
 import { formatDistanceToNow } from 'date-fns'
-import { Badge } from '@cloudflare/kumo'
+import { Badge, Link } from '@cloudflare/kumo'
 import { BookmarkFavicon } from './BookmarkFavicon'
 import { BookmarkPreview } from './BookmarkPreview'
 
@@ -14,6 +14,7 @@ interface BookmarkContentProps {
     tag_names: string[]
     date_added: string
   }
+  titleHref?: string
   titleClassName?: string
   descriptionClassName?: string
   dateClassName?: string
@@ -24,6 +25,7 @@ interface BookmarkContentProps {
 
 export const BookmarkContent = memo(function BookmarkContent({
   bookmark,
+  titleHref,
   titleClassName = '',
   descriptionClassName = '',
   dateClassName = '',
@@ -31,6 +33,8 @@ export const BookmarkContent = memo(function BookmarkContent({
   previewClassName = '',
   showDate = true,
 }: BookmarkContentProps) {
+  const titleText = bookmark.title || bookmark.url
+
   return (
     <>
       <div className="flex-1 min-w-0 relative">
@@ -38,7 +42,18 @@ export const BookmarkContent = memo(function BookmarkContent({
           className={`flex min-w-0 items-start gap-1.5 mb-2 text-sm font-medium text-kumo-default! ${titleClassName}`}
         >
           <BookmarkFavicon url={bookmark.favicon_url} />
-          <span className="line-clamp-1">{bookmark.title || bookmark.url}</span>
+          {titleHref ? (
+            <Link
+              href={titleHref}
+              target="_blank"
+              variant="plain"
+              className="relative z-10 line-clamp-1"
+            >
+              {titleText}
+            </Link>
+          ) : (
+            <span className="line-clamp-1">{titleText}</span>
+          )}
         </div>
         {bookmark.description && (
           <p className={`text-xs text-kumo-strong mt-0.5 line-clamp-4 ${descriptionClassName}`}>

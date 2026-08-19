@@ -39,7 +39,7 @@ export const bookmarkService = {
   },
 
   async addBookmark(bookmark: Bookmark) {
-    await db.bookmarks.add({ ...bookmark, _sync_status: 'synced', _local_modified_at: '' })
+    await db.bookmarks.put({ ...bookmark, _sync_status: 'synced', _local_modified_at: '' })
   },
 
   async toggleArchive(id: number, currentArchived: boolean) {

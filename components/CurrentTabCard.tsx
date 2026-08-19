@@ -115,20 +115,24 @@ export function CurrentTabCard({
               <div className="pt-4 flex items-center justify-between select-none">
                 <div className="text-xs text-kumo-subtle" aria-hidden="true" />
                 <div className="flex items-center gap-1">
-                  <Tooltip content="Click again to confirm delete" disabled={!isConfirmingDelete}>
-                    <Button
-                      variant={isConfirmingDelete ? 'destructive' : 'ghost'}
-                      shape="square"
-                      className={!isConfirmingDelete ? 'text-kumo-danger hover:bg-kumo-tint' : ''}
-                      aria-label={
-                        isConfirmingDelete ? 'Confirm delete bookmark' : 'Delete bookmark'
-                      }
-                      disabled={isLoading}
-                      onClick={handleDeletePress}
-                    >
-                      <TrashIcon weight="bold" className="w-4 h-4" aria-hidden="true" />
-                    </Button>
-                  </Tooltip>
+                  <Tooltip
+                    content="Click again to confirm delete"
+                    disabled={!isConfirmingDelete}
+                    render={
+                      <Button
+                        variant={isConfirmingDelete ? 'destructive' : 'ghost'}
+                        shape="square"
+                        className={!isConfirmingDelete ? 'text-kumo-danger hover:bg-kumo-tint' : ''}
+                        aria-label={
+                          isConfirmingDelete ? 'Confirm delete bookmark' : 'Delete bookmark'
+                        }
+                        disabled={isLoading}
+                        onClick={handleDeletePress}
+                      >
+                        <TrashIcon weight="bold" className="w-4 h-4" aria-hidden="true" />
+                      </Button>
+                    }
+                  />
                   <Button
                     variant={effectiveBookmark.unread ? 'primary' : 'secondary'}
                     className="w-32 justify-center"

@@ -281,13 +281,13 @@ Runs only on pushes to `main`, after `checks` succeeds:
 ### Chrome Sidepanel IntersectionObserver
 
 The `IntersectionObserver` API may not fire in Chrome's side panel until user interaction.
-**Solution**: Use a fallback "Load More" button that hides only after the observer successfully triggers the first load.
+**Solution**: Use a fallback "Load More" button that hides only after the observer successfully triggers the first load. Drive visibility with state (not a ref read during render), and reset it when the list identity changes (filter/search).
 
 ```tsx
-const hasTriggeredLoadRef = useRef(false)
-// In render:
+const [showLoadMoreFallback, setShowLoadMoreFallback] = useState(true)
+// Hide after IntersectionObserver fires once; reset on filter/search change.
 {
-  !isLoading && hasMore && !hasTriggeredLoadRef.current && (
+  !isLoading && hasMore && showLoadMoreFallback && (
     <Button onPress={() => setSize(s => s + 1)}>Load more</Button>
   )
 }

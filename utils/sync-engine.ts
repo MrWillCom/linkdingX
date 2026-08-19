@@ -28,14 +28,28 @@ async function notifyUI(
   }
 }
 
-function dedupOps(operations: SyncOperation[]) {
+function dedupOps(operations: SyncOperation[]): Map<number, SyncOperation> {
   const latestOps = new Map<number, SyncOperation>()
-  for (const op of operations) {
+  const sorted = [...operations].sort((a, b) => a.timestamp - b.timestamp)
+
+  for (const op of sorted) {
     const existing = latestOps.get(op.bookmark_id)
-    if (!existing || op.timestamp > existing.timestamp) {
-      latestOps.set(op.bookmark_id, op)
+    if (!existing) {
+      latestOps.set(op.bookmark_id, { ...op, payload: { ...op.payload } })
+      continue
     }
+
+    if (op.action === 'delete' || existing.action === 'delete') {
+      latestOps.set(op.bookmark_id, { ...op, payload: { ...op.payload } })
+      continue
+    }
+
+    latestOps.set(op.bookmark_id, {
+      ...op,
+      payload: { ...existing.payload, ...op.payload },
+    })
   }
+
   return latestOps
 }
 
@@ -113,14 +127,6 @@ export async function process(): Promise<SyncResult> {
     }
   }
 
-  const staleOps = operations.filter(op => {
-    const latest = latestOps.get(op.bookmark_id)
-    return latest && op.id !== latest.id
-  })
-  for (const op of staleOps) {
-    await db.sync_queue.delete(op.id!)
-  }
-
   if (result.failed > 0) {
     await syncErrorStorage.setValue(true)
   } else {
@@ -135,17 +141,34 @@ export async function process(): Promise<SyncResult> {
 
 export async function expireStale(maxAgeMs: number = 24 * 60 * 60 * 1000): Promise<number> {
   const cutoff = Date.now() - maxAgeMs
-  const stale = await db.sync_queue.where('timestamp').below(cutoff).toArray()
-  for (const op of stale) {
-    await db.bookmarks.update(op.bookmark_id, { _sync_status: 'error' })
-    await db.sync_queue.delete(op.id!)
+  const operations = await db.sync_queue.toArray()
+  if (operations.length === 0) return 0
+
+  const latestByBookmark = new Map<number, number>()
+  for (const op of operations) {
+    const latest = latestByBookmark.get(op.bookmark_id)
+    if (latest === undefined || op.timestamp > latest) {
+      latestByBookmark.set(op.bookmark_id, op.timestamp)
+    }
   }
-  if (stale.length > 0) {
-    await notifyUI(
-      'warning',
-      `${stale.length} sync operation${stale.length > 1 ? 's' : ''} expired`,
-      'These changes could not be synced within 24 hours.',
-    )
-  }
-  return stale.length
+
+  const expiredIds = [...latestByBookmark.entries()]
+    .filter(([, timestamp]) => timestamp < cutoff)
+    .map(([bookmarkId]) => bookmarkId)
+
+  if (expiredIds.length === 0) return 0
+
+  await db.transaction('rw', [db.bookmarks, db.sync_queue], async () => {
+    for (const bookmarkId of expiredIds) {
+      await db.bookmarks.update(bookmarkId, { _sync_status: 'error' })
+      await db.sync_queue.where('bookmark_id').equals(bookmarkId).delete()
+    }
+  })
+
+  await notifyUI(
+    'warning',
+    `${expiredIds.length} sync operation${expiredIds.length > 1 ? 's' : ''} expired`,
+    'These changes could not be synced within 24 hours.',
+  )
+  return expiredIds.length
 }

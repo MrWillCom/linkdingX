@@ -1,14 +1,5 @@
 import { useState, useRef } from 'react'
-import {
-  Button,
-  Popover,
-  Tooltip,
-  TooltipProvider,
-  Text,
-  Surface,
-  Input,
-  Loader,
-} from '@cloudflare/kumo'
+import { Button, Popover, Tooltip, TooltipProvider, Input, Loader } from '@cloudflare/kumo'
 import {
   CloudCheckIcon,
   CloudSlashIcon,
@@ -23,7 +14,7 @@ import { CurrentTabCard } from '@/components/CurrentTabCard'
 import { useSyncQueueStatus } from '@/hooks/useSyncQueueStatus'
 import type { Bookmark } from '@/utils/types'
 
-const STATUS_CONFIG: Record<string, { dotClass: string; Icon: typeof CloudCheckIcon }> = {
+const STATUS_CONFIG = {
   synced: { dotClass: 'bg-kumo-success', Icon: CloudCheckIcon },
   pending: { dotClass: 'bg-kumo-warning', Icon: CloudArrowUpIcon },
   error: { dotClass: 'bg-kumo-danger', Icon: CloudSlashIcon },
@@ -88,7 +79,7 @@ export function BookmarksHeader({
 }: BookmarksHeaderProps) {
   const isVisible = !!currentTabUrl
   const { status, tooltip, items } = useSyncQueueStatus()
-  const config = STATUS_CONFIG[status] ?? STATUS_CONFIG.error
+  const config = STATUS_CONFIG[status]
   const statusDotClass = config.dotClass
   const StatusIcon = config.Icon
 
@@ -170,15 +161,21 @@ export function BookmarksHeader({
           <span className="relative inline-flex">
             <Popover>
               <TooltipProvider>
-                <Tooltip content={tooltip} asChild side="bottom">
-                  <Popover.Trigger asChild>
-                    <Button variant="ghost" shape="square" aria-label="View sync queue">
-                      <StatusIcon weight="bold" className="w-4 h-4" aria-hidden="true" />
-                    </Button>
-                  </Popover.Trigger>
-                </Tooltip>
+                <Tooltip
+                  content={tooltip}
+                  side="bottom"
+                  render={
+                    <Popover.Trigger
+                      render={
+                        <Button variant="ghost" shape="square" aria-label="View sync queue">
+                          <StatusIcon weight="bold" className="w-4 h-4" aria-hidden="true" />
+                        </Button>
+                      }
+                    />
+                  }
+                />
               </TooltipProvider>
-              <Popover.Content className="w-64 p-3" side="bottom">
+              <Popover.Content className="w-64 p-3" side="bottom" positionMethod="fixed">
                 <Popover.Title className="text-sm font-semibold">Sync Queue</Popover.Title>
                 <div className="mt-2">
                   {items.length === 0 ? (
