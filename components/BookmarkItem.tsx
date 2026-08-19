@@ -73,7 +73,7 @@ export const BookmarkItem = memo(function BookmarkItem({
       <Link
         href={bookmark.url}
         target="_blank"
-        variant="plain"
+        variant="current"
         className="absolute inset-0 z-[5]"
         tabIndex={-1}
         aria-hidden="true"

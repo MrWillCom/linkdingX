@@ -46,7 +46,7 @@ export const BookmarkContent = memo(function BookmarkContent({
             <Link
               href={titleHref}
               target="_blank"
-              variant="plain"
+              variant="current"
               className="relative z-10 line-clamp-1"
             >
               {titleText}
