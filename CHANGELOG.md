@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.3.1
+
+### Patch Changes
+
+- [#5](https://github.com/MrWillCom/linkdingX/pull/5) [`794c278`](https://github.com/MrWillCom/linkdingX/commit/794c278f32972d42e241a6a5567ea109fa35d411) Thanks [@MrWillCom](https://github.com/MrWillCom)! - Fix sync queue payload merging and stale expiry, stop pagination retries on fetch errors, surface add-bookmark failures, and improve bookmark row keyboard access plus Kumo tooltip/popover usage.
+
 ## [1.3.0](https://github.com/MrWillCom/linkdingX/compare/v1.2.0...v1.3.0) (2026-06-12)
 
 
