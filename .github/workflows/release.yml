@@ -17,52 +17,36 @@ permissions:
 
 jobs:
   checks:
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
+      - uses: pnpm/setup@v2
         with:
-          node-version: 24
+          runtime: node@24
+          cache: true
 
-      - name: Enable Corepack
-        run: corepack enable
+      - run: pnpm fmt:check
 
-      - name: Install dependencies
-        run: pnpm install --frozen-lockfile
+      - run: pnpm compile
 
-      - name: Check formatting
-        run: pnpm fmt:check
-
-      - name: Type check
-        run: pnpm compile
-
-      - name: Build Chrome
-        run: pnpm build
-
-      - name: Build Firefox
-        run: pnpm build:firefox
+      - run: |
+          pnpm build
+          pnpm build:firefox
 
   release:
     if: github.event_name == 'push' && github.ref_name == 'main'
     needs: checks
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with:
           fetch-depth: 0
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
+      - uses: pnpm/setup@v2
         with:
-          node-version: 24
-
-      - name: Enable Corepack
-        run: corepack enable
-
-      - name: Install dependencies
-        run: pnpm install --frozen-lockfile
+          runtime: node@24
+          cache: true
 
       - name: Create Release Pull Request or Publish
         id: changesets
@@ -71,8 +55,6 @@ jobs:
           publish-script: pnpm release
           create-github-releases: true
           push-git-tags: true
-          commit-message: 'chore: version packages'
-          pr-title: 'chore: version packages'
           github-token: ${{ secrets.GITHUB_TOKEN }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
